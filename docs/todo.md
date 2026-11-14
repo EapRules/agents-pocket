@@ -126,6 +126,21 @@ so no program-specific branches.
   command cut by the top of the screen shows the waiting request when its last rows match exactly
   (`shown-request.ts`, fixture `claude-tall-bash.ansi`, atlas `rn.blocked-card-tall`). What is sent is
   unchanged. Not yet on a phone: it reaches build 5 with the first update.
+- [x] **One piece per pattern** (owner, 2026-11-14, after two read-only audits of duplicated UI and of
+  fallback paths). The generic Blocked card serves any program's unknown dialog: keys when nothing is
+  numbered, more labels read as permission answers (strictly), a clean reading with the question as title
+  (`excerpt-rows.ts`), Codex's cut exec shown as its request, Grok's empty-subject permission sent to it.
+  Shared now: `DisclosureChevron`, `LineCounts`, wash pills, `ChipRow`, `KeyPad compact`, `ButtonRow` in
+  the Live Activity confirm sheet, Review Paste and the quick sheet, `UnreadableNotice`. Texts: chat
+  titles, composer, send and Stop reasons travel as `Text` and translate; the app says "Agents Pocket".
+  Guards: `degraded-dialogs.test.ts` (every capture that falls to the generic card is listed with its
+  reason, plus cut variants), and tests that fail on the old names or a missing language.
+- [ ] **Still to normalize:** a check script against hand-made button lists and local components that
+  shadow a shared one; the terminal's connection status drawn two ways (`StatusOverlay`, `ShellSurface`);
+  the grouped rows card reimplemented in about nine places (`Section grouped`); generic-card reasons that
+  say "answer it in the terminal" beside the keys.
+- [ ] **Waiting for the next store build** (branch `encryption-declaration`): the encryption declaration
+  and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
   the publish script with the real R2 upload, the app side behind the official-build flag, the signing
   certificate in the repo (the key is with the owner), the privacy policy and the store wording, a local
@@ -137,10 +152,6 @@ so no program-specific branches.
   Left: the first update for everyone once 1.0.1 is approved, when the owner asks (it also removes the
   Early Updates switch from builds that still show it). Not checked on a device: rollback after a crash
   at launch, Android.
-- [ ] **Encryption declared in the app** (owner said yes, 2026-11-14): `ITSAppUsesNonExemptEncryption = NO`, so
-  App Store Connect stops asking per build. Ready on the branch `encryption-declaration`. It changes the runtime
-  fingerprint, and an update can only be published from a tree whose runtime matches a released build, so it
-  merges into main with the commit that cuts the next store build, not before.
 
 ## 5. Needs the owner
 
