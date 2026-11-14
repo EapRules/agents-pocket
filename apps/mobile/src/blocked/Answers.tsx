@@ -9,10 +9,18 @@ const useStyles = makeStyles((th) => ({
   warning: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xxs },
 }));
 
-/** One answer button: the program's own label, never its number; the layout carries the meaning. */
+/**
+ * One answer button: the program's own label; the layout carries the meaning. Every Blocked card
+ * draws its answer buttons from these, through `Answers`.
+ */
 export interface Answer {
   readonly key: number;
   readonly label: string;
+  /**
+   * The option's number, drawn before the label ("2. Something") only when nothing else tells the
+   * options apart: raw rows whose options are not all known answers. Null otherwise.
+   */
+  readonly number: number | null;
   readonly kind: AnswerKind;
   /** Saves a rule: always below the pair, with its warning. */
   readonly persistent: boolean;
@@ -23,7 +31,7 @@ export interface Answer {
 function AnswerButton({ answer, disabled }: { answer: Answer; disabled: boolean }) {
   return (
     <Button
-      title={answer.label}
+      title={answer.number === null ? answer.label : `${answer.number}. ${answer.label}`}
       kind={answer.kind}
       size="medium"
       disabled={disabled}

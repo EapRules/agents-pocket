@@ -169,6 +169,7 @@ function Known({
     (option): Answer => ({
       key: option.ordinal,
       label: option.label,
+      number: null,
       kind: optionKind(option),
       persistent: option.role === 'approvePersistent',
       testID: `blocked-option-${option.ordinal}`,

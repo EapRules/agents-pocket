@@ -552,6 +552,11 @@
     "note": "Blocked card: a dialog the parser could not name, shown from the one waiting request it provably shows"
   },
   {
+    "id": "rn.blocked-card-tall",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: a permission dialog taller than the terminal, its command cut at the top, shown from the one waiting request"
+  },
+  {
     "id": "rn.blocked-card-raw",
     "rn": "AgentDetailScreen",
     "note": "Blocked card: a dialog the parser could not name and no request matches, raw excerpt"

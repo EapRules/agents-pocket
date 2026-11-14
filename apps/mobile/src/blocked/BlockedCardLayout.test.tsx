@@ -133,8 +133,8 @@ describe('a dialog no parser names', () => {
     expect(props.onPress).toHaveBeenCalledWith(1);
   });
 
-  it('stays raw when nothing provably matches', async () => {
-    await renderCard({
+  it('shows the raw rows when nothing provably matches, its answers in the same layout', async () => {
+    const props = await renderCard({
       kind: 'generic',
       excerpt: excerpt([
         [1, 'Yes'],
@@ -144,7 +144,50 @@ describe('a dialog no parser names', () => {
     });
     expect(screen.getByTestId('blocked-excerpt')).toBeTruthy();
     expect(screen.getByTestId('blocked-generic-reason')).toBeTruthy();
-    expect(screen.queryByTestId('blocked-answer-pair')).toBeNull();
     expect(screen.queryByTestId('blocked-subject-code')).toBeNull();
+    const ids = pair()
+      .getAllByTestId(/^blocked-generic-/)
+      .map((button) => button.props.testID);
+    expect(ids).toEqual(['blocked-generic-2', 'blocked-generic-1']);
+    expect(pair().getByText('Yes')).toBeTruthy();
+    expect(screen.queryByText('1. Yes')).toBeNull();
+    await fireEvent.press(screen.getByTestId('blocked-generic-2'));
+    expect(props.onPress).toHaveBeenCalledWith(2);
+  });
+
+  it('keeps a raw answer that saves a rule below the pair', async () => {
+    await renderCard({
+      kind: 'generic',
+      excerpt: excerpt([
+        [1, 'Yes'],
+        [2, "Yes, and don't ask again for touch commands"],
+        [3, 'No'],
+      ]),
+      shown: null,
+    });
+    expect(pair().getByTestId('blocked-generic-1')).toBeTruthy();
+    expect(pair().getByTestId('blocked-generic-3')).toBeTruthy();
+    expect(pair().queryByTestId('blocked-generic-2')).toBeNull();
+    expect(screen.getByTestId('blocked-generic-2')).toBeTruthy();
+  });
+
+  it('lists raw options it cannot tell apart in order, numbered as the rows show them', async () => {
+    const props = await renderCard({
+      kind: 'generic',
+      excerpt: excerpt([
+        [1, 'Yes'],
+        [2, 'Something else'],
+        [3, 'No'],
+      ]),
+      shown: null,
+    });
+    expect(screen.queryByTestId('blocked-answer-pair')).toBeNull();
+    const ids = screen.getAllByTestId(/^blocked-generic-\d/).map((button) => button.props.testID);
+    expect(ids).toEqual(['blocked-generic-1', 'blocked-generic-2', 'blocked-generic-3']);
+    for (const title of ['1. Yes', '2. Something else', '3. No']) {
+      expect(screen.getByText(title)).toBeTruthy();
+    }
+    await fireEvent.press(screen.getByTestId('blocked-generic-2'));
+    expect(props.onPress).toHaveBeenCalledWith(2);
   });
 });

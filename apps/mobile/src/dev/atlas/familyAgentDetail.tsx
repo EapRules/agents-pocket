@@ -201,6 +201,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.session-drawer--agents': detail('p2', 'chat', ['agent-header-sidebar']),
   'agent-detail.chat-blocked-card': detail('p1', 'chat', undefined, 'bash', false, 'blocked'),
   'rn.blocked-card-clipped': detail('p1', 'chat', undefined, 'clipped', false, 'blocked'),
+  'rn.blocked-card-tall': detail('p1', 'chat', undefined, 'tall', false, 'blocked'),
   'rn.blocked-card-raw': detail('p1', 'chat', undefined, 'raw', false, 'blocked'),
   'rn.blocked-card-persistent': detail('p1', 'chat', undefined, 'persistent', false, 'blocked'),
   'rn.blocked-card-question': detail('p1', 'chat', undefined, 'question', false, 'blocked'),
