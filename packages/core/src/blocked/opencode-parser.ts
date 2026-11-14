@@ -45,7 +45,7 @@ const LAYOUT = message(
 );
 const OFF_SCREEN = message('The top of the dialog is off screen.');
 const REJECT_NOTE = message(
-  'OpenCode asks what to do differently before it rejects. Answer it in the terminal.',
+  'OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.',
 );
 const SINGLE_QUESTION_FOOTER = '↑↓ select  enter submit  esc dismiss';
 const OWN_ANSWER = 'Type your own answer';
@@ -315,7 +315,7 @@ function answers(lines: readonly OpenCodeBlockLine[], block: OpenCodeBlock): Dia
  */
 function question(block: OpenCodeBlock, screen: AnsiScreen): DialogParseResult {
   const layout = message(
-    "Agentico answers only OpenCode's single questions. Answer this one in the terminal.",
+    "Agentico answers only OpenCode's single questions. Answer this one with these keys or in the terminal.",
   );
   const sections = block.sections;
   const footer = sections.at(-1);

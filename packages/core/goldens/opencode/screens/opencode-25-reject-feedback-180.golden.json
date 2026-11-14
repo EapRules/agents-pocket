@@ -18,7 +18,7 @@
         "value": "5a6661a1bcefb97660ae7d454bd952f896c682608323b50cd27e7f2d54e563c7"
       },
       "numbered": {},
-      "reason": "OpenCode asks what to do differently before it rejects. Answer it in the terminal.",
+      "reason": "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.",
       "rows": [
         {
           "index": 38,

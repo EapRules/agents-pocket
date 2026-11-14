@@ -290,5 +290,8 @@
   "Hermes Agent's screen shows no running turn, so Stop pressed nothing.": "La pantalla de Hermes Agent no muestra un turno en curso, así que Detener no hizo nada.",
   "Ctrl+C would clear the draft in Hermes Agent's box. Stop it in the terminal.": "Ctrl+C borraría el borrador en la caja de Hermes Agent. Detenelo en la terminal.",
   "Ctrl+C went, but the Agent still shows Working.": "Se envió Ctrl+C, pero el Agente sigue mostrando Trabajando.",
-  "OpenCode runs its commands alone. Send the command without anything after it.": "OpenCode corre sus comandos solos. Enviá el comando sin nada después."
+  "OpenCode runs its commands alone. Send the command without anything after it.": "OpenCode corre sus comandos solos. Enviá el comando sin nada después.",
+  "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.": "OpenCode pregunta qué hacer distinto antes de rechazar. Escribí tu nota en la terminal; estas teclas no pueden escribir texto.",
+  "Agentico answers only OpenCode's single questions. Answer this one with these keys or in the terminal.": "Agents Pocket responde solo las preguntas simples de OpenCode. Respondé esta con estas teclas o en la terminal.",
+  "Agentico answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.": "Agents Pocket responde solo las preguntas de selección única de Oh My Pi. Estas teclas mueven y envían; para marcar opciones usá la terminal."
 }

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { sourceMessageKeys, swiftCatalog } from '../errors/catalog.testkit';
+import { appTable, sourceMessageKeys } from '../errors/catalog.testkit';
 
 describe('the words the Blocked parsers and planners use', () => {
   const keys = sourceMessageKeys('blocked');
-  const english = swiftCatalog('en');
-  const spanish = swiftCatalog('es');
+  const english = appTable('en');
+  const spanish = appTable('es');
 
   it('finds the keys', () => {
     expect(keys.length).toBeGreaterThan(30);

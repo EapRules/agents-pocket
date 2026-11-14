@@ -87,7 +87,7 @@ export function ask(panel: OmpPanel, screen: AnsiScreen): DialogParseResult {
         panel,
         screen,
         message(
-          "Agentico answers only Oh My Pi's single-select questions. Answer this one in the terminal.",
+          "Agentico answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.",
         ),
       );
     }
