@@ -1,11 +1,10 @@
 import { t } from '@openagentspocket/i18n';
-import { Button, makeStyles, TextField } from '@openagentspocket/ui';
+import { Button, ButtonRow, makeStyles, TextField } from '@openagentspocket/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
 
 const useStyles = makeStyles((th) => ({
   box: { padding: th.spacing.md, gap: th.spacing.xs },
-  buttons: { flexDirection: 'row', justifyContent: 'flex-end', gap: th.spacing.xs },
 }));
 
 interface Props {
@@ -28,7 +27,7 @@ export function RenameField({ initial, busy, onSave, onCancel }: Props) {
         autoFocus
         testID="account-rename-field"
       />
-      <View style={styles.buttons}>
+      <ButtonRow>
         <Button title={t('Cancel')} kind="text" size="small" onPress={onCancel} />
         <Button
           title={t('Save')}
@@ -37,7 +36,7 @@ export function RenameField({ initial, busy, onSave, onCancel }: Props) {
           onPress={() => onSave(name)}
           testID="account-rename-save"
         />
-      </View>
+      </ButtonRow>
     </View>
   );
 }
