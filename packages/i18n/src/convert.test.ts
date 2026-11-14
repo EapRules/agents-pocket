@@ -102,8 +102,8 @@ describe('brand', () => {
       strings: { [key]: entry(unit('Abri Agentico en %@'), unit('Open Agentico on %@')) },
     });
     expect(Object.keys(out.en)).toEqual([key]);
-    expect(out.en[key]).toBe('Open OpenAgentsPocket on {0}');
-    expect(out.es[key]).toBe('Abri OpenAgentsPocket en {0}');
+    expect(out.en[key]).toBe('Open Agents Pocket on {0}');
+    expect(out.es[key]).toBe('Abri Agents Pocket en {0}');
   });
 
   it('only rewrites the whole word', () => {

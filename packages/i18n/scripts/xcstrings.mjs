@@ -10,7 +10,7 @@
 // - App Intents placeholders (`${agent}`) become named arguments (`{agent}`).
 // - The English value is the catalog's `en` localization when it has one, else the key itself;
 //   Spanish falls back to English only for keys marked "don't translate".
-// - The only rewrite is the product name: literal text says OpenAgentsPocket where Swift says
+// - The only rewrite is the product name: literal text says Agents Pocket where Swift says
 //   Agentico (see `brand`). Keys stay as the Swift source wrote them.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -21,7 +21,7 @@ const SPECIFIER =
   /%%|%(?:(\d+)\$)?[-+ #0']*\d*(?:\.\d+)?(?:hh|h|ll|l|q|z|t|j|L)?([@dDuUxXoOfFeEgGcCsSpaAi])/g;
 const NAMED = /\$\{(\w+)\}/g;
 /** The product name of this app, which replaces the Swift app's name in every user-facing value. */
-export const BRAND = 'OpenAgentsPocket';
+export const BRAND = 'Agents Pocket';
 
 /** Swift value text as this app says it. */
 export const brand = (text) => text.replace(/\bAgentico\b/g, BRAND);

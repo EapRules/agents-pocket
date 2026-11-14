@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 import { PAIRING_MESSAGE_CATALOG_KEYS } from '../pairing/failure';
 import { appTable, sourceMessageKeys } from './catalog.testkit';
 
-const OLD_BRAND = /\bAgentico\b/;
+// The Swift app's old name, and the project name: the app says "Agents Pocket".
+const OLD_BRAND = /\bAgentico\b|OpenAgentsPocket/;
 
 describe("core's catalog keys", () => {
   // Pairing passes ids that its own table maps to catalog keys.

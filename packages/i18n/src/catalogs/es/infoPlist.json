@@ -1,7 +1,7 @@
 {
-  "CFBundleDisplayName": "OpenAgentsPocket",
-  "NSCameraUsageDescription": "OpenAgentsPocket usa la cámara para escanear el código de vinculación que muestra tu computadora, así esa máquina se agrega sin escribir nada.",
-  "NSFaceIDUsageDescription": "OpenAgentsPocket usa Face ID, cuando lo activás en Configuración › Seguridad, para bloquear la app y para confirmar que sos vos antes de que tus claves SSH se conecten a un Host.",
-  "NSLocalNetworkUsageDescription": "OpenAgentsPocket usa tu red local para conectarse por SSH a Hosts de la misma red, incluidos los Hosts de tu red Tailscale, ZeroTier o EasyTier cuando están cerca.",
-  "NSMicrophoneUsageDescription": "OpenAgentsPocket usa el micrófono, cuando tocás el botón de micrófono del Composer, para convertir tu voz en texto en el borrador. La voz se transcribe en tu dispositivo y no se envía a ningún lado."
+  "CFBundleDisplayName": "Agents Pocket",
+  "NSCameraUsageDescription": "Agents Pocket usa la cámara para escanear el código de vinculación que muestra tu computadora, así esa máquina se agrega sin escribir nada.",
+  "NSFaceIDUsageDescription": "Agents Pocket usa Face ID, cuando lo activás en Configuración › Seguridad, para bloquear la app y para confirmar que sos vos antes de que tus claves SSH se conecten a un Host.",
+  "NSLocalNetworkUsageDescription": "Agents Pocket usa tu red local para conectarse por SSH a Hosts de la misma red, incluidos los Hosts de tu red Tailscale, ZeroTier o EasyTier cuando están cerca.",
+  "NSMicrophoneUsageDescription": "Agents Pocket usa el micrófono, cuando tocás el botón de micrófono del Composer, para convertir tu voz en texto en el borrador. La voz se transcribe en tu dispositivo y no se envía a ningún lado."
 }
