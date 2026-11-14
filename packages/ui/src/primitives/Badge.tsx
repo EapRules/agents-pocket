@@ -32,16 +32,33 @@ interface BadgeProps {
   kind?: BadgeKind;
   /** The ink and wash color of `kind="wash"` (a status or tone color, from the theme). */
   color?: string;
+  /** A mark before the label, such as a warning glyph. */
+  leading?: ReactNode;
+  /** Reads the badge as one element with this sentence instead of its label. */
+  accessibilityLabel?: string;
   testID?: string;
 }
 
 /** A short label on a capsule: a count, a tag. */
-export function Badge({ label, kind = 'accent', color, testID }: BadgeProps) {
+export function Badge({
+  label,
+  kind = 'accent',
+  color,
+  leading,
+  accessibilityLabel,
+  testID,
+}: BadgeProps) {
   const styles = useStyles();
   const theme = useTheme();
   const wash = kind === 'wash' && color ? { backgroundColor: theme.wash(color) } : null;
   return (
-    <View style={[styles.capsule, styles[kind], wash]} testID={testID}>
+    <View
+      style={[styles.capsule, styles[kind], wash]}
+      testID={testID}
+      accessible={accessibilityLabel ? true : undefined}
+      accessibilityLabel={accessibilityLabel}
+    >
+      {leading}
       <Text
         variant="caption2"
         semibold

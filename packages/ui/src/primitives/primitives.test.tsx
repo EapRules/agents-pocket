@@ -181,6 +181,19 @@ describe('Badge and Chip', () => {
     });
   });
 
+  it('draws a leading mark and reads as one labelled element', async () => {
+    await renderThemed(
+      <Badge
+        kind="wash"
+        color={themes.indigo.colors.warning}
+        label="12%"
+        leading={<Icon name="warning" size={10} />}
+        accessibilityLabel="12% context left"
+      />,
+    );
+    expect(screen.getByLabelText('12% context left')).toBeTruthy();
+  });
+
   it('makes a filter chip a selectable button', async () => {
     const onPress = jest.fn();
     await renderThemed(<Chip label="Blocked" selected onPress={onPress} />);

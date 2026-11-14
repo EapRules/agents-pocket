@@ -53,14 +53,6 @@ const useStyles = makeStyles((t) => ({
   prompt: { flex: 1, flexShrink: 1 },
   pillGap: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.xxs },
   ownTotals: { alignItems: 'flex-end' },
-  contextPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: airy.badgeV,
-    borderRadius: t.radius.capsule,
-    paddingHorizontal: airy.stack,
-    paddingVertical: airy.badgeV,
-  },
 }));
 
 interface AgentCardBodyProps {
@@ -125,17 +117,14 @@ export function AgentCardBody({
           <View style={styles.pillGap}>
             {agent.saved ? <Badge label={labels.saved} kind="outline" /> : null}
             {agent.contextLeft ? (
-              <View
-                style={[styles.contextPill, { backgroundColor: theme.wash(warning) }]}
-                accessible
+              <Badge
+                kind="wash"
+                color={warning}
+                label={agent.contextLeft}
+                leading={<Icon name="warning" size={10} tint={warning} />}
                 accessibilityLabel={labels.contextLow(agent.contextLeft)}
                 testID="agent-card-context"
-              >
-                <Icon name="warning" size={10} tint={warning} />
-                <Text variant="caption2" semibold tabularNums style={{ color: warning }}>
-                  {agent.contextLeft}
-                </Text>
-              </View>
+              />
             ) : null}
             <StatusPill
               status={status}

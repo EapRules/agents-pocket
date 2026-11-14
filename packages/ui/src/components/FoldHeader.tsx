@@ -1,10 +1,9 @@
 import { View } from 'react-native';
-import { Badge } from '../primitives/Badge';
+import { Badge, StatusPill } from '../primitives/Badge';
 import { Icon } from '../primitives/Icon';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
-import { airy } from '../theme/metrics';
 import type { Status, Tone } from '../theme/status';
 import { makeStyles, useTheme } from '../theme/theme';
 import { type AgentRowLabels, defaultAgentRowLabels } from './agentRowLabels';
@@ -39,11 +38,6 @@ const useStyles = makeStyles((t) => ({
     borderColor: t.colors.canvas,
   },
   pills: { flexDirection: 'row', gap: t.spacing.xxs },
-  pill: {
-    borderRadius: t.radius.capsule,
-    paddingHorizontal: airy.stack,
-    paddingVertical: airy.badgeV,
-  },
 }));
 
 interface FoldHeaderProps {
@@ -105,15 +99,12 @@ export function FoldHeader({
         {collapsed && pills?.length ? (
           <View style={styles.pills}>
             {pills.map((pill) => (
-              <View
+              <StatusPill
                 key={pill.status}
-                style={[styles.pill, { backgroundColor: theme.wash(theme.status(pill.status)) }]}
+                status={pill.status}
+                label={pill.label}
                 testID={`fold-pill-${pill.status}`}
-              >
-                <Text variant="caption2" semibold style={{ color: theme.status(pill.status) }}>
-                  {pill.label}
-                </Text>
-              </View>
+              />
             ))}
           </View>
         ) : null}
