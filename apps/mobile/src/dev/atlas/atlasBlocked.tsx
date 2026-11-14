@@ -14,6 +14,7 @@ import {
 } from '@openagentspocket/core';
 import type { ReactNode } from 'react';
 import { BlockedCardOverride } from '@/blocked/BlockedCardSlot';
+import { genericContent } from './atlasBlockedGeneric';
 import { TALL_CONTENT } from './atlasBlockedTall';
 
 /** The Blocked card states the atlas draws over a Blocked Agent's chat. */
@@ -22,6 +23,9 @@ export type AtlasBlockedVariant =
   | 'clipped'
   | 'tall'
   | 'raw'
+  | 'genericMcp'
+  | 'genericPlan'
+  | 'genericKeys'
   | 'unreadable'
   | 'persistent'
   | 'question';
@@ -150,6 +154,9 @@ const CONTENT: Record<AtlasBlockedVariant, CardContent> = {
   },
   tall: TALL_CONTENT,
   raw: { kind: 'generic', excerpt, shown: null },
+  genericMcp: genericContent('mcp'),
+  genericPlan: genericContent('plan'),
+  genericKeys: genericContent('keys'),
   // No parser saw a dialog while herdr says Blocked: the key pad card.
   unreadable: { kind: 'unreadable' },
 };

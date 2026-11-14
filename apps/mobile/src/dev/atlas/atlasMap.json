@@ -562,6 +562,21 @@
     "note": "Blocked card: a dialog the parser could not name and no request matches, raw excerpt"
   },
   {
+    "id": "rn.blocked-card-generic-mcp",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: Codex MCP tool approval no parser names (codex-15 golden), its answers laid out as a permission"
+  },
+  {
+    "id": "rn.blocked-card-generic-plan",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: Codex \"Implement this plan?\" no parser names (codex-19 golden), its answers laid out as a permission"
+  },
+  {
+    "id": "rn.blocked-card-generic-keys",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: Grok rewind confirmation no parser names (grok-23 golden), no numbered answer, so the key pad"
+  },
+  {
     "id": "rn.blocked-card-unreadable",
     "rn": "AgentDetailScreen",
     "note": "Blocked card: herdr says Blocked and no parser sees a dialog, the key pad card"
