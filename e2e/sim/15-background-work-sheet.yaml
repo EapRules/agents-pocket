@@ -28,22 +28,22 @@ appId: com.openagentspocket.app
 # Work runs, so Finished starts collapsed: its header opens it, which only a real section does.
 - tapOn:
     id: work-section-finished-header-toggle
-- extendedWaitUntil:
-    visible:
-      id: work-open-w3
-    timeout: 4000
+# The open Running section fills the screen, so the finished rows sit below the fold.
 # A notice for a command the lines don't hold stands in as its finished row.
 - scrollUntilVisible:
     element:
       id: work-sheet-notice:n1
     direction: DOWN
-    timeout: 4000
+    timeout: 15000
+    visibilityPercentage: 50
 # A finished Subagent's transcript is the dock's other sheet: it opens after this one has left.
 - scrollUntilVisible:
     element:
       id: work-open-w3
-    direction: UP
-    timeout: 4000
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 50
+- takeScreenshot: design/atlas/sim/15-background-work-finished
 - tapOn:
     id: work-open-w3
 - extendedWaitUntil:
