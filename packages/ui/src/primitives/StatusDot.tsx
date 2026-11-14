@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { Animated } from 'react-native';
+import { usePulse } from '../motion';
 import { useFontScale } from '../theme/accessibility';
 import type { Status } from '../theme/status';
 import { useTheme } from '../theme/theme';
@@ -17,14 +18,22 @@ export const STATUS_GLYPH: Record<Status, IconName> = {
 /** Caption size, the glyph's size at the default text scale. */
 const GLYPH_SIZE = 12;
 
+interface StatusDotProps {
+  status: Status;
+  size?: number;
+  /** The dot pulses, a live activity mark; Reduce Motion and the glyph keep it still. */
+  pulse?: boolean;
+}
+
 /**
  * An Agent status as a dot in the theme's status color, or at accessibility text
  * sizes a glyph whose shape names the status, so status is never color alone.
  * Hidden from screen readers: the row says it in words.
  */
-export function StatusDot({ status, size = 8 }: { status: Status; size?: number }) {
+export function StatusDot({ status, size = 8, pulse = false }: StatusDotProps) {
   const theme = useTheme();
   const { scale, isAccessibilitySize } = useFontScale();
+  const opacity = usePulse(pulse && !isAccessibilitySize);
   if (isAccessibilitySize) {
     return (
       <Icon
@@ -36,7 +45,7 @@ export function StatusDot({ status, size = 8 }: { status: Status; size?: number 
     );
   }
   return (
-    <View
+    <Animated.View
       testID={`status-dot-${status}`}
       accessibilityElementsHidden
       importantForAccessibility="no"
@@ -45,6 +54,7 @@ export function StatusDot({ status, size = 8 }: { status: Status; size?: number 
         height: size,
         borderRadius: size / 2,
         backgroundColor: theme.status(status),
+        opacity,
       }}
     />
   );

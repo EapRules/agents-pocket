@@ -37,6 +37,8 @@ export const rowID = {
   group: (lastCall: string) => make(`group:${lastCall}`),
   /** A running tool group, by its first call: it grows at its end. */
   liveGroup: (firstCall: string) => make(`liveGroup:${firstCall}`),
+  /** The live line that ends the transcript while the newest turn runs. */
+  working: make('working'),
 } as const;
 
 /** The entry id of an `entry:` row id, else null. */
@@ -83,6 +85,21 @@ export interface ChatTurnHeader {
   stepCount: number;
 }
 
+/** What the running turn's newest record says the Agent does. */
+export type ChatTurnDoing =
+  | { kind: 'thinking' }
+  /** A call that has not returned: its one line, as its tool row says it. */
+  | { kind: 'tool'; title: string }
+  /** A call waits for the user's approval. */
+  | { kind: 'waiting' };
+
+/** The running turn, as the projection's live header and the rows under it show it. */
+export interface ChatLiveTurn {
+  /** When the turn started, on the Host's clock. */
+  since: string;
+  doing: ChatTurnDoing | null;
+}
+
 /** Consecutive tool calls shown as one summary row. */
 export interface ChatToolGroup {
   /** "Ran 2 commands, Edited 2 files", unresolved so the UI translates it. */
@@ -111,7 +128,9 @@ export type ChatRowContent =
   | { type: 'pending'; echo: ChatPendingEcho }
   | { type: 'olderHistory'; older: ChatOlderHistory }
   | { type: 'turnHeader'; header: ChatTurnHeader }
-  | { type: 'toolGroup'; group: ChatToolGroup };
+  | { type: 'toolGroup'; group: ChatToolGroup }
+  /** The live line at the end of the transcript while the newest turn runs. */
+  | { type: 'working'; turn: ChatLiveTurn };
 
 export interface ChatRow {
   id: ChatRowID;

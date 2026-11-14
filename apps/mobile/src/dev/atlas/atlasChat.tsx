@@ -15,6 +15,7 @@ import type { ConversationRegistry } from '@/conversations/ConversationRegistry'
 import { ConversationsProvider } from '@/conversations/useConversation';
 import { FOLDED_CALLS } from './atlasChatCalls';
 import { COMMAND_OUTPUT } from './atlasChatCommand';
+import { withAgentMessage } from './atlasChatMessage';
 import { ATLAS_NOW } from './atlasClock';
 
 const at = (secondsAgo: number) => new Date(ATLAS_NOW - secondsAgo * 1000).toISOString();
@@ -366,6 +367,7 @@ const commandRegistry = registryFor(commandState);
 const workRegistry = registryFor(workState);
 const blockedWorkRegistry = registryFor(blockedWorkState);
 const lookingRegistry = registryFor(lookingState);
+const messageRegistry = registryFor(withAgentMessage(state));
 
 /** Gives the atlas a scripted conversation, so Chat renders as it does mid-session. */
 export function AtlasChat({
@@ -376,8 +378,8 @@ export function AtlasChat({
   children: ReactNode;
   /** The conversation is still being located and the last read failed (chat-banners). */
   looking?: boolean;
-  /** Background Work over the Composer, or `command`: a local command's output in place of it. */
-  background?: 'list' | 'blocked' | 'command';
+  /** Background Work over the Composer, or in place of it a local command's output or a Subagent's report. */
+  background?: 'list' | 'blocked' | 'command' | 'message';
 }) {
   const scripted = looking
     ? lookingRegistry
@@ -387,6 +389,8 @@ export function AtlasChat({
         ? blockedWorkRegistry
         : background === 'command'
           ? commandRegistry
-          : registry;
+          : background === 'message'
+            ? messageRegistry
+            : registry;
   return <ConversationsProvider registry={scripted}>{children}</ConversationsProvider>;
 }

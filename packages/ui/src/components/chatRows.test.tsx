@@ -1,10 +1,12 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderThemed } from '../test-utils';
 import { ChatDivider, formatClock } from './ChatDivider';
+import { ChatMessageSheet } from './ChatMessageSheet';
 import { ChatNoticeRow } from './ChatNoticeRow';
 import { ChatThoughtRow } from './ChatThoughtRow';
 import { ChatToolRow } from './ChatToolRow';
 import { ChatUserBubble } from './ChatUserBubble';
+import { ChatWorkingRow } from './ChatWorkingRow';
 import { DiffRow } from './DiffRow';
 
 describe('ChatUserBubble', () => {
@@ -238,5 +240,39 @@ describe('DiffRow', () => {
     await renderThemed(<DiffRow file={file} hunks={hunks} layout="sideBySide" />);
     expect(screen.getAllByTestId('diff-row-split')).toHaveLength(1);
     expect(screen.getByLabelText('Removed, line 1: old. Added, line 1: new')).toBeTruthy();
+  });
+});
+
+describe('ChatWorkingRow', () => {
+  it('reads as one element with its spoken label and a working mark', async () => {
+    await renderThemed(
+      <ChatWorkingRow text="Working 5s" accessibilityLabel="Working, 5 seconds" />,
+    );
+    expect(screen.getByLabelText('Working, 5 seconds')).toBeTruthy();
+    expect(screen.getByTestId('status-dot-working', { includeHiddenElements: true })).toBeTruthy();
+  });
+});
+
+describe('ChatMessageSheet', () => {
+  it('names the sender, renders the message and offers Copy and Done', async () => {
+    const onCopy = jest.fn();
+    const onClose = jest.fn();
+    await renderThemed(
+      <ChatMessageSheet
+        visible
+        onClose={onClose}
+        title="Message"
+        fromLabel="From:"
+        sender="Audit"
+        text={'**Done.** Two commits.'}
+        doneLabel="Done"
+        copy={{ label: 'Copy', onPress: onCopy }}
+      />,
+    );
+    expect(screen.getByTestId('chat-message-sheet-from')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('chat-message-sheet-copy'));
+    expect(onCopy).toHaveBeenCalled();
+    await fireEvent.press(screen.getByTestId('chat-message-sheet-done'));
+    expect(onClose).toHaveBeenCalled();
   });
 });

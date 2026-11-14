@@ -1,4 +1,5 @@
 import {
+  type ChatNotice,
   type ChatRow,
   rowCopyText,
   toolLine,
@@ -25,6 +26,7 @@ import { memo, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { renderMessage } from '@/lib/renderText';
 import { useAgentWait } from '../../blocked/BlockedCardProvider';
+import { ChatAgentMessageLine, ChatLiveLine } from './ChatMessages';
 import { ChatQuestionBlock } from './ChatQuestionBlock';
 import { ChatToolDetail } from './ChatToolDetail';
 import { durationText, echoStatus, rowToolStatus, toolIcon, toolStatusLabel } from './chatRowModel';
@@ -58,6 +60,8 @@ interface Props {
   onOpenBackgroundWork?: () => void;
   /** The whole latest answer, when this row ends it: its actions show under the row. */
   answer?: string;
+  /** Opens a message another agent sent in its sheet. */
+  onOpenMessage?: (notice: ChatNotice) => void;
 }
 
 /** One timeline row in the Swift app's look: quiet bubbles, flat answers, compact tool rows. */
@@ -69,6 +73,7 @@ export const ChatRowView = memo(function ChatRowView({
   onOpenSubagent,
   onOpenBackgroundWork,
   answer,
+  onOpenMessage,
 }: Props) {
   const styles = useStyles();
   const [open, setOpen] = useState(false);
@@ -206,7 +211,7 @@ export const ChatRowView = memo(function ChatRowView({
         );
       case 'turnHeader': {
         const { state, isOpen } = content.header;
-        // The running turn's time is the status line over the Composer (ChatTimeline leaves it out).
+        // The running turn shows as the live line at the end (ChatTimeline moves it there).
         if (state.kind === 'working') return null;
         return (
           <ChatDivider
@@ -224,6 +229,8 @@ export const ChatRowView = memo(function ChatRowView({
           <ChatNoticeRow title={content.divider.detail} />
         ) : null;
       case 'notice':
+        if (content.notice.kind === 'agentMessage')
+          return <ChatAgentMessageLine notice={content.notice} onOpen={onOpenMessage} />;
         return (
           <ChatNoticeRow
             title={content.notice.title}
@@ -231,6 +238,8 @@ export const ChatRowView = memo(function ChatRowView({
             detailFormat={content.notice.detailFormat}
           />
         );
+      case 'working':
+        return <ChatLiveLine turn={content.turn} />;
       case 'olderHistory':
         return content.older === 'available' ? (
           <View style={styles.center}>

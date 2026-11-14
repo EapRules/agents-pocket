@@ -4,7 +4,14 @@ import { notice, toolActivity, userMessage } from '../model/factories';
 import { type ChatBackgroundWorkItem, emptyTranscript } from '../model/types';
 import { type ChatRow, type ChatRowContent, chatRow, rowID } from '../timeline/row';
 import { presentBackgroundWork } from './presentation';
-import { chatStatusLine, liveTurnOf, sameLiveTurn, withoutLiveTurn } from './status-line';
+import {
+  chatStatusLine,
+  liveLine,
+  liveTurnOf,
+  sameLiveTurn,
+  withLiveLine,
+  withoutLiveTurn,
+} from './status-line';
 import { type ChatBackgroundWork, listedNotices } from './work';
 
 const NOW = Date.parse('2026-11-13T15:20:00Z');
@@ -63,7 +70,7 @@ const line = (rows: ChatRow[], items: Item[] = [], isBlocked = false, notices = 
   chatStatusLine(
     liveTurnOf(rows),
     presentBackgroundWork(work(items), { isHostConnected: true, now: NOW, locale: 'en' }),
-    { now: NOW, isBlocked, notices },
+    { isBlocked, notices },
   );
 const text = (rows: ChatRow[], items: Item[] = []) => {
   const shown = line(rows, items);
@@ -86,28 +93,22 @@ describe('the status line over the Composer', () => {
     expect(notices?.state).toBe('completed');
   });
 
-  it('says how long the turn has worked, then what the newest record shows', () => {
-    expect(text([user, header(ago(116))])).toBe('Working for 1m 56s');
-    expect(text([user, header(ago(116)), reasoning])).toBe('Working for 1m 56s · Thinking');
-    expect(text([user, header(ago(5)), call('running')])).toBe('Working for 5s · pnpm test');
-    // A call that returned says nothing about what comes next.
-    expect(text([user, header(ago(5)), call('succeeded')])).toBe('Working for 5s');
-    expect(line([user, header(ago(5))])?.ticks).toBe(true);
+  it('leaves the turn itself to the live line: no time, nothing it does', () => {
+    expect(line([user, header(ago(116))])).toBeNull();
+    expect(line([user, header(ago(116)), reasoning])).toBeNull();
+    expect(line([user, header(ago(5)), call('running')])).toBeNull();
   });
 
   it('says the Agent waits on the user for an approval or a Blocked report', () => {
     const waiting = line([user, header(ago(5)), call('awaitingApproval')]);
     expect(waiting?.state).toBe('waiting');
-    expect(renderText(waiting?.text ?? '')).toBe('Working for 5s · Needs you');
+    expect(renderText(waiting?.text ?? '')).toBe('Needs you');
     expect(line([user, header(ago(5)), reasoning], [], true)?.state).toBe('waiting');
   });
 
   it('folds running and finished work into counts', () => {
     const items: Item[] = [{}, { state: 'completed' }, { state: 'completed' }, { state: 'failed' }];
-    expect(text([user, header(ago(5))], items)).toBe(
-      'Working for 5s · 1 running · 2 done · 1 failed',
-    );
-    // Work still running after the turn keeps the line, without a time of its own.
+    expect(text([user, header(ago(5))], items)).toBe('1 running · 2 done · 1 failed');
     const after = line([user], [{}, { state: 'completed' }]);
     expect(renderText(after?.text ?? '')).toBe('1 running · 1 done');
     expect(after?.state).toBe('running');
@@ -122,6 +123,39 @@ describe('the status line over the Composer', () => {
     expect(sameLiveTurn(liveTurnOf(rows), running)).toBe(false);
     expect(sameLiveTurn(null, liveTurnOf(rows))).toBe(false);
     expect(sameLiveTurn(null, null)).toBe(true);
+  });
+});
+
+describe('the live line at the end of the transcript', () => {
+  const said = (rows: ChatRow[]) => {
+    const turn = liveTurnOf(rows);
+    return turn === null ? null : renderText(liveLine(turn, NOW).text);
+  };
+
+  it('ends the rows while a turn runs, in place of the turn header, and is absent otherwise', () => {
+    const rows = [user, header(ago(5)), reasoning];
+    const shown = withLiveLine(rows);
+    expect(shown.map((r) => r.id)).toEqual([user.id, reasoning.id, rowID.working]);
+    expect(shown.at(-1)?.content).toEqual({ type: 'working', turn: liveTurnOf(rows) });
+    expect(withLiveLine([user, reasoning]).map((r) => r.id)).toEqual([user.id, reasoning.id]);
+  });
+
+  it('keeps its revision while the turn does the same thing, and changes it when that changes', () => {
+    const revision = (rows: ChatRow[]) => withLiveLine(rows).at(-1)?.revision;
+    expect(revision([user, header(ago(5)), reasoning])).toBe(
+      revision([user, header(ago(5)), reasoning]),
+    );
+    expect(revision([user, header(ago(5)), reasoning])).not.toBe(
+      revision([user, header(ago(5)), call('running')]),
+    );
+  });
+
+  it('says how long the turn has worked, then what the newest record shows', () => {
+    expect(said([user, header(ago(116))])).toBe('Working… 1m 56s');
+    expect(said([user, header(ago(116)), reasoning])).toBe('Working… 1m 56s · Thinking');
+    expect(said([user, header(ago(5)), call('running')])).toBe('Working… 5s · pnpm test');
+    expect(said([user, header(ago(5)), call('succeeded')])).toBe('Working… 5s');
+    expect(said([user, header(ago(5)), call('awaitingApproval')])).toBe('Working… 5s · Needs you');
   });
 });
 

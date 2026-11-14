@@ -26,24 +26,20 @@ interface Props {
 }
 
 /**
- * Chat's status line over the Composer (the running turn, what the Agent does, Background Work as
- * counts) and the sheet it opens, which lists the work and the harness's notices. Absent with no
- * turn running and nothing for the sheet to list, so its height drops to zero.
+ * Chat's status line over the Composer (the running turn needs the user, Background Work as counts)
+ * and the sheet it opens, which lists the work and the harness's notices. The turn itself is the
+ * live line at the transcript's end. Absent with nothing to say, so its height drops to zero.
  */
 export function AgentBackgroundWork({ hostId, paneId, isBlocked = false }: Props) {
   const styles = useStyles();
   const turn = useLiveTurn();
-  const { presentation, notices, now, subagentIdOf } = useBackgroundWork(
-    hostId,
-    paneId,
-    turn !== null,
-  );
+  const { presentation, notices, subagentIdOf } = useBackgroundWork(hostId, paneId);
   const { openSubagent } = useDetailUi();
   const sheet = useHandoverSheet();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const line = useMemo(
-    () => chatStatusLine(turn, presentation, { now, isBlocked, notices: notices.length }),
-    [turn, presentation, now, isBlocked, notices.length],
+    () => chatStatusLine(turn, presentation, { isBlocked, notices: notices.length }),
+    [turn, presentation, isBlocked, notices.length],
   );
   const empty = presentation.rows.length === 0 && notices.length === 0;
   const show = () => {

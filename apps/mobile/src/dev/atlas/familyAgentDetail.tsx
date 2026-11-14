@@ -21,7 +21,7 @@ function detail(
   press?: readonly string[],
   blocked: AtlasBlockedVariant | false = false,
   looking = false,
-  background?: 'list' | 'blocked' | 'command',
+  background?: 'list' | 'blocked' | 'command' | 'message',
 ): AtlasEntry {
   return {
     script: press ? { press } : undefined,
@@ -159,6 +159,15 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'rn.composer-slash-panel': slashPanelGallery,
   'rn.composer-command-notice': refusedCommand,
   'rn.chat-command-output': detail('p5', 'chat', undefined, false, false, 'command'),
+  'rn.chat-agent-message': detail('p2', 'chat', undefined, false, false, 'message'),
+  'rn.chat-agent-message-sheet': detail(
+    'p2',
+    'chat',
+    ['chat-agent-message-open'],
+    false,
+    false,
+    'message',
+  ),
   'rn.composer-skill-list': longSkillList,
   'agent-detail.composer-more-menu': detail('p4', 'terminal', ['composer-input', 'composer-more']),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),

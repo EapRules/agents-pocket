@@ -307,6 +307,16 @@
     "note": "RN-only state: a typed /model refused in Chat, with Run in Terminal"
   },
   {
+    "id": "rn.chat-agent-message",
+    "rn": "AgentDetailScreen (ChatMessages ChatAgentMessageLine, ChatWorkingRow)",
+    "note": "RN-only state: a Subagent's report as one quiet line in the running turn, the live Working line under it"
+  },
+  {
+    "id": "rn.chat-agent-message-sheet",
+    "rn": "AgentDetailScreen (ChatMessageSheet)",
+    "note": "RN-only state: the report's sheet opened from its line, From and Copy, markdown rendered"
+  },
+  {
     "id": "rn.chat-command-output",
     "rn": "AgentDetailScreen (ChatNoticeRow, markdown detail)",
     "note": "RN-only state: Claude Code /context sent from Chat, its recorded markdown as a command notice"
@@ -419,7 +429,7 @@
   {
     "id": "agent-detail.chat",
     "rn": "AgentDetailScreen",
-    "note": "chat surface, scripted conversation (atlasChat)"
+    "note": "chat surface, scripted conversation (atlasChat); the running turn ends in the live Working line"
   },
   {
     "id": "agent-detail.chat-timeline",
@@ -434,7 +444,7 @@
   {
     "id": "agent-detail.chat-background-strip",
     "rn": "AgentDetailScreen (AgentBackgroundWork status line)",
-    "note": "one status line: the running turn, two running, two finished as counts; scripted conversation"
+    "note": "one status line: two running, two finished as counts (the running turn is the live line at the transcript's end); scripted conversation"
   },
   {
     "id": "agent-detail.chat-background-sheet",

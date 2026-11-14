@@ -5,7 +5,7 @@ import {
   latestAnswer,
   liveTurnOf,
   pendingEchoes,
-  withoutLiveTurn,
+  withLiveLine,
 } from '@openagentspocket/core';
 import { makeStyles, metrics } from '@openagentspocket/ui';
 import { useMemo, useRef } from 'react';
@@ -15,6 +15,7 @@ import { useConversation } from '@/conversations/useConversation';
 import { useDetailUi, useOpenBackgroundWork, usePublishLiveTurn } from '../detailUi';
 import { ChatBanners } from './ChatBanners';
 import { ChatEmpty } from './ChatEmpty';
+import { useAgentMessageSheet } from './ChatMessages';
 import { ChatRowView } from './ChatRowView';
 import { useChatFollow } from './useChatFollow';
 import { useChatRows } from './useChatRows';
@@ -83,10 +84,12 @@ export function ChatTimeline({
     messages,
   );
   const { rows, toggle } = useChatRows(conversation.state, activity, pending);
-  // The running turn's header is the status line over the Composer, not a row.
+  // The strip over the Composer reads the running turn (whether it needs the user).
   usePublishLiveTurn(useMemo(() => liveTurnOf(rows), [rows]));
-  // Inverted: the newest row sits at offset 0, where the list opens and stays.
-  const newestFirst = useMemo(() => withoutLiveTurn(rows).reverse(), [rows]);
+  // Inverted: the newest row sits at offset 0, where the list opens and stays. While a turn runs
+  // that row is its live line, so it scrolls with the list and the end spacing stays under it.
+  const newestFirst = useMemo(() => withLiveLine(rows).reverse(), [rows]);
+  const message = useAgentMessageSheet();
   const answer = useMemo(() => latestAnswer(rows), [rows]);
   const list = useRef<FlatList<ChatRow>>(null);
   const follow = useChatFollow(list, messages.length, visit);
@@ -135,9 +138,11 @@ export function ChatTimeline({
             onOpenSubagent={openSubagent}
             onOpenBackgroundWork={openBackgroundWork}
             answer={item.id === answer?.id ? answer.text : undefined}
+            onOpenMessage={message.open}
           />
         )}
       />
+      {message.sheet}
     </View>
   );
 }

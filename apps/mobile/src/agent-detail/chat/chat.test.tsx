@@ -27,7 +27,7 @@ describe('chat row model', () => {
 
 jest.setTimeout(30_000);
 
-async function showAtlasChat(background?: 'list') {
+async function showAtlasChat(background?: 'list' | 'message') {
   await render(
     <ThemeProvider themeId="indigo">
       <TestSettings>
@@ -66,14 +66,29 @@ describe('the actions under the latest answer', () => {
   });
 });
 
-describe('the status line over the Composer', () => {
-  it('stands for the running turn, which is no row of the transcript', async () => {
+describe('the running turn', () => {
+  it('is the live line at the end of the transcript, not the line over the Composer', async () => {
     await showAtlasChat();
-    const line = await screen.findByTestId('background-work-strip-summary');
-    expect(line.props.accessibilityValue.text).toMatch(/^Working for /);
+    const live = await screen.findByTestId('chat-row-working');
+    expect(within(live).getByTestId('chat-working-row')).toBeTruthy();
     expect(screen.queryByTestId('chat-row-liveTurn')).toBeNull();
+    // With no Background Work and nothing waiting on the user, the line over the Composer is gone.
+    expect(screen.queryByTestId('background-work-strip-summary')).toBeNull();
   });
+});
 
+describe('a message another agent sent', () => {
+  it('is one line that opens the whole message in a sheet, with its sender and Copy', async () => {
+    await showAtlasChat('message');
+    await fireEvent.press(await screen.findByTestId('chat-agent-message-open'));
+    await waitFor(() => expect(screen.getByTestId('chat-message-sheet-from')).toBeTruthy());
+    expect(screen.getByTestId('chat-message-sheet-from').props.children).toBe('Check screenshots');
+    await fireEvent.press(screen.getByTestId('chat-message-sheet-copy'));
+    expect(mockCopy).toHaveBeenCalledWith(expect.stringContaining('## Out of date'));
+  });
+});
+
+describe('the status line over the Composer', () => {
   it('folds finished work into a count and opens the sheet, which lists the notices', async () => {
     await showAtlasChat('list');
     const line = await screen.findByTestId('background-work-strip-summary');

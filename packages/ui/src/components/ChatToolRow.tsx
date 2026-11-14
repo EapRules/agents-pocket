@@ -71,6 +71,8 @@ interface ChatToolRowProps {
   onToggle?: () => void;
   onLongPress?: () => void;
   testID?: string;
+  /** The quiet line's own test id, for a line a flow taps; `tool-line-<status>` by default. */
+  lineTestID?: string;
 }
 
 function useStatusInk(status: ToolStatus): string {
@@ -146,10 +148,11 @@ export function needsAttention(status: ToolStatus): boolean {
   return status === 'failed' || status === 'waiting';
 }
 
-type ToolProps = Omit<ChatToolRowProps, 'subagents' | 'openLabel' | 'testID'> & {
+type ToolProps = Omit<ChatToolRowProps, 'subagents' | 'openLabel' | 'testID' | 'lineTestID'> & {
   tool: NonNullable<ChatToolRowProps['tool']>;
   /** A finished line says how it ended (a Subagent's check), not only a running one. */
   marked?: boolean;
+  lineTestID?: string;
 };
 
 function LineCounts({ added, removed }: { added?: number | null; removed?: number | null }) {
@@ -163,7 +166,15 @@ function LineCounts({ added, removed }: { added?: number | null; removed?: numbe
 }
 
 /** The quiet line: kind glyph, summary, line counts, a spinner while it runs, and a chevron. */
-function ToolLine({ tool, detail, expanded = false, onToggle, onLongPress, marked }: ToolProps) {
+function ToolLine({
+  tool,
+  detail,
+  expanded = false,
+  onToggle,
+  onLongPress,
+  marked,
+  lineTestID,
+}: ToolProps) {
   const styles = useStyles();
   return (
     <View style={styles.line}>
@@ -174,7 +185,7 @@ function ToolLine({ tool, detail, expanded = false, onToggle, onLongPress, marke
         accessibilityRole="button"
         accessibilityLabel={tool.title}
         accessibilityState={{ expanded, busy: tool.status === 'running' }}
-        testID={`tool-line-${tool.status}`}
+        testID={lineTestID ?? `tool-line-${tool.status}`}
       >
         <Icon name={tool.icon ?? 'terminal'} size={LINE_GLYPH} />
         <Text
@@ -274,6 +285,7 @@ export function ChatToolRow({
   onToggle,
   onLongPress,
   testID = 'chat-tool-row',
+  lineTestID,
 }: ChatToolRowProps) {
   const styles = useStyles();
   if (subagents?.length) {
@@ -293,7 +305,7 @@ export function ChatToolRow({
     </View>
   ) : (
     <View testID={testID}>
-      <ToolLine {...props} />
+      <ToolLine {...props} lineTestID={lineTestID} />
     </View>
   );
 }
