@@ -14,11 +14,14 @@
 // leaves to the terminal included, so the hints, not the cursor, say whether keys reach the card. A
 // row too long for the card stops at its edge, and a label cut there still names the option it begins.
 
+import { message, type Text } from '../errors/text';
 import { dialogFingerprint } from './fingerprint';
 import {
   answerOption,
   answerSheet,
+  FORK_HIDDEN_ROWS_REASON,
   FORK_QUESTION,
+  FORK_REASON,
   FORK_ROWS,
   FREE_TEXT_KEY,
   freeTextOption,
@@ -46,16 +49,15 @@ import {
   NO_DIALOG,
 } from './types';
 
-const UNKNOWN_REASON =
-  "Agentico doesn't know this Grok Build card. Answer it with these keys or in the terminal.";
-const OVERLAY_REASON =
-  'Grok Build is showing this card for an agent from its dashboard, which may not be this conversation. Answer it with these keys or in the terminal.';
-const QUESTION_REASON =
-  'Agentico answers only a single question Grok Build asks during its turn. Answer this one with these keys or in the terminal.';
-const FORK_REASON =
-  "Grok Build's /fork asks this, and every answer forks. Always worktree and Never worktree also save a lasting choice. Answer in the terminal or with these keys.";
-const FORK_HIDDEN_ROWS_REASON =
-  "Grok Build's /fork asks this, and every answer forks. Always worktree and Never worktree, which this width hides, also save a lasting choice. Answer in the terminal or with these keys.";
+const UNKNOWN_REASON = message(
+  "Agentico doesn't know this Grok Build card. Answer it with these keys or in the terminal.",
+);
+const OVERLAY_REASON = message(
+  'Grok Build is showing this card for an agent from its dashboard, which may not be this conversation. Answer it with these keys or in the terminal.',
+);
+const QUESTION_REASON = message(
+  'Agentico answers only a single question Grok Build asks during its turn. Answer this one with these keys or in the terminal.',
+);
 const CUT_RULE_NOTE = 'Widen the terminal to see the lasting rule.';
 
 const REJECT = 'No, reject (type to add feedback)';
@@ -117,7 +119,7 @@ export function parseGrokDialog(screen: AnsiScreen): DialogParseResult {
 }
 
 /** Why a card stays generic: `/fork`'s worktree question that `fork` can't read, a question Agentico doesn't answer, or a card it doesn't know. */
-function genericReason(card: GrokCard): string {
+function genericReason(card: GrokCard): Text {
   if (answerSheet(card)?.question === FORK_QUESTION) {
     const lasting = FORK_ROWS.filter((row) => !row.offered).map((row) => row.label);
     const shown = lasting.every((label) =>

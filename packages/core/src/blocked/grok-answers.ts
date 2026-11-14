@@ -2,11 +2,20 @@
 // then any description, above the answers keyed from `1` and the typed answer's `z` row; the status
 // row that says a turn waits on them; and the `/fork` question's rows.
 
+import { message } from '../errors/text';
 import type { GrokCard, GrokLine } from './grok-card';
 import { rowIndent, type ScreenRow, trimBlanks, trimmedText } from './screen';
 import { type DialogOption, makeOption } from './types';
 
 const trimmed = (text: string) => trimBlanks(text);
+
+/** Why `/fork`'s question stays generic: every answer forks, and two save a lasting choice. */
+export const FORK_REASON = message(
+  "Grok Build's /fork asks this, and every answer forks. Always worktree and Never worktree also save a lasting choice. Answer in the terminal or with these keys.",
+);
+export const FORK_HIDDEN_ROWS_REASON = message(
+  "Grok Build's /fork asks this, and every answer forks. Always worktree and Never worktree, which this width hides, also save a lasting choice. Answer in the terminal or with these keys.",
+);
 
 export const FORK_QUESTION = 'Run this fork in an isolated git worktree?';
 export const FORK_ROWS = [

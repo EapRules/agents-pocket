@@ -2,7 +2,7 @@
 // lighter background, each option a row `<key> (○) <label>` with any description two spaces or more
 // after the label, and the card's own hints in the footer.
 
-import { message } from '../errors/text';
+import type { Text } from '../errors/text';
 import { textWidth } from './cell-width';
 import { excerptFingerprint } from './fingerprint';
 import { textFromColumn, withoutScrollbar } from './grok-screen';
@@ -169,7 +169,7 @@ export class GrokCard {
    * screen. The fingerprint leaves out the cursor's mark and the key hints, so moving the cursor
    * with the key pad keeps the card.
    */
-  excerpt(reason: string): GenericDialogExcerpt {
+  excerpt(reason: Text): GenericDialogExcerpt {
     const columns = this.lines.filter((line) => line.text !== '').map((line) => line.column);
     const indent = columns.length === 0 ? 0 : Math.min(...columns);
     const display = this.lines.map((line) =>
@@ -182,7 +182,7 @@ export class GrokCard {
     return {
       rows: this.lines.map((line) => line.row),
       numbered: new Map(),
-      reason: message(reason),
+      reason,
       fingerprint: excerptFingerprint('grok', content),
       displayLines: display,
     };
