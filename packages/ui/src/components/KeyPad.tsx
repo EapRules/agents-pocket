@@ -83,7 +83,9 @@ const useStyles = makeStyles((t) => ({
     borderWidth: t.metrics.hairlineWidth,
     borderColor: t.hairline,
   },
+  capCompact: { minHeight: t.metrics.minTapSize },
   pressed: { opacity: 0.6 },
+  disabled: { opacity: 0.4 },
   tabs: { flexDirection: 'row', gap: t.spacing.xs },
   tab: {
     flex: 1,
@@ -96,17 +98,39 @@ const useStyles = makeStyles((t) => ({
   tabOn: { backgroundColor: t.colors.accentContainer },
 }));
 
-function Cap({ spec, onKey }: { spec: KeySpec; onKey: (key: KeySpec) => void }) {
+function Cap({
+  spec,
+  onKey,
+  compact,
+  disabled,
+}: {
+  spec: KeySpec;
+  onKey: (key: KeySpec) => void;
+  compact: boolean;
+  disabled: boolean;
+}) {
   const styles = useStyles();
   const repeat = useKeyRepeat(() => onKey(spec));
+  // Compact caps send one key per tap: a card never holds a key down.
+  const press = compact
+    ? { onPress: () => onKey(spec) }
+    : {
+        onPressIn: () => {
+          impact('light');
+          repeat.start();
+        },
+        onPressOut: repeat.stop,
+      };
   return (
     <Tappable
-      style={({ pressed }) => [styles.cap, pressed && styles.pressed]}
-      onPressIn={() => {
-        impact('light');
-        repeat.start();
-      }}
-      onPressOut={repeat.stop}
+      style={({ pressed }) => [
+        styles.cap,
+        compact && styles.capCompact,
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
+      disabled={disabled}
+      {...press}
       accessibilityRole="keyboardkey"
       accessibilityLabel={spec.accessibilityLabel ?? spec.label}
       testID={`keypad-key-${spec.id}`}
@@ -127,6 +151,13 @@ interface KeyPadProps {
   tabs?: readonly KeyPadTab[];
   tab?: string;
   onTabChange?: (id: string) => void;
+  /**
+   * A card's form: one row of the first page's keys, no pager, no tabs, one key per tap (no
+   * repeat on hold), caps at the minimum tap height.
+   */
+  compact?: boolean;
+  /** Ignores presses and dims the caps. */
+  disabled?: boolean;
   testID?: string;
 }
 
@@ -142,6 +173,8 @@ export function KeyPad({
   tabs = [],
   tab,
   onTabChange,
+  compact = false,
+  disabled = false,
   testID = 'keypad',
 }: KeyPadProps) {
   const styles = useStyles();
@@ -165,6 +198,23 @@ export function KeyPad({
     }),
   ).current;
   const current = pages[index];
+  if (compact) {
+    return (
+      <View style={styles.grid} testID={testID}>
+        <View style={styles.gridRow}>
+          {(current?.keys ?? []).map((spec) => (
+            <Cap
+              key={spec.id}
+              spec={spec}
+              compact
+              disabled={disabled}
+              onKey={(key) => current && onKey(key, current.id)}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={styles.pad} testID={testID}>
       <View style={styles.pager} accessibilityRole="tablist">
@@ -203,7 +253,13 @@ export function KeyPad({
         {chunk(current?.keys ?? [], PAD_COLUMNS).map((row) => (
           <View key={row.map((spec) => spec.id).join()} style={styles.gridRow}>
             {row.map((spec) => (
-              <Cap key={spec.id} spec={spec} onKey={(key) => current && onKey(key, current.id)} />
+              <Cap
+                key={spec.id}
+                spec={spec}
+                compact={false}
+                disabled={disabled}
+                onKey={(key) => current && onKey(key, current.id)}
+              />
             ))}
           </View>
         ))}

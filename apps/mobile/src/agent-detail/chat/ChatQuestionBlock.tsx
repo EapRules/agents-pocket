@@ -1,12 +1,12 @@
 import type { ChatQuestion } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { Button, ChatQuestions, makeStyles, Text } from '@openagentspocket/ui';
+import { ChatQuestions, makeStyles } from '@openagentspocket/ui';
 import { View } from 'react-native';
 import { useAgentWait } from '../../blocked/BlockedCardProvider';
+import { UnreadableNotice } from '../../blocked/UnreadableNotice';
 
 const useStyles = makeStyles((th) => ({
   stack: { gap: th.spacing.xs, paddingBottom: th.spacing.xs },
-  way: { alignItems: 'flex-start', gap: th.spacing.xxs },
 }));
 
 interface Props {
@@ -32,20 +32,13 @@ export function ChatQuestionBlock({ questions, asking, showsText = true }: Props
         }}
       />
       {asking && waiting && wait === 'terminal' ? (
-        <View style={styles.way} testID="chat-question-unread">
-          <Text variant="footnote" tone="warning">
-            {t(
-              "Agentico can't read this question on the Agent's screen. Answer it in the terminal.",
-            )}
-          </Text>
-          <Button
-            title={t('Show Terminal')}
-            kind="secondary"
-            size="small"
-            onPress={showTerminal}
-            testID="chat-question-terminal"
-          />
-        </View>
+        <UnreadableNotice
+          message={t(
+            "Agentico can't read this question on the Agent's screen. Answer it in the terminal.",
+          )}
+          onShowTerminal={showTerminal}
+          testID="chat-question-unread"
+        />
       ) : null}
     </View>
   );

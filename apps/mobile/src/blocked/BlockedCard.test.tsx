@@ -115,7 +115,7 @@ describe('BlockedCard', () => {
       notice: message('This prompt changed. Check it before answering.'),
     });
     expect(screen.getByTestId('blocked-notice')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('↓'));
+    await fireEvent.press(screen.getByTestId('keypad-key-down'));
     expect(props.onKeys).toHaveBeenCalledWith(['down']);
   });
 

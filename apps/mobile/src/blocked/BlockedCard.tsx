@@ -6,7 +6,18 @@ import {
   splitAnswers,
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { Button, Card, Icon, makeStyles, Tappable, Text } from '@openagentspocket/ui';
+import {
+  agentPadKeys,
+  Button,
+  Card,
+  DisclosureChevron,
+  Icon,
+  KeyPad,
+  type KeyPadPage,
+  makeStyles,
+  Tappable,
+  Text,
+} from '@openagentspocket/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { type Answer, Answers } from './Answers';
@@ -21,13 +32,13 @@ import {
 import { GenericDialog } from './GenericDialog';
 import { Subject } from './Subject';
 import { cardText } from './text';
+import { UnreadableNotice } from './UnreadableNotice';
 
 const useStyles = makeStyles((th) => ({
   header: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xs },
   title: { flex: 1 },
   choices: { gap: th.spacing.xs },
   actions: { flexDirection: 'row', justifyContent: 'center', gap: th.spacing.md },
-  pad: { flexDirection: 'row', gap: th.spacing.xs, flexWrap: 'wrap' },
   toggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -58,29 +69,21 @@ function subjectOf(dialog: BlockedDialog): { description: string | null; code: s
   return { description: dialog.body.join('\n') || null, code: null };
 }
 
-function KeyPad({ onKeys, disabled }: { onKeys: (keys: string[]) => void; disabled: boolean }) {
-  const styles = useStyles();
-  const keys: { keys: string[]; label: string }[] = [
-    { keys: ['up'], label: '↑' },
-    { keys: ['down'], label: '↓' },
-    { keys: ['enter'], label: t('Enter') },
-    { keys: ['esc'], label: t('Escape') },
-  ];
-  return (
-    <View style={styles.pad} testID="blocked-keypad">
-      {keys.map((key) => (
-        <Button
-          key={key.label}
-          title={key.label}
-          kind="secondary"
-          size="small"
-          disabled={disabled}
-          onPress={() => onKeys(key.keys)}
-        />
-      ))}
-    </View>
+const unreadableMessage = () =>
+  t(
+    "The Agent is waiting on something Agentico can't read. Answer with these keys or in the terminal.",
   );
-}
+
+/** The keys the card offers when it cannot read the screen: the shared pad's, in this order. */
+const CARD_KEYS: readonly KeyPadPage[] = [
+  {
+    id: 'card',
+    title: '',
+    keys: ['up', 'down', 'enter', 'esc'].flatMap((id) =>
+      agentPadKeys.filter((key) => key.id === id),
+    ),
+  },
+];
 
 /** A multi-select question's answers: toggles here, keys only once the selection goes. */
 function Selection({
@@ -248,7 +251,7 @@ export function BlockedCard(props: BlockedCardProps) {
         >
           {heading}
         </Text>
-        <Icon name={state.isCollapsed ? 'chevronRight' : 'chevronDown'} color="accent" />
+        <DisclosureChevron expanded={!state.isCollapsed} />
       </Tappable>
       {state.isCollapsed ? null : (
         <>
@@ -273,12 +276,24 @@ export function BlockedCard(props: BlockedCardProps) {
           ) : null}
           {content.kind === 'unreadable' ? (
             <>
-              <Text variant="body">
-                {t(
-                  "The Agent is waiting on something Agentico can't read. Answer with these keys or in the terminal.",
-                )}
-              </Text>
-              <KeyPad onKeys={props.onKeys} disabled={state.progress === 'acting'} />
+              {props.onShowTerminal ? (
+                <UnreadableNotice
+                  message={unreadableMessage()}
+                  onShowTerminal={props.onShowTerminal}
+                  testID="blocked-unreadable"
+                />
+              ) : (
+                <Text variant="body">{unreadableMessage()}</Text>
+              )}
+              <KeyPad
+                compact
+                pages={CARD_KEYS}
+                page="card"
+                onPageChange={() => {}}
+                onKey={(key) => props.onKeys([key.id])}
+                disabled={state.progress === 'acting'}
+                testID="blocked-keypad"
+              />
             </>
           ) : null}
           {state.notice ? (
@@ -286,7 +301,7 @@ export function BlockedCard(props: BlockedCardProps) {
               {cardText(state.notice)}
             </Text>
           ) : null}
-          {props.onShowTerminal && content.kind !== 'card' ? (
+          {props.onShowTerminal && content.kind === 'generic' ? (
             <ShowTerminal onPress={props.onShowTerminal} />
           ) : null}
         </>

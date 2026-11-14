@@ -121,7 +121,7 @@ describe('a question in Chat', () => {
       wait: 'terminal',
     });
     await waitFor(() => expect(screen.getByTestId('chat-question-unread')).toBeTruthy());
-    await fireEvent.press(screen.getByTestId('chat-question-terminal'));
+    await fireEvent.press(screen.getByTestId('chat-question-unread-action'));
     expect(showTerminal).toHaveBeenCalledTimes(1);
   });
 
