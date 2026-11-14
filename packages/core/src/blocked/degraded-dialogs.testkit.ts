@@ -58,10 +58,10 @@
  * | opencode-37-permission-long-62 | options | generic | keys |
  * | grok-12-permission-command | top | named | - |
  * | grok-12-permission-command | title | named | - |
- * | grok-12-permission-command | options | named | - |
+ * | grok-12-permission-command | options | generic | keys |
  * | grok-14-permission-edit | top | named | - |
- * | grok-14-permission-edit | title | named | - |
- * | grok-14-permission-edit | options | named | - |
+ * | grok-14-permission-edit | title | generic | keys |
+ * | grok-14-permission-edit | options | generic | keys |
  * | omp-24-approval-a-dialog | title | generic | keys |
  * | omp-24-approval-a-dialog | options | generic | keys |
  * | omp-36-approval-edit-18-12 | title | generic | keys |
@@ -222,12 +222,12 @@ export const CUT_VARIANTS: readonly CutVariant[] = [
   ...variant('grok-12-permission-command', 'chmod 644 README.md', [
     ['top', 34, 'named', null],
     ['title', 35, 'named', null],
-    ['options', 38, 'named', null],
+    ['options', 38, 'generic', 'keys'],
   ]),
   ...variant('grok-14-permission-edit', null, [
     ['top', 37, 'named', null],
-    ['title', 38, 'named', null],
-    ['options', 39, 'named', null],
+    ['title', 38, 'generic', 'keys'],
+    ['options', 39, 'generic', 'keys'],
   ]),
   ...variant('omp-24-approval-a-dialog', 'echo approved-2', [
     ['title', 34, 'generic', 'keys'],

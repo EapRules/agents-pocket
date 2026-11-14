@@ -218,6 +218,8 @@ function permission(card: GrokCard): BlockedDialog | null {
     .join(' ');
   // A command too long for its rows ends in ` …`.
   if (command.endsWith('…')) command = trimmed([...command].slice(0, -1).join(''));
+  // Only the options on screen (a short terminal cut the rest): nothing says what they allow.
+  if (command === '' && description === null) return null;
 
   const subject = makeSubject();
   let title: string;
