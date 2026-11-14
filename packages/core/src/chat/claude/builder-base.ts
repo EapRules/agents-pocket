@@ -16,6 +16,7 @@ import type {
   NoticeKind,
   TurnEnding,
 } from '../model/types';
+import { agentMessageNotice } from './agent-message';
 import { type Answer, answersIn } from './answers';
 import type { ClaudeChain, ClaudeRole } from './chain';
 import type { ClaudeTranscriptIndex } from './index-store';
@@ -31,7 +32,7 @@ import {
   notificationKey,
   opensTurn,
 } from './turns';
-import { type ClaudeUserText, classifyUserText } from './user-text';
+import { type ClaudeExternalMessage, type ClaudeUserText, classifyUserText } from './user-text';
 
 interface TurnDraft {
   firstEntryID: string | null;
@@ -43,10 +44,6 @@ interface TurnDraft {
 
 function nonEmpty(text: string | null | undefined): string | null {
   return text === null || text === undefined || text === '' ? null : text;
-}
-
-function _commandText(name: string, args: string): string {
-  return args === '' ? `/${name}` : `/${name} ${args}`;
 }
 
 export abstract class BuilderBase {
@@ -357,9 +354,16 @@ export abstract class BuilderBase {
     });
   }
 
-  protected addSystemNotices(messages: string[], record: ClaudeRecord): void {
+  protected addSystemNotices(messages: ClaudeExternalMessage[], record: ClaudeRecord): void {
     messages.forEach((message, position) => {
-      this.addSystemNotice(message, record, position === 0 ? '' : `#${position}`);
+      const suffix = position === 0 ? '' : `#${position}`;
+      if (typeof message === 'string') this.addSystemNotice(message, record, suffix);
+      else
+        this.add(
+          `notice:${record.uuid}${suffix}`,
+          record,
+          agentMessageNotice(message, this.entries),
+        );
     });
   }
 

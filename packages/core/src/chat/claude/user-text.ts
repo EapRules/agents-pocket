@@ -1,6 +1,7 @@
 // Classifies what a user record says (Swift ClaudeUserText).
 
 import type { ChatCommandInvocation } from '../model/types';
+import { agentMessage, agentMessageBlocks, type ClaudeAgentMessage } from './agent-message';
 import {
   attribute,
   blocksOfTag,
@@ -20,8 +21,11 @@ export type ClaudeUserText =
   | { type: 'bashInput'; text: string }
   | { type: 'bashOutput'; text: string }
   | { type: 'taskNotification'; notification: ClaudeTaskNotification }
-  | { type: 'external'; messages: string[] }
+  /** Notices from outside the conversation: harness text, or a message another agent sent. */
+  | { type: 'external'; messages: ClaudeExternalMessage[] }
   | { type: 'hidden' };
+
+export type ClaudeExternalMessage = string | ClaudeAgentMessage;
 
 const COMMAND_TAGS = new Set([
   'command-name',
@@ -98,7 +102,11 @@ function idleNotification(content: string): { from: string | null; result: strin
   }
 }
 
-function teammateMessages(tag: string, text: string): string[] | null {
+function teammateMessages(tag: string, text: string): ClaudeExternalMessage[] | null {
+  if (tag === 'agent-message') {
+    const messages = agentMessageBlocks(text);
+    return messages.length === 0 ? null : messages;
+  }
   const blocks = blocksOfTag(tag, text);
   if (blocks.length === 0) return null;
   return blocks.map((block) => {
@@ -110,12 +118,14 @@ function teammateMessages(tag: string, text: string): string[] | null {
       const title = name === null ? 'Teammate finished' : `Teammate @${name} finished`;
       return [title, idle.result].flatMap((part) => part ?? []).join('\n');
     }
+    if (tag === 'teammate-message' && content !== '')
+      return agentMessage(block.openingTag, content, 'teammate_id');
     const title = sender === null ? 'Message' : `Message from @${sender}`;
     return content === '' ? title : `${title}\n${content}`;
   });
 }
 
-export function peerMessages(text: string): string[] | null {
+export function peerMessages(text: string): ClaudeExternalMessage[] | null {
   const header = PEER_HEADERS.find((candidate) => text.startsWith(candidate));
   if (!header) return null;
   const body = text.slice(header.length).trim();
@@ -209,7 +219,7 @@ export function classifyUserText(text: string): ClaudeUserText {
   if (tag === 'task-notification')
     return { type: 'taskNotification', notification: parseTaskNotification(trimmed) };
   if (HIDDEN_TAGS.has(tag)) return { type: 'hidden' };
-  if (tag === 'teammate-message') {
+  if (tag === 'teammate-message' || tag === 'agent-message') {
     const messages = teammateMessages(tag, trimmed);
     if (messages) return { type: 'external', messages };
   }

@@ -310,7 +310,10 @@ describe('user text', () => {
     const external = classifyUserText(
       '<teammate-message teammate_id="bob">hello</teammate-message>',
     );
-    expect(external).toEqual({ type: 'external', messages: ['Message from @bob\nhello'] });
+    expect(external).toEqual({
+      type: 'external',
+      messages: [{ from: 'bob', text: 'hello', isHandBack: false }],
+    });
   });
 
   it('unwraps pasted content', () => {

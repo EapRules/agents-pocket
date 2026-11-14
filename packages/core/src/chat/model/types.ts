@@ -3,6 +3,8 @@
 // the Swift goldens, so a persisted entry round-trips through JSON unchanged. Dates are ISO 8601
 // strings with milliseconds.
 
+import type { ChatNotice } from './notice-types';
+
 export const CHAT_PROGRAMS = [
   'claude',
   'codex',
@@ -186,30 +188,7 @@ export interface ChatQuestionSet {
   questions: ChatQuestion[];
 }
 
-export type NoticeKind =
-  | 'command'
-  | 'shellCommand'
-  | 'pythonCommand'
-  | 'taskNotification'
-  | 'interrupted'
-  | 'stopped'
-  | 'error'
-  | 'modelChange'
-  | 'planMode'
-  | 'hook'
-  | 'review'
-  | 'answered'
-  | 'system';
-
-export interface ChatNotice {
-  kind: NoticeKind;
-  title: string;
-  detail: string | null;
-  /** `markdown` when `detail` is markdown, such as a local command's output the program recorded so; absent for plain text. */
-  detailFormat?: 'markdown';
-  rawDetail: string | null;
-  questions: ChatQuestion[];
-}
+export type { ChatMessageSender, ChatNotice, NoticeKind } from './notice-types';
 
 export interface ChatDivider {
   kind: 'compaction' | 'historyUnavailable';
