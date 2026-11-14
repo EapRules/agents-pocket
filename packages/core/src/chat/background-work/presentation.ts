@@ -14,6 +14,7 @@ import type {
   ChatBackgroundWorkItem,
 } from '../model/types';
 import type { ChatWorkflowProgress } from '../model/workflow-progress';
+import { exitCodeText, kindLabelOf, stateLabelOf } from './row-labels';
 import type { BackgroundWorkRow, ChatBackgroundWork } from './work';
 
 /** The rows the strip shows before "+N more". */
@@ -67,6 +68,15 @@ export interface BackgroundWorkPresentedRow {
   usage: Text | null;
   agents: BackgroundWorkAgent[];
   accessibilityLabel: Text;
+  /** What kind of work it is: a Subagent's type, "Workflow", "Shell command". */
+  kindLabel: Text;
+  /** Where it stands: its running time, "Completed", "Failed · Exit code 1", "Stopped". */
+  stateLabel: Text;
+  /** The title is a command line, not words. */
+  monospaced: boolean;
+  /** What a Subagent was asked to do, as markdown. */
+  prompt: string | null;
+  exitCode: number | null;
 }
 
 export interface BackgroundWorkSummary {
@@ -223,21 +233,31 @@ class Style {
         : note;
     const started = row.progress?.agents ?? [];
     const lastRunning = [...started].reverse().find((agent) => agent.state === 'running');
+    const kindLabel = kindLabelOf(item);
     const caption: Text =
-      item.kind === 'subagent'
-        ? (item.subtitle ?? message('Subagent'))
-        : (lastRunning?.phase ?? started.at(-1)?.phase ?? message('Workflow'));
+      item.kind === 'workflow'
+        ? (lastRunning?.phase ?? started.at(-1)?.phase ?? message('Workflow'))
+        : item.kind === 'command'
+          ? (item.subtitle ?? kindLabel)
+          : kindLabel;
     const kindPhrase: Text =
-      item.kind === 'subagent'
-        ? item.subtitle === null
-          ? message('Subagent')
-          : message('%@ subagent', item.subtitle)
-        : message('Workflow');
+      item.kind === 'subagent' && item.subtitle !== null
+        ? message('%@ subagent', item.subtitle)
+        : kindLabel;
+    const exitCode = item.exitCode ?? null;
+    const time = seconds === null ? null : formatDuration(seconds);
     const spoken: Text[] = [item.title, kindPhrase, statePhrase(status, lastSeen)];
+    const exit = exitCodeText(exitCode);
+    if (exit) spoken.push(exit);
     if (fraction)
       spoken.push(message('%lld of %lld agents done', n(fraction.done), n(fraction.total)));
     if (seconds !== null) spoken.push(formatDuration(seconds, 'wide'));
     return {
+      kindLabel,
+      stateLabel: stateLabelOf(status, time, shortNote, exitCode),
+      monospaced: item.kind === 'workflow' || (item.kind === 'command' && item.subtitle === null),
+      prompt: item.prompt ?? null,
+      exitCode,
       id: item.id,
       kind: item.kind,
       status,
@@ -245,7 +265,7 @@ class Style {
       caption,
       detail: item.kind === 'workflow' ? item.subtitle : null,
       fraction,
-      time: seconds === null ? null : formatDuration(seconds),
+      time,
       note,
       shortNote,
       usage: usageText(item.usage),

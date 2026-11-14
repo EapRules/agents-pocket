@@ -6,7 +6,12 @@ import { userFacingDescription } from '../../errors/presentation';
 import { DEFAULT_FOLLOWER_LIMITS, type FollowerLimits } from '../model/follower';
 import { type ChatHostFiles, readBytes } from '../model/host-files';
 import { JsonlLineFramer } from '../model/lines';
-import { type ChatEntry, type ChatTranscript, projectionContext } from '../model/types';
+import {
+  type ChatBackgroundWorkItem,
+  type ChatEntry,
+  type ChatTranscript,
+  projectionContext,
+} from '../model/types';
 import { subagentTranscriptPath } from './location';
 import { ClaudeTranscriptReducer } from './reducer';
 
@@ -28,6 +33,8 @@ export interface ClaudeSubagentRoute {
   title: string | null;
   /** The subagent type (`Explore`, `general-purpose`), when the call named one. */
   subtitle: string | null;
+  /** What the launch asked of it (markdown), when its Background Work item holds it. */
+  prompt: string | null;
 }
 
 /**
@@ -39,6 +46,7 @@ export function subagentRoute(
   agentID: string,
   transcriptPath: string | null,
   entries: readonly ChatEntry[],
+  work: readonly ChatBackgroundWorkItem[] = [],
 ): ClaudeSubagentRoute | null {
   if (transcriptPath === null) return null;
   const path = subagentTranscriptPath(transcriptPath, agentID);
@@ -46,14 +54,42 @@ export function subagentRoute(
   for (const entry of entries) {
     if (entry.content.type !== 'tool' || entry.content.value.subagentAgentID !== agentID) continue;
     const { title, subtitle } = entry.content.value;
+    const launched = work.find((item) => item.kind === 'subagent' && item.agentID === agentID);
     return {
       agentID,
       path,
       title: title === '' ? null : title,
       subtitle: subtitle === null || subtitle === '' ? null : subtitle,
+      prompt: launched?.prompt ?? null,
     };
   }
   return null;
+}
+
+/** A Subagent's prompt, and the entry of its own transcript that repeats it (left out of the timeline). */
+export interface SubagentPrompt {
+  prompt: string | null;
+  entryID: string | null;
+}
+
+/**
+ * The prompt a Subagent was given: its launch's, else the first message of its own transcript
+ * (Claude Code records the prompt there), which only a read from the file's head holds.
+ */
+export function subagentPrompt(
+  route: Pick<ClaudeSubagentRoute, 'prompt'> | null,
+  transcript: ChatTranscript | null,
+  isPartial: boolean,
+): SubagentPrompt {
+  const first = isPartial ? undefined : transcript?.entries[0];
+  const recorded = first?.content.type === 'user' ? first.content.value.text.trim() : null;
+  const launched = route?.prompt ?? null;
+  if (launched !== null) {
+    const repeats = recorded !== null && first && recorded === launched.trim();
+    return { prompt: launched, entryID: repeats ? first.id : null };
+  }
+  if (recorded === null || recorded === '' || !first) return { prompt: null, entryID: null };
+  return { prompt: recorded, entryID: first.id };
 }
 
 /**

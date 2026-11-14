@@ -46,8 +46,9 @@ export abstract class ToolProjection extends ProjectionBase {
 
   /** A background task ended: its call's row says how, and a notice marks when. */
   protected readTaskEnd(record: GrokUpdateRecord, end: TaskCompleted): void {
+    let callID: string | undefined;
     if (end.taskID !== null) {
-      const callID =
+      callID =
         this.taskCalls.get(end.taskID) ?? (this.calls.has(end.taskID) ? end.taskID : undefined);
       const call = callID === undefined ? undefined : this.calls.get(callID);
       if (call) {
@@ -60,11 +61,26 @@ export abstract class ToolProjection extends ProjectionBase {
     else if (end.signal !== null) detail.push(`Signal ${end.signal}`);
     else if (end.exitCode !== null) detail.push(`Exit code ${end.exitCode}`);
     const isCommand = end.taskKind === null || end.taskKind === 'bash';
+    const killed = end.wasKilled || end.signal !== null;
     this.addNotice(
       makeNotice(
         'taskNotification',
         isCommand ? 'Background command finished' : 'Background task finished',
-        { detail: detail.length === 0 ? null : detail.join(' · ') },
+        {
+          detail: detail.length === 0 ? null : detail.join(' · '),
+          task: {
+            callID: callID ?? null,
+            taskID: end.taskID,
+            kind: isCommand ? 'command' : null,
+            state: killed
+              ? 'stopped'
+              : end.exitCode !== null && end.exitCode !== 0
+                ? 'failed'
+                : 'completed',
+            label: end.command,
+            exitCode: end.exitCode,
+          },
+        },
       ),
       record,
     );

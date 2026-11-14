@@ -1,5 +1,6 @@
 // A notice row of the conversation: the harness, a command's output, a message another agent sent.
 
+import type { ChatNoticeTask } from './background-work-types';
 import type { ChatQuestion } from './types';
 
 export type NoticeKind =
@@ -37,4 +38,6 @@ export interface ChatNotice {
   questions: ChatQuestion[];
   /** The sender of an `agentMessage` notice, whose whole text is `detail`; absent otherwise. */
   from?: ChatMessageSender;
+  /** The background work a task notification announces the end of. This port's: goldens leave it out. */
+  task?: ChatNoticeTask;
 }

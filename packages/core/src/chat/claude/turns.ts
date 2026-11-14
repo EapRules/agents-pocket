@@ -5,7 +5,7 @@ import { capPreview } from '../model/preview';
 import type { BackgroundWorkState, ChatBackgroundWorkEnd, ChatNotice } from '../model/types';
 import { dateOf, isHuman, VISIBLE_META_ORIGINS } from './prompts';
 import { type ClaudeRecord, isAttachment, isSystem, textsOf, toolResultsOf } from './record-types';
-import { type ClaudeTaskNotification, taskNotificationTitle } from './text';
+import { type ClaudeTaskNotification, notificationSubject, taskNotificationTitle } from './text';
 import { classifyUserText, isMarker } from './user-text';
 
 export interface NotificationDelivery {
@@ -78,8 +78,17 @@ export function notificationKey(n: ClaudeTaskNotification): string {
 
 export function noticeForNotification(n: ClaudeTaskNotification): ChatNotice {
   const detail = n.result === null ? '' : capPreview(n.result).text;
+  const subject = notificationSubject(n);
   return notice('taskNotification', taskNotificationTitle(n), {
     detail: detail === '' ? null : detail,
+    task: {
+      callID: n.toolUseID,
+      taskID: n.taskID,
+      kind: subject.kind,
+      state: workState(n),
+      label: subject.label,
+      exitCode: subject.exitCode,
+    },
   });
 }
 
@@ -103,7 +112,14 @@ export function endOfDelivery(delivery: NotificationDelivery): ChatBackgroundWor
     offset: delivery.offset,
     endedAt: dateOf(delivery.timestamp),
     usage: delivery.notification.usage,
+    ...exitOf(delivery.notification),
   };
+}
+
+/** A background command's exit code, when its notification states one. */
+function exitOf(n: ClaudeTaskNotification): Pick<ChatBackgroundWorkEnd, 'exitCode'> {
+  const { exitCode } = notificationSubject(n);
+  return exitCode === null ? {} : { exitCode };
 }
 
 export { isHuman };

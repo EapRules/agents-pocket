@@ -274,6 +274,9 @@ export abstract class ToolBuilder extends BuilderBase {
     result: ClaudeToolUseResult | null,
   ): ChatBackgroundWorkItem | null {
     if (this.role !== 'main' || use.id === '' || !result) return null;
+    if (result.backgroundTaskID !== null && (use.name === 'Bash' || use.name === 'PowerShell')) {
+      return this.commandItem(use, record, result.backgroundTaskID);
+    }
     if (result.status !== 'async_launched' && result.status !== 'remote_launched') return null;
     let item: ChatBackgroundWorkItem;
     if (isWorkflow(use, result)) {
@@ -295,6 +298,7 @@ export abstract class ToolBuilder extends BuilderBase {
         subtitle: nonEmpty(use.input.subagentType),
         launchOffset: record.byteOffset,
         agentID: result.agentID && isSafeComponent(result.agentID) ? result.agentID : null,
+        prompt: promptOf(use),
       });
     } else {
       return null;
@@ -307,7 +311,45 @@ export abstract class ToolBuilder extends BuilderBase {
       ? item
       : followAgent(item, this.backgroundWorkAgents[item.agentID]);
   }
+
+  /**
+   * A shell command Claude Code runs in the background (`run_in_background`, or Ctrl+B): titled by
+   * its description, the command line as a last resort. Its notification names the call, or only the
+   * task id the launch returned.
+   */
+  protected commandItem(
+    use: ClaudeToolUse,
+    record: ClaudeRecord,
+    taskID: string,
+  ): ChatBackgroundWorkItem {
+    const { purpose, command } = commandPurpose(use);
+    let item = backgroundWorkItem({
+      id: use.id,
+      kind: 'command',
+      title: purpose ?? nonEmpty(use.input.command) ?? use.name,
+      subtitle: purpose === null ? null : command,
+      launchOffset: record.byteOffset,
+      launchedAt: dateOf(record.timestamp),
+      taskID,
+    });
+    const delivery = this.notifications.get(use.id);
+    const end = delivery
+      ? endOfDelivery(delivery)
+      : this.backgroundWorkAgents[taskID]?.notifications.find(
+          (candidate) => candidate.offset > record.byteOffset,
+        );
+    if (end) item = applyWorkEnd(item, end);
+    return item;
+  }
 }
+
+/** What a Subagent's launch asked of it, capped as a long tool output is. */
+function promptOf(use: ClaudeToolUse): string | null {
+  const prompt = nonEmpty(use.input.prompt?.trim());
+  return prompt === null ? null : capPreview(prompt, 0, PROMPT_LIMITS).text;
+}
+
+const PROMPT_LIMITS = { lines: 1000, bytes: 32 * 1024 };
 
 function isWorkflow(use: ClaudeToolUse, result: ClaudeToolUseResult | null): boolean {
   return use.name === 'Workflow' || result?.taskType === 'local_workflow';

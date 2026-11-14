@@ -36,6 +36,7 @@ export function applyWorkEnd(
     endOffset: end.offset,
     endedAt: end.endedAt,
     usage: end.usage,
+    ...(end.exitCode == null ? {} : { exitCode: end.exitCode }),
   };
 }
 

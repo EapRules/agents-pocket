@@ -3,7 +3,14 @@
 // the Swift goldens, so a persisted entry round-trips through JSON unchanged. Dates are ISO 8601
 // strings with milliseconds.
 
+import type {
+  ChatBackgroundWorkAgent,
+  ChatBackgroundWorkEnd,
+  ChatBackgroundWorkItem,
+} from './background-work-types';
 import type { ChatNotice } from './notice-types';
+
+export type * from './background-work-types';
 
 export const CHAT_PROGRAMS = [
   'claude',
@@ -259,60 +266,6 @@ export interface ChatRecordedPrompt {
   text: string;
   entryID: string | null;
   pastedImagePaths: string[] | null;
-}
-
-export type BackgroundWorkKind = 'subagent' | 'workflow';
-export type BackgroundWorkState = 'running' | 'completed' | 'failed' | 'stopped';
-
-export interface BackgroundWorkUsage {
-  tokens: number | null;
-  toolUses: number | null;
-  durationMilliseconds: number | null;
-  agents: number | null;
-  agentsDone: number | null;
-  agentsFailed: number | null;
-}
-
-export interface ChatBackgroundWorkItem {
-  id: string;
-  kind: BackgroundWorkKind;
-  title: string;
-  subtitle: string | null;
-  state: BackgroundWorkState;
-  journalPath: string | null;
-  launchOffset: number;
-  endOffset: number | null;
-  launchedAt: string | null;
-  endedAt: string | null;
-  usage: BackgroundWorkUsage | null;
-  /** A Subagent's id (its notifications' task id, its transcript's name); null for a Workflow or an id unsafe as a path. */
-  agentID: string | null;
-  /** The latest resume of a Subagent that ended; its state, end and usage are that run's. */
-  resume: ChatBackgroundWorkResume | null;
-}
-
-/** A Subagent continued after it ended (Claude Code `SendMessage` naming it), running again. */
-export interface ChatBackgroundWorkResume {
-  /** The resuming call, which the notification ending this run names. */
-  callID: string;
-  offset: number;
-  resumedAt: string | null;
-}
-
-/** What the loaded lines say about one Subagent beyond its launch, by its id. */
-export interface ChatBackgroundWorkAgent {
-  /** Its latest resume in the loaded lines, and the end of that run there, if any. */
-  resume: ChatBackgroundWorkResume | null;
-  resumeEnd: ChatBackgroundWorkEnd | null;
-  /** Notifications naming only the agent, no tool call, oldest first. */
-  notifications: ChatBackgroundWorkEnd[];
-}
-
-export interface ChatBackgroundWorkEnd {
-  state: BackgroundWorkState;
-  offset: number;
-  endedAt: string | null;
-  usage: BackgroundWorkUsage | null;
 }
 
 export interface AgentContextUsage {

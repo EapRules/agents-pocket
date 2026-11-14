@@ -3,11 +3,22 @@ import '../programs';
 
 import { describe, expect, it } from 'vitest';
 import { encodeUtf8 } from '../../events/utf8';
+import { userMessage } from '../model/factories';
 import { FakeHostFiles } from '../model/fake-host-files';
 import { frameLines } from '../model/lines';
-import { type ChatToolActivity, type ChatTranscript, projectionContext } from '../model/types';
+import {
+  type ChatToolActivity,
+  type ChatTranscript,
+  emptyTranscript,
+  projectionContext,
+} from '../model/types';
 import { ClaudeTranscriptReducer } from './reducer';
-import { readSubagentTranscript, subagentRoute, subagentTranscriptFrom } from './subagent';
+import {
+  readSubagentTranscript,
+  subagentPrompt,
+  subagentRoute,
+  subagentTranscriptFrom,
+} from './subagent';
 
 const SESSION = '5f0c2a8e-3b1d-4c6a-9e27-8d4f1b6a0c35';
 const SESSION_PATH = `/Users/developer/.claude/projects/-workspace/${SESSION}.jsonl`;
@@ -130,7 +141,19 @@ describe('subagent route', () => {
       path: `/Users/developer/.claude/projects/-workspace/${SESSION}/subagents/agent-abc123.jsonl`,
       title: 'Find callers',
       subtitle: 'Explore',
+      prompt: null,
     });
+  });
+
+  it('carries the prompt of the Background Work item that launched it', () => {
+    const background = mainTranscript('Agent', '{"status":"async_launched","agentId":"abc123"}');
+    const route = subagentRoute(
+      'abc123',
+      SESSION_PATH,
+      background.entries,
+      background.backgroundWork,
+    );
+    expect(route?.prompt).toBe('Find every caller.');
   });
 
   it('refuses without a session path, a safe id, the call itself or a .jsonl session', () => {
@@ -138,6 +161,43 @@ describe('subagent route', () => {
     expect(subagentRoute('../x', SESSION_PATH, entries)).toBeNull();
     expect(subagentRoute('other', SESSION_PATH, entries)).toBeNull();
     expect(subagentRoute('abc123', '/x/session.txt', entries)).toBeNull();
+  });
+});
+
+describe('subagent prompt', () => {
+  const own = (first: string): ChatTranscript => ({
+    ...emptyTranscript(),
+    entries: [
+      { id: 'p', sourceOffset: 0, content: { type: 'user', value: userMessage(first) } },
+      {
+        id: 'a',
+        sourceOffset: 9,
+        content: { type: 'assistant', value: { text: 'Found two.' } },
+      },
+    ],
+  });
+
+  it('is the launch’s, and drops the first message that repeats it', () => {
+    expect(subagentPrompt({ prompt: 'Find callers.' }, own('Find callers.'), false)).toEqual({
+      prompt: 'Find callers.',
+      entryID: 'p',
+    });
+    expect(subagentPrompt({ prompt: 'Find callers.' }, own('Other'), false)).toEqual({
+      prompt: 'Find callers.',
+      entryID: null,
+    });
+  });
+
+  it('falls back to the transcript’s first message, only when read from its head', () => {
+    expect(subagentPrompt({ prompt: null }, own('# Task\nRead it.'), false)).toEqual({
+      prompt: '# Task\nRead it.',
+      entryID: 'p',
+    });
+    expect(subagentPrompt({ prompt: null }, own('Mid-file'), true)).toEqual({
+      prompt: null,
+      entryID: null,
+    });
+    expect(subagentPrompt(null, null, false)).toEqual({ prompt: null, entryID: null });
   });
 });
 

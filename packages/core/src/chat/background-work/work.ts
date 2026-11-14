@@ -55,14 +55,14 @@ function newest(...stamps: (string | null | undefined)[]): string | null {
   return best;
 }
 
-export function backgroundWorkOf(
-  transcript: ChatTranscript,
+/** Rows for the items, each with its Workflow's progress and whether it has gone quiet. */
+export function rowsOf(
+  items: readonly ChatBackgroundWorkItem[],
   progress: Readonly<Record<string, ChatWorkflowProgress>>,
-  isLive: boolean,
   now: number,
-  staleness: BackgroundWorkStaleness = DEFAULT_STALENESS,
-): ChatBackgroundWork {
-  const rows = listedBackgroundWork(transcript).map((item): BackgroundWorkRow => {
+  staleness: BackgroundWorkStaleness,
+): BackgroundWorkRow[] {
+  return items.map((item): BackgroundWorkRow => {
     const known = progress[item.id] ?? null;
     const lastActivity = newest(runStartedAt(item), known?.updatedAt);
     let isStale = false;
@@ -72,6 +72,21 @@ export function backgroundWorkOf(
     }
     return { item, progress: known, isStale, lastActivity };
   });
+}
+
+/**
+ * The Subagents and Workflows the strip over the Composer counts. Background commands are the
+ * sheet's (`backgroundSheetOf`), which lists every kind.
+ */
+export function backgroundWorkOf(
+  transcript: ChatTranscript,
+  progress: Readonly<Record<string, ChatWorkflowProgress>>,
+  isLive: boolean,
+  now: number,
+  staleness: BackgroundWorkStaleness = DEFAULT_STALENESS,
+): ChatBackgroundWork {
+  const items = listedBackgroundWork(transcript).filter((item) => item.kind !== 'command');
+  const rows = rowsOf(items, progress, now, staleness);
   // Running first; each part keeps launch order, so rows never jump.
   return {
     rows: [...rows.filter(isRowRunning), ...rows.filter((row) => !isRowRunning(row))],
@@ -87,6 +102,8 @@ export const holdsActivePace = (work: ChatBackgroundWork): boolean =>
 export interface BackgroundWorkNotice {
   id: string;
   notice: ChatNotice;
+  /** Where its record starts in the file. */
+  offset: number;
 }
 
 /**
@@ -99,7 +116,7 @@ export function listedNotices(transcript: ChatTranscript): BackgroundWorkNotice[
     entry.content.type === 'notice' &&
     entry.content.value.kind === 'taskNotification' &&
     entry.sourceOffset > prompt
-      ? [{ id: entry.id, notice: entry.content.value }]
+      ? [{ id: entry.id, notice: entry.content.value, offset: entry.sourceOffset }]
       : [],
   );
 }

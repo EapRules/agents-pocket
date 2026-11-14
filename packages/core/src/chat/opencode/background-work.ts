@@ -11,12 +11,11 @@
 import { backgroundWorkItem } from '../model/factories';
 import { followAgent } from '../model/transcript';
 import type {
-  BackgroundWorkState,
   ChatBackgroundWorkAgent,
   ChatBackgroundWorkItem,
   ChatTranscript,
 } from '../model/types';
-import { dateOf, offsetOf } from './projection-parts';
+import { dateOf, endState, offsetOf } from './projection-parts';
 import type { OpenCodeNote, OpenCodeRow, OpenCodeTool } from './record';
 import { toolKindOf } from './tool-summary';
 
@@ -29,17 +28,6 @@ function backgroundChild(tool: OpenCodeTool): string | null {
 }
 
 const STILL_RUNNING = /^\s*<subagent\b[^>]*\bstate="running"/;
-
-function endState(state: string | null): BackgroundWorkState {
-  switch (state) {
-    case 'error':
-      return 'failed';
-    case 'cancelled':
-      return 'stopped';
-    default:
-      return 'completed';
-  }
-}
 
 /** Collects one read's launches and completions, then sets them on the transcript. */
 export class OpenCodeBackgroundWork {

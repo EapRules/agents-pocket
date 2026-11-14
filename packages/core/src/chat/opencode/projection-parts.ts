@@ -2,7 +2,7 @@
 // notices a note or a failed compaction shows (Swift OpenCodeTranscriptReducer private helpers).
 
 import { notice } from '../model/factories';
-import type { ChatNotice, ChatTurnEnd } from '../model/types';
+import type { BackgroundWorkState, ChatNotice, ChatTurnEnd } from '../model/types';
 import { trimmed } from '../store/text';
 import type {
   OpenCodeError,
@@ -12,6 +12,18 @@ import type {
   OpenCodeTool,
 } from './record';
 import { DECLINED_MESSAGES } from './tool-summary';
+
+/** How a background job's completion row says it ended (`state`: `completed`, `error`, `cancelled`). */
+export function endState(state: string | null): BackgroundWorkState {
+  switch (state) {
+    case 'error':
+      return 'failed';
+    case 'cancelled':
+      return 'stopped';
+    default:
+      return 'completed';
+  }
+}
 
 export type Place =
   | { kind: 'above'; seen: boolean }
@@ -75,6 +87,14 @@ export function noteNotice(
         return {
           notice: notice('taskNotification', note.description ?? 'Background work finished', {
             detail: note.text,
+            task: {
+              callID: null,
+              taskID: note.source === 'subagent' ? note.childID : note.jobID,
+              kind: note.source === 'subagent' ? 'subagent' : 'command',
+              state: endState(note.state),
+              label: note.description,
+              exitCode: null,
+            },
           }),
           resumes: true,
         };

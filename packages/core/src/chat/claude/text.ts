@@ -5,7 +5,7 @@
 import { trimSpaces } from '../../hosts/text';
 import { workUsage } from '../model/factories';
 import { capPreview } from '../model/preview';
-import type { BackgroundWorkUsage, ChatToolPreview } from '../model/types';
+import type { BackgroundWorkKind, BackgroundWorkUsage, ChatToolPreview } from '../model/types';
 
 export const MAXIMUM_TITLE_LENGTH = 200;
 
@@ -202,4 +202,33 @@ export function taskNotificationTitle(notification: ClaudeTaskNotification): str
   return notification.status === null
     ? 'Background task finished'
     : `Background task ${notification.status}`;
+}
+
+/** What a summary names, by how Claude Code opens it: `Background command "…" completed (exit code 0)`. */
+const SUMMARY_KINDS: readonly (readonly [string, BackgroundWorkKind])[] = [
+  ['Background command', 'command'],
+  ['Agent', 'subagent'],
+  ['Workflow', 'workflow'],
+];
+
+export interface NotificationSubject {
+  kind: BackgroundWorkKind | null;
+  /** The quoted name of the work; Claude Code cuts a long one with "…". */
+  label: string | null;
+  exitCode: number | null;
+}
+
+/** The kind, name and exit code a notification's summary states; nulls for what it doesn't. */
+export function notificationSubject(notification: ClaudeTaskNotification): NotificationSubject {
+  const summary = notification.summary ?? '';
+  const exit = /exit code (-?\d+)/i.exec(summary)?.[1];
+  const exitCode = exit === undefined ? null : Number.parseInt(exit, 10);
+  for (const [opening, kind] of SUMMARY_KINDS) {
+    if (!summary.startsWith(`${opening} "`)) continue;
+    const start = opening.length + 2;
+    const close = summary.lastIndexOf('"');
+    const label = close > start ? summary.slice(start, close).trim() : '';
+    return { kind, label: label === '' ? null : label, exitCode };
+  }
+  return { kind: null, label: null, exitCode };
 }

@@ -10,6 +10,9 @@ function entryImage(entry: ChatEntry): unknown {
   if (entry.content.type === 'tool') {
     const { purpose: _purpose, command: _command, ...swift } = entry.content.value;
     value = swift;
+  } else if (entry.content.type === 'notice') {
+    const { task: _task, ...swift } = entry.content.value;
+    value = swift;
   }
   return {
     id: entry.id,
@@ -18,9 +21,19 @@ function entryImage(entry: ChatEntry): unknown {
   };
 }
 
-/** Background Work as Swift holds it: Subagent resumes are this port's, so their fields are left out. */
+/**
+ * Background Work as Swift holds it: Subagent resumes and prompts, background commands and exit
+ * codes are this port's, so they are left out.
+ */
 function workImage(item: ChatBackgroundWorkItem): unknown {
-  const { agentID: _agentID, resume: _resume, ...swift } = item;
+  const {
+    agentID: _agentID,
+    resume: _resume,
+    prompt: _prompt,
+    exitCode: _exitCode,
+    taskID: _taskID,
+    ...swift
+  } = item;
   return swift;
 }
 
@@ -31,7 +44,9 @@ export function goldenImage(transcript: ChatTranscript): unknown {
     JSON.stringify({
       ...swift,
       entries: transcript.entries.filter((entry) => !entry.isPortOnly).map(entryImage),
-      backgroundWork: transcript.backgroundWork.map(workImage),
+      backgroundWork: transcript.backgroundWork
+        .filter((item) => item.kind !== 'command')
+        .map(workImage),
       diagnostics: {
         ...transcript.diagnostics,
         unknownRecordTypes: [...transcript.diagnostics.unknownRecordTypes].sort(),
