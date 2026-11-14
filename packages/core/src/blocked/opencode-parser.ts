@@ -40,6 +40,13 @@ const PERMISSION_ROLES: Readonly<Record<string, DialogOptionRole>> = {
   [ALWAYS_ALLOW]: 'approvePersistent',
   [REJECT]: 'decline',
 };
+const LAYOUT = message(
+  "Agentico doesn't know this permission's layout. Answer it with these keys or in the terminal.",
+);
+const OFF_SCREEN = message('The top of the dialog is off screen.');
+const REJECT_NOTE = message(
+  'OpenCode asks what to do differently before it rejects. Answer it in the terminal.',
+);
 const SINGLE_QUESTION_FOOTER = '↑↓ select  enter submit  esc dismiss';
 const OWN_ANSWER = 'Type your own answer';
 
@@ -51,18 +58,22 @@ export function parseOpenCodeDialog(screen: AnsiScreen): DialogParseResult {
     case PERMISSION_HEADING:
       return permission(block, screen);
     case '△ Reject permission':
-      return unrecognized(
-        block,
-        screen,
-        message(
-          'OpenCode asks what to do differently before it rejects. Answer it in the terminal.',
-        ),
-      );
+      return unrecognized(block, screen, REJECT_NOTE);
     case 'Questions':
       return question(block, screen);
     default:
-      return NO_DIALOG;
+      return headless(block, screen);
   }
+}
+
+/**
+ * A block ending in a permission's answers under no known heading: cut at its top by a short
+ * terminal (the block starts at row 0), or worded otherwise. Its rows still say what is asked.
+ */
+function headless(block: OpenCodeBlock, screen: AnsiScreen): DialogParseResult {
+  const options = block.sections.find((section) => section[0]?.text.startsWith(ALLOW_ONCE))?.[0];
+  if (!options || !permissionOptions(options)) return NO_DIALOG;
+  return unrecognized(block, screen, block.rows.lowerBound === 0 ? OFF_SCREEN : LAYOUT);
 }
 
 // MARK: Permissions
@@ -135,14 +146,11 @@ function focusedOption(backgrounds: readonly (ScreenColor | null)[], panel: Scre
  * from the next.
  */
 function permission(block: OpenCodeBlock, screen: AnsiScreen): DialogParseResult {
-  const layout = message(
-    "Agentico doesn't know this permission's layout. Answer it with these keys or in the terminal.",
-  );
   const sections = block.sections;
   const optionsIndex = sections.findIndex((section) => section[0]?.text.startsWith(ALLOW_ONCE));
   const optionsLine = sections[optionsIndex]?.[0];
   const labels = optionsLine ? permissionOptions(optionsLine) : null;
-  if (optionsIndex <= 0 || !optionsLine || !labels) return unrecognized(block, screen, layout);
+  if (optionsIndex <= 0 || !optionsLine || !labels) return unrecognized(block, screen, LAYOUT);
 
   const header = (sections[0] ?? []).slice(1);
   const action = header.length === 0 ? null : block.joined(header);
@@ -150,7 +158,7 @@ function permission(block: OpenCodeBlock, screen: AnsiScreen): DialogParseResult
   if (action !== null) {
     // The icon, then the action and its target.
     const characters = [...action];
-    if (characters.indexOf(' ') !== 1) return unrecognized(block, screen, layout);
+    if (characters.indexOf(' ') !== 1) return unrecognized(block, screen, LAYOUT);
     target = trimBlanks(characters.slice(2).join(''));
   }
   let notes = sections.slice(1, optionsIndex).flatMap((section) => block.paragraphs(section));

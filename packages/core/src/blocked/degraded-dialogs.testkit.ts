@@ -47,14 +47,14 @@
  * | codex-02-x2-patch | title | generic | digits |
  * | codex-02-x2-patch | options | generic | digits |
  * | opencode-10-permission-180 | top | named | - |
- * | opencode-10-permission-180 | title | unreadable | - |
- * | opencode-10-permission-180 | options | unreadable | - |
+ * | opencode-10-permission-180 | title | generic | none |
+ * | opencode-10-permission-180 | options | generic | none |
  * | opencode-27-permission-shell-180 | top | named | - |
- * | opencode-27-permission-shell-180 | title | unreadable | - |
- * | opencode-27-permission-shell-180 | options | unreadable | - |
+ * | opencode-27-permission-shell-180 | title | generic | none |
+ * | opencode-27-permission-shell-180 | options | generic | none |
  * | opencode-37-permission-long-62 | top | named | - |
- * | opencode-37-permission-long-62 | title | unreadable | - |
- * | opencode-37-permission-long-62 | options | unreadable | - |
+ * | opencode-37-permission-long-62 | title | generic | none |
+ * | opencode-37-permission-long-62 | options | generic | none |
  * | grok-12-permission-command | top | named | - |
  * | grok-12-permission-command | title | named | - |
  * | grok-12-permission-command | options | named | - |
@@ -204,18 +204,18 @@ export const CUT_VARIANTS: readonly CutVariant[] = [
   ]),
   ...variant('opencode-10-permission-180', null, [
     ['top', 38, 'named', null],
-    ['title', 39, 'unreadable', null],
-    ['options', 44, 'unreadable', null],
+    ['title', 39, 'generic', 'none'],
+    ['options', 44, 'generic', 'none'],
   ]),
   ...variant('opencode-27-permission-shell-180', 'git status', [
     ['top', 39, 'named', null],
-    ['title', 40, 'unreadable', null],
-    ['options', 44, 'unreadable', null],
+    ['title', 40, 'generic', 'none'],
+    ['options', 44, 'generic', 'none'],
   ]),
   ...variant('opencode-37-permission-long-62', null, [
     ['top', 26, 'named', null],
-    ['title', 27, 'unreadable', null],
-    ['options', 36, 'unreadable', null],
+    ['title', 27, 'generic', 'none'],
+    ['options', 36, 'generic', 'none'],
   ]),
   ...variant('grok-12-permission-command', 'chmod 644 README.md', [
     ['top', 34, 'named', null],
