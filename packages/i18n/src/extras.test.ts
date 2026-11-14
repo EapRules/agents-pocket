@@ -12,6 +12,12 @@ describe('app extras', () => {
     expect(Object.keys(appExtras.en).filter((key) => swift.has(key))).toEqual([]);
   });
 
+  it("never say the Swift app's old name (the catalogs rewrite it; the extras are written by hand)", () => {
+    for (const table of [appExtras.en, appExtras.es]) {
+      expect(Object.values(table).filter((value) => /\bAgentico\b/.test(value))).toEqual([]);
+    }
+  });
+
   it('resolve through t() as part of the app table', () => {
     const [key] = Object.keys(appExtras.en);
     expect(keysOf('app')).toContain(key);

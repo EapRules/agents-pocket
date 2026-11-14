@@ -16,8 +16,8 @@
   "Accept Edits": "Aceptar ediciones",
   "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.": "Agregá otra forma de llegar a este Host, como su dirección de LAN en casa y una red overlay o un Jump Host en otro lado.",
   "Agent view": "Vista del Agent",
-  "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "Agentico no puede leer esta pregunta en la pantalla del Agente. Respondela en la terminal.",
-  "Agentico couldn't find Hermes Agent's database at %@.": "Agentico no encontró la base de datos de Hermes Agent en {0}.",
+  "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "OpenAgentsPocket no puede leer esta pregunta en la pantalla del Agente. Respondela en la terminal.",
+  "Agentico couldn't find Hermes Agent's database at %@.": "OpenAgentsPocket no encontró la base de datos de Hermes Agent en {0}.",
   "Always Approve": "Aprobar siempre",
   "Answer This Prompt": "Responder este pedido",
   "Approving needs your Face ID or passcode. Nothing was sent.": "Para aprobar hace falta tu Face ID o código. No se envió nada.",
@@ -284,5 +284,11 @@
   "Prompt": "Prompt",
   "Show More": "Ver más",
   "Show Less": "Ver menos",
-  "Waiting for you… %@": "Esperándote… {0}"
+  "Waiting for you… %@": "Esperándote… {0}",
+  "/%@ is available once the Agent is idle.": "/{0} está disponible cuando el Agente esté inactivo.",
+  "Hermes Agent is working, and a message now would interrupt the turn. Wait for it, or use the terminal.": "Hermes Agent está trabajando, y un mensaje ahora interrumpiría el turno. Esperá a que termine, o usá la terminal.",
+  "Hermes Agent's screen shows no running turn, so Stop pressed nothing.": "La pantalla de Hermes Agent no muestra un turno en curso, así que Detener no hizo nada.",
+  "Ctrl+C would clear the draft in Hermes Agent's box. Stop it in the terminal.": "Ctrl+C borraría el borrador en la caja de Hermes Agent. Detenelo en la terminal.",
+  "Ctrl+C went, but the Agent still shows Working.": "Se envió Ctrl+C, pero el Agente sigue mostrando Trabajando.",
+  "OpenCode runs its commands alone. Send the command without anything after it.": "OpenCode corre sus comandos solos. Enviá el comando sin nada después."
 }

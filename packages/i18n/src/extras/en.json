@@ -16,8 +16,8 @@
   "Accept Edits": "Accept Edits",
   "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.": "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.",
   "Agent view": "Agent view",
-  "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "Agentico can't read this question on the Agent's screen. Answer it in the terminal.",
-  "Agentico couldn't find Hermes Agent's database at %@.": "Agentico couldn't find Hermes Agent's database at {0}.",
+  "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "OpenAgentsPocket can't read this question on the Agent's screen. Answer it in the terminal.",
+  "Agentico couldn't find Hermes Agent's database at %@.": "OpenAgentsPocket couldn't find Hermes Agent's database at {0}.",
   "Always Approve": "Always Approve",
   "Answer This Prompt": "Answer This Prompt",
   "Approving needs your Face ID or passcode. Nothing was sent.": "Approving needs your Face ID or passcode. Nothing was sent.",
@@ -284,5 +284,11 @@
   "Prompt": "Prompt",
   "Show More": "Show More",
   "Show Less": "Show Less",
-  "Waiting for you… %@": "Waiting for you… {0}"
+  "Waiting for you… %@": "Waiting for you… {0}",
+  "/%@ is available once the Agent is idle.": "/{0} is available once the Agent is idle.",
+  "Hermes Agent is working, and a message now would interrupt the turn. Wait for it, or use the terminal.": "Hermes Agent is working, and a message now would interrupt the turn. Wait for it, or use the terminal.",
+  "Hermes Agent's screen shows no running turn, so Stop pressed nothing.": "Hermes Agent's screen shows no running turn, so Stop pressed nothing.",
+  "Ctrl+C would clear the draft in Hermes Agent's box. Stop it in the terminal.": "Ctrl+C would clear the draft in Hermes Agent's box. Stop it in the terminal.",
+  "Ctrl+C went, but the Agent still shows Working.": "Ctrl+C went, but the Agent still shows Working.",
+  "OpenCode runs its commands alone. Send the command without anything after it.": "OpenCode runs its commands alone. Send the command without anything after it."
 }
