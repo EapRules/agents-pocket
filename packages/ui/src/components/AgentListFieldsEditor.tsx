@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Button } from '../primitives/Button';
 import { Card } from '../primitives/Card';
-import { Chip } from '../primitives/Chip';
+import { Chip, ChipRow } from '../primitives/Chip';
 import { Icon } from '../primitives/Icon';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -44,7 +44,6 @@ const useStyles = makeStyles((t) => ({
     borderTopWidth: t.metrics.hairlineWidth,
     borderTopColor: t.hairline,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: t.spacing.xs },
   dimmed: { opacity: 0.55 },
   add: { minWidth: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center' },
   actions: { alignItems: 'flex-start', gap: t.spacing.xxs },
@@ -95,7 +94,7 @@ export function AgentListFieldsEditor({
         {rows.map((row) => (
           <View key={row.id} style={styles.row} testID={`fields-row-${row.id}`}>
             <Text variant="headline">{row.title}</Text>
-            <View style={styles.chips}>
+            <ChipRow>
               {row.fields.map((field) => (
                 <Tappable
                   key={field}
@@ -117,7 +116,7 @@ export function AgentListFieldsEditor({
               >
                 <Icon name="add" size={17} color="accent" />
               </Tappable>
-            </View>
+            </ChipRow>
           </View>
         ))}
       </Card>

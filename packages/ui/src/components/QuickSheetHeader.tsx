@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Button } from '../primitives/Button';
+import { ChipRow } from '../primitives/Chip';
 import { Text } from '../primitives/Text';
 import { airy } from '../theme/metrics';
 import { makeStyles } from '../theme/theme';
@@ -24,7 +25,6 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
     backgroundColor: t.colors.control,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xs },
 }));
 
 interface QuickSheetHeaderProps {
@@ -75,7 +75,7 @@ export function QuickSheetHeader({
           <Text variant="title2" accessibilityRole="header" numberOfLines={2}>
             {title}
           </Text>
-          {chips ? <View style={styles.chips}>{chips}</View> : null}
+          {chips ? <ChipRow>{chips}</ChipRow> : null}
         </>
       ) : (
         <View style={styles.row}>

@@ -23,7 +23,7 @@ const useStyles = makeStyles((t) => ({
   label: { flexShrink: 1 },
   selected: { backgroundColor: t.colors.accentContainer },
   pressed: { opacity: 0.7 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xs },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: t.spacing.xs },
 }));
 
 interface ChipProps {

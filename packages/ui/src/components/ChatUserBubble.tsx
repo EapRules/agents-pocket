@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { ActionMenu, type ActionMenuItem } from '../overlay/ActionMenu';
 import { useContextMenu } from '../overlay/useContextMenu';
-import { Chip } from '../primitives/Chip';
+import { Chip, ChipRow } from '../primitives/Chip';
 import { Icon, type IconName } from '../primitives/Icon';
 import { Tappable } from '../primitives/Tappable';
 import { Text, type TextTone } from '../primitives/Text';
@@ -21,7 +21,6 @@ const useStyles = makeStyles((t) => ({
     gap: t.spacing.xs,
   },
   pending: { opacity: 0.55 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xxs },
   sending: { paddingTop: t.spacing.xxs },
   status: {
     flexDirection: 'row',
@@ -79,11 +78,11 @@ export function ChatUserBubble({
       >
         {text ? <Text variant="body">{text}</Text> : null}
         {attachments?.length ? (
-          <View style={styles.chips}>
+          <ChipRow>
             {attachments.map((name) => (
               <Chip size="small" key={name} label={name} icon="attach" />
             ))}
-          </View>
+          </ChipRow>
         ) : null}
       </Tappable>
       {pending && pendingLabel ? (

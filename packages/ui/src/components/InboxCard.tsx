@@ -1,6 +1,6 @@
 import { type GestureResponderEvent, View } from 'react-native';
 import { Card } from '../primitives/Card';
-import { Chip } from '../primitives/Chip';
+import { Chip, ChipRow } from '../primitives/Chip';
 import { ProgramMark } from '../primitives/ProgramMark';
 import { Text } from '../primitives/Text';
 import { airy } from '../theme/metrics';
@@ -31,7 +31,6 @@ const useStyles = makeStyles((t) => ({
   body: { gap: t.spacing.xs, padding: airy.card },
   header: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.xs },
   title: { flex: 1 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: airy.stack },
 }));
 
 interface InboxCardProps {
@@ -89,11 +88,11 @@ export function InboxCard({
         </Text>
       ) : null}
       {p.chips.length > 0 ? (
-        <View style={styles.chips}>
+        <ChipRow>
           {p.chips.map((chip) => (
             <Chip size="small" key={chip} label={chip} />
           ))}
-        </View>
+        </ChipRow>
       ) : null}
     </Card>
   );
