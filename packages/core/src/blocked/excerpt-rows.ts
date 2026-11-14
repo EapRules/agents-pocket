@@ -58,7 +58,7 @@ export interface ExcerptReading {
   /**
    * The dialog's own question, for the card's title: the one row directly above the numbered
    * options (blank rows between) when it ends in `?` and a blank or rule row sits above it, so the
-   * row is the whole question. Null otherwise.
+   * row is the whole question. Null otherwise. The body leaves that row out: the title shows it.
    */
   readonly question: string | null;
   /**
@@ -80,15 +80,19 @@ export function excerptReading(excerpt: GenericDialogExcerpt): ExcerptReading {
   const owned = optionRows(texts, excerpt.numbered);
   const first = owned.indexOf(true);
   let question: string | null = null;
+  let questionRow = -1;
   if (first >= 0) {
     let above = first - 1;
     while (above >= 0 && SEPARATOR.test(texts[above] ?? '')) above -= 1;
     const row = cleanRow(texts[above] ?? '');
-    if (above > 0 && SEPARATOR.test(texts[above - 1] ?? '') && row.endsWith('?')) question = row;
+    if (above > 0 && SEPARATOR.test(texts[above - 1] ?? '') && row.endsWith('?')) {
+      question = row;
+      questionRow = above;
+    }
   }
   const lines: ShownRow[] = [];
   for (const [index, text] of texts.entries()) {
-    if (owned[index] || isKeyHints(text)) continue;
+    if (owned[index] || index === questionRow || isKeyHints(text)) continue;
     const line = SEPARATOR.test(text) ? { text: '', flush: true } : shownRow(text);
     if (line.text === '' && (lines.length === 0 || lines.at(-1)?.text === '')) continue;
     lines.push(line);

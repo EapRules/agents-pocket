@@ -157,7 +157,7 @@ describe('a dialog no parser names', () => {
     expect(screen.getByTestId('blocked-excerpt')).toBeTruthy();
     expect(screen.getByTestId('blocked-generic-reason')).toBeTruthy();
     // The dialog's own question heads the card; the answers read once, as buttons.
-    expect(screen.getByText(QUESTION)).toBeTruthy();
+    expect(screen.getAllByText(new RegExp(QUESTION.replace('?', '\\?')))).toHaveLength(1);
     expect(screen.queryByText(/\d\. (?:Yes|No)/)).toBeNull();
     expect(screen.queryByTestId('blocked-subject-code')).toBeNull();
     const ids = pair()

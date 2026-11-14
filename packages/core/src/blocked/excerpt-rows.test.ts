@@ -41,7 +41,11 @@ describe('excerptReading', () => {
         ).toBe(true);
         expect(line.startsWith(' ') && GLYPH.test(line.trim()[0] ?? '')).toBe(false);
       }
-      if (question) expect(body).toContain(question);
+      // The title's row reads once, as the title.
+      if (question) {
+        expect(rows.some((row) => row.includes(question))).toBe(true);
+        expect(body).not.toContain(question);
+      }
       const labels = [...excerpt.numbered.values()];
       // No row the card draws as a button reads again in the body.
       for (const line of body) {
