@@ -1,27 +1,33 @@
-import type { BlockedCardState, BlockedDialog, GenericDialogExcerpt } from '@openagentspocket/core';
-import { t } from '@openagentspocket/i18n';
 import {
-  BoundedScroll,
-  Button,
-  Card,
-  Icon,
-  makeStyles,
-  Tappable,
-  Text,
-} from '@openagentspocket/ui';
+  type BlockedCardState,
+  type BlockedDialog,
+  isApprovalDialog,
+  optionAt,
+  splitAnswers,
+} from '@openagentspocket/core';
+import { t } from '@openagentspocket/i18n';
+import { Button, Card, Icon, makeStyles, Tappable, Text } from '@openagentspocket/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { cardTitle, isMultiSelect, isTappable, optionKind, stopLabel } from './dialogModel';
+import { type Answer, Answers } from './Answers';
+import {
+  cardTitle,
+  headlineTitle,
+  isMultiSelect,
+  isTappable,
+  optionKind,
+  stopLabel,
+} from './dialogModel';
+import { GenericDialog } from './GenericDialog';
+import { Subject } from './Subject';
 import { cardText } from './text';
 
 const useStyles = makeStyles((th) => ({
   header: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xs },
   title: { flex: 1 },
-  code: { padding: th.spacing.sm },
   choices: { gap: th.spacing.xs },
   actions: { flexDirection: 'row', justifyContent: 'center', gap: th.spacing.md },
   pad: { flexDirection: 'row', gap: th.spacing.xs, flexWrap: 'wrap' },
-  warning: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xxs },
   toggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -73,47 +79,6 @@ function KeyPad({ onKeys, disabled }: { onKeys: (keys: string[]) => void; disabl
         />
       ))}
     </View>
-  );
-}
-
-function Generic({
-  excerpt,
-  disabled,
-  onPress,
-}: {
-  excerpt: GenericDialogExcerpt;
-  disabled: boolean;
-  onPress: (number: number) => void;
-}) {
-  const styles = useStyles();
-  const numbers = [...excerpt.numbered.keys()].sort((a, b) => a - b);
-  const reason = cardText(excerpt.reason);
-  return (
-    <>
-      <BoundedScroll testID="blocked-excerpt">
-        <Card level="control" style={styles.code}>
-          <Text variant="mono">{excerpt.rows.map((row) => row.text.trimEnd()).join('\n')}</Text>
-        </Card>
-      </BoundedScroll>
-      {reason ? (
-        <Text variant="footnote" tone="secondary" testID="blocked-generic-reason">
-          {reason}
-        </Text>
-      ) : null}
-      <View style={styles.choices}>
-        {numbers.map((number) => (
-          <Button
-            key={number}
-            title={`${number}. ${excerpt.numbered.get(number) ?? ''}`}
-            kind="secondary"
-            size="small"
-            disabled={disabled}
-            onPress={() => onPress(number)}
-            testID={`blocked-generic-${number}`}
-          />
-        ))}
-      </View>
-    </>
   );
 }
 
@@ -200,46 +165,28 @@ function Known({
   const buttons = dialog.options.filter(
     (option) => isTappable(option) && !(multi && ['answer', 'next'].includes(option.role)),
   );
+  const answers = buttons.map(
+    (option): Answer => ({
+      key: option.ordinal,
+      label: option.label,
+      kind: optionKind(option),
+      persistent: option.role === 'approvePersistent',
+      testID: `blocked-option-${option.ordinal}`,
+      onPress: () => onChoose(option.ordinal),
+    }),
+  );
+  // Only an approval pairs its answers; a question or a plan keeps its list.
+  const layout = isApprovalDialog(dialog)
+    ? splitAnswers(answers, (answer) => optionAt(dialog, answer.key)?.role ?? null)
+    : { pair: null, rest: answers };
   return (
     <>
-      <BoundedScroll testID="blocked-subject">
-        {description ? (
-          <Text variant="subheadline" tone="secondary">
-            {description}
-          </Text>
-        ) : null}
-        {code ? (
-          <Card level="control" style={styles.code}>
-            <Text variant="mono" testID="blocked-subject-code">
-              {code}
-            </Text>
-          </Card>
-        ) : null}
-      </BoundedScroll>
+      <Subject code={code} description={description} />
       <View style={styles.choices}>
         {multi ? (
           <Selection dialog={dialog} disabled={disabled} onSubmit={onSubmitSelection} />
         ) : null}
-        {buttons.map((option) => (
-          <View key={option.ordinal} style={styles.choices}>
-            <Button
-              title={option.label}
-              kind={optionKind(option)}
-              size="medium"
-              disabled={disabled}
-              onPress={() => onChoose(option.ordinal)}
-              testID={`blocked-option-${option.ordinal}`}
-            />
-            {option.role === 'approvePersistent' ? (
-              <View style={styles.warning}>
-                <Icon name="warning" size={13} color="warning" />
-                <Text variant="footnote" tone="warning">
-                  {t("Saves a rule, so this isn't asked again.")}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ))}
+        <Answers layout={layout} disabled={disabled} />
         {dialog.options.some((option) => !isTappable(option)) ? (
           <Text variant="caption" tone="secondary">
             {t('Type your own answer in the terminal.')}
@@ -277,7 +224,9 @@ export function BlockedCard(props: BlockedCardProps) {
     content.kind === 'card'
       ? cardTitle(content.dialog)
       : content.kind === 'generic'
-        ? t('Needs you')
+        ? content.shown
+          ? headlineTitle({ actor: content.shown.toolName, verb: 'run' })
+          : t('Needs you')
         : t('Keys');
   return (
     <Card accent="warning" testID="blocked-card">
@@ -314,8 +263,9 @@ export function BlockedCard(props: BlockedCardProps) {
             />
           ) : null}
           {content.kind === 'generic' ? (
-            <Generic
+            <GenericDialog
               excerpt={content.excerpt}
+              shown={content.shown ?? null}
               disabled={state.progress !== 'ready'}
               onPress={props.onPress}
             />

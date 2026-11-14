@@ -4,6 +4,7 @@ export { LAUNCH, LAUNCH_TOTAL_MS, launchPhases } from './brand/launchTimeline';
 export { markGeometry, markPalette } from './brand/mark.generated';
 export * from './components/agentBar';
 export * from './components/agentRows';
+export { ButtonRow } from './components/ButtonRow';
 export * from './components/blockedTerminal';
 export { type ChoiceOption, ChoiceSheet } from './components/ChoiceSheet';
 export { CommandBlock } from './components/CommandBlock';

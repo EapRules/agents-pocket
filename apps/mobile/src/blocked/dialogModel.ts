@@ -1,9 +1,12 @@
-import type {
-  BlockedDialog,
-  BlockedDialogKind,
-  CardProgress,
-  DialogOption,
-  DialogOptionRole,
+import {
+  type ApprovalHeadline,
+  type ApprovalVerb,
+  approvalHeadline,
+  type BlockedDialog,
+  type BlockedDialogKind,
+  type CardProgress,
+  type DialogOption,
+  type DialogOptionRole,
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 
@@ -23,8 +26,26 @@ const QUESTIONS: readonly BlockedDialogKind[] = [
   'openCodeQuestion',
 ];
 
-/** The card's heading: what a question asks, the dialog's title, or a name for poorly worded kinds. */
+const VERB_TITLES: Record<ApprovalVerb, (actor: string) => string> = {
+  run: (actor) => t('%@ wants to run:', actor),
+  edit: (actor) => t('%@ wants to edit:', actor),
+  create: (actor) => t('%@ wants to create:', actor),
+  read: (actor) => t('%@ wants to read:', actor),
+  fetch: (actor) => t('%@ wants to fetch:', actor),
+  connect: (actor) => t('%@ wants to connect to:', actor),
+};
+
+/** An approval's title: who wants to do what ("Bash wants to run:"). */
+export const headlineTitle = (headline: ApprovalHeadline): string =>
+  VERB_TITLES[headline.verb](headline.actor);
+
+/**
+ * The card's heading: who wants to do what for an approval, what a question asks, the dialog's
+ * title, or a name for poorly worded kinds.
+ */
 export function cardTitle(dialog: BlockedDialog): string {
+  const headline = approvalHeadline(dialog);
+  if (headline) return headlineTitle(headline);
   if (QUESTIONS.includes(dialog.kind)) return dialog.subject.question ?? t('Question');
   if (dialog.kind === 'codexAsyncCollapsed') return t('Questions');
   if (dialog.kind === 'ompApproval') return t('Allow %@', dialog.subject.toolName ?? t('Tool'));
@@ -69,9 +90,14 @@ export function stopLabel(dialog: BlockedDialog, progress: CardProgress): string
 const APPROVING: readonly DialogOptionRole[] = ['approve', 'approveModeSwitch'];
 
 /** The button style of an option: approvals lead, declines warn, the rest stay quiet. */
-export function optionKind(option: DialogOption): 'primary' | 'secondary' | 'destructive' {
-  if (APPROVING.includes(option.role)) return 'primary';
-  if (option.role === 'decline' || option.role === 'exitProgram') return 'destructive';
+export const optionKind = (option: DialogOption): AnswerKind => roleKind(option.role);
+
+export type AnswerKind = 'primary' | 'secondary' | 'destructive';
+
+/** The button style of an answer's role; null (a role the card cannot tell) stays quiet. */
+export function roleKind(role: DialogOptionRole | null): AnswerKind {
+  if (role !== null && APPROVING.includes(role)) return 'primary';
+  if (role === 'decline' || role === 'exitProgram') return 'destructive';
   return 'secondary';
 }
 
