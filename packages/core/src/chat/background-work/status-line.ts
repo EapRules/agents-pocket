@@ -5,7 +5,7 @@
 // and the Background Work presentation, so it reads the same for every program: a program that
 // records no reasoning or running calls shows only the time.
 
-import { message, type Text } from '../../errors/text';
+import { message, renderText, type Text } from '../../errors/text';
 import { formatDuration } from '../../format/duration';
 import {
   type ChatLiveTurn,
@@ -73,7 +73,7 @@ export function withLiveLine(rows: readonly ChatRow[]): ChatRow[] {
   const shown = withoutLiveTurn(rows);
   if (turn === null) return shown;
   const content = { type: 'working' as const, turn };
-  const title = turn.doing?.kind === 'tool' ? turn.doing.title : '';
+  const title = turn.doing?.kind === 'tool' ? renderText(turn.doing.title) : '';
   const revision = hashRevision(turn.since, turn.doing?.kind ?? '', title);
   const previous = shown.at(-1)?.content ?? null;
   shown.push(chatRow(rowID.working, content, revision, topSpacing(content, previous)));
@@ -124,7 +124,8 @@ export function liveLine(turn: ChatLiveTurn, now: number, isBlocked = false): Ch
 
 export function sameLiveTurn(a: ChatLiveTurn | null, b: ChatLiveTurn | null): boolean {
   if (a === null || b === null) return a === b;
-  const title = (turn: ChatLiveTurn) => (turn.doing?.kind === 'tool' ? turn.doing.title : null);
+  const title = (turn: ChatLiveTurn) =>
+    turn.doing?.kind === 'tool' ? renderText(turn.doing.title) : null;
   return a.since === b.since && a.doing?.kind === b.doing?.kind && title(a) === title(b);
 }
 

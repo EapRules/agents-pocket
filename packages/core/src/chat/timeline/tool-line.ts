@@ -2,12 +2,14 @@
 // that (`purpose`), else as a short form of itself; the command line as run shows once the row opens.
 // The same for every program: each adapter fills `purpose` and `command`, the row never asks which.
 
+import type { Text } from '../../errors/text';
 import { isAssignment, RESERVED_WORDS, simpleCommands } from '../model/shell-words';
 import type { ChatToolActivity } from '../model/types';
+import { toolSubtitleText, toolTitleText } from '../titles';
 
 export interface ToolLine {
-  /** The row's title: a description, a short command, or the call's own title. */
-  title: string;
+  /** The row's title: a description, a short command, or the call's own title (keyed when known). */
+  title: Text;
   /** The title is a command (short or whole), drawn monospaced. */
   isCommand: boolean;
   /** The command line its open row shows, when the title does not already show it whole. */
@@ -79,10 +81,11 @@ export function shortCommand(line: string): string {
 }
 
 export function toolLine(
-  tool: Pick<ChatToolActivity, 'kind' | 'title' | 'subtitle' | 'purpose' | 'command'>,
+  tool: Pick<ChatToolActivity, 'kind' | 'name' | 'title' | 'subtitle' | 'purpose' | 'command'>,
 ): ToolLine {
   if (tool.kind !== 'command') {
-    return { title: tool.subtitle ?? tool.title, isCommand: false, command: null };
+    const title = toolSubtitleText(tool) ?? toolTitleText(tool);
+    return { title, isCommand: false, command: null };
   }
   // A cache written before these fields existed holds neither.
   const whole = tool.command ?? tool.title;

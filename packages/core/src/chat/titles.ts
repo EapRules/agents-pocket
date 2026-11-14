@@ -74,9 +74,3 @@ export function toolSubtitleText(tool: Pick<ChatToolActivity, 'kind' | 'subtitle
   const teammate = kind === 'agent' ? /^Teammate @(.+)$/s.exec(subtitle) : null;
   return teammate ? message('Teammate @%@', teammate[1] as string) : subtitle;
 }
-
-/** The note a tool row carries when its question closed unanswered. */
-export function toolNoteText(note: string | null): Text | null {
-  if (note === null) return null;
-  return note === 'Question closed' ? message(note) : note;
-}

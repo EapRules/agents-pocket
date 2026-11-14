@@ -89,7 +89,7 @@ export interface ChatTurnHeader {
 export type ChatTurnDoing =
   | { kind: 'thinking' }
   /** A call that has not returned: its one line, as its tool row says it. */
-  | { kind: 'tool'; title: string }
+  | { kind: 'tool'; title: Text }
   /** A call waits for the user's approval. */
   | { kind: 'waiting' };
 

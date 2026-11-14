@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { notice, toolActivity } from './model/factories';
 import type { ToolKind } from './model/types';
-import { noticeTitleText, toolNoteText, toolSubtitleText, toolTitleText } from './titles';
+import { noticeTitleText, toolSubtitleText, toolTitleText } from './titles';
 
 describe('noticeTitleText', () => {
   it('keys the fixed titles and fills the placeholders', () => {
@@ -58,13 +58,11 @@ describe('tool texts', () => {
     expect(toolTitleText(row('other', 'Skill', 'Loaded x'))).toBe('Loaded x');
   });
 
-  it('keys the teammate subtitle and the closed-question note', () => {
+  it('keys the teammate subtitle', () => {
     expect(toolSubtitleText({ kind: 'agent', subtitle: 'Teammate @ann' })).toEqual({
       key: 'Teammate @%@',
       args: ['ann'],
     });
     expect(toolSubtitleText({ kind: 'agent', subtitle: null })).toBeNull();
-    expect(toolNoteText('Question closed')).toEqual({ key: 'Question closed' });
-    expect(toolNoteText('other')).toBe('other');
   });
 });

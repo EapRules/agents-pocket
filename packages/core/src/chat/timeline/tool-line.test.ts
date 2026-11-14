@@ -56,4 +56,14 @@ describe('a tool row line', () => {
     });
     expect(toolLine(read)).toEqual({ title: 'src', isCommand: false, command: null });
   });
+
+  it('keys a known title so the app shows it in the user language', () => {
+    const todo = toolActivity({
+      kind: 'todo',
+      name: 'TodoWrite',
+      title: 'Update todos',
+      status: 'succeeded',
+    });
+    expect(toolLine(todo).title).toEqual({ key: 'Update todos' });
+  });
 });

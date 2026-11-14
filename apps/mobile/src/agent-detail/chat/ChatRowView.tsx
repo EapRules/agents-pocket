@@ -1,8 +1,11 @@
 import {
   type ChatNotice,
   type ChatRow,
+  noticeTitleText,
   rowCopyText,
   toolLine,
+  toolSubtitleText,
+  toolTitleText,
   withoutAttachmentPaths,
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
@@ -40,6 +43,11 @@ const useStyles = makeStyles((th) => ({
 }));
 
 /** Copy, for a row that has text to copy: the long press menu, and the actions under the latest answer. */
+function subagentKind(tool: Parameters<typeof toolSubtitleText>[0]): string | undefined {
+  const kind = toolSubtitleText(tool);
+  return kind === null ? undefined : renderMessage(kind);
+}
+
 function copyMenu(text: string | null | undefined): ActionMenuItem[] | undefined {
   if (!text) return undefined;
   const title = t('Copy');
@@ -146,8 +154,8 @@ export const ChatRowView = memo(function ChatRowView({
               subagents={[
                 {
                   id: agentId,
-                  name: content.tool.title,
-                  kind: content.tool.subtitle ?? undefined,
+                  name: renderMessage(toolTitleText(content.tool)),
+                  kind: subagentKind(content.tool),
                   status,
                   // A running Subagent has no transcript to show yet: the sheet says where it is.
                   onOpen:
@@ -164,7 +172,7 @@ export const ChatRowView = memo(function ChatRowView({
           <ChatToolRow
             tool={{
               icon: toolIcon(content.tool.kind),
-              title: line.title,
+              title: renderMessage(line.title),
               monospaced: line.isCommand,
               status,
               statusLabel: asking ? t('Waiting') : toolStatusLabel(content.tool),
@@ -233,7 +241,7 @@ export const ChatRowView = memo(function ChatRowView({
           return <ChatAgentMessageLine notice={content.notice} onOpen={onOpenMessage} />;
         return (
           <ChatNoticeRow
-            title={content.notice.title}
+            title={renderMessage(noticeTitleText(content.notice))}
             detail={content.notice.detail ?? undefined}
             detailFormat={content.notice.detailFormat}
           />

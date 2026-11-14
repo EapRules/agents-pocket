@@ -1,3 +1,4 @@
+import { renderText } from '../../errors/text';
 import type { ChatDiffHunk, ChatToolActivity } from '../model/types';
 import type { ChatRowContent } from './row';
 import { toolLine } from './tool-line';
@@ -50,7 +51,8 @@ export function rowCopyText(content: ChatRowContent): string | null {
       return content.reasoning.text;
     case 'tool': {
       const line = toolLine(content.tool);
-      return [line.command ?? line.title, toolDetailText(content.tool)]
+      // Copy keeps the call's own words: the title in the catalog's source language.
+      return [line.command ?? renderText(line.title), toolDetailText(content.tool)]
         .filter((part) => part !== null)
         .join('\n\n');
     }
