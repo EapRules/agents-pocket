@@ -16,10 +16,10 @@ Pieces:
 | Released builds and their runtime versions | `docs/releases/builds.json` (appended by `scripts/release-ios.mjs`) | No |
 | Public log of published updates | `docs/releases/updates.jsonl` (appended by a real upload) | No |
 
-Status (2026-11-14): server, publish script (including the real R2 upload), the deploy script, the app
-config and the app side (channel setting, running update in Settings) exist with tests. No key exists,
-nothing is deployed, and the R2 upload and the deploy have never run against a real Cloudflare account
-(they are tested against a fake `wrangler`; the local bucket path runs for real). iOS only; Android
+Status (2026-11-14): everything here is built and deployed. The signing key is with the owner, the
+Worker runs on the update domain, store build 1.0.1 (5) has updates on, and the first real update was
+uploaded and applied on a phone. There is **one channel**: an upload reaches every official build with
+that runtime at once, with no step in between (ADR 0028, "Amendment: one channel"). iOS only; Android
 stays off until its client is verified on a device.
 
 ## Publish
@@ -54,50 +54,51 @@ What it does, in order, stopping at the first problem:
    would (signature, runtime version, every asset's hash, `createdAt` newer than the last update).
 
 ```sh
-# 2. Re-check any time
-node scripts/publish-update.mjs verify build/updates/<id> --channel beta
+# 2. Re-check a bundle that is not published yet
+node scripts/publish-update.mjs verify build/updates/<id>
 
-# 3. Upload: separate and explicit. Look at the plan first, then upload; beta first.
-node scripts/publish-update.mjs --upload build/updates/<id> --channel beta --target r2 \
+# 3. Upload: separate and explicit. Look at the plan first, then upload. It reaches everyone.
+node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
   --base-url https://<update domain> --dry-run
-node scripts/publish-update.mjs --upload build/updates/<id> --channel beta --target r2 \
+node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
   --base-url https://<update domain>
-git add docs/releases/updates.jsonl && git commit -m "Updates: manifest <id> on beta" && git push origin main
+git add docs/releases/updates.jsonl && git commit -m "Updates: manifest <id> published" && git push origin main
 
 # 4. Check what the server serves, as the app would (the upload already did once)
-node scripts/publish-update.mjs verify --url https://<update domain>/manifest --channel beta
-
-# 5. Days later, the same bundle to everyone
-node scripts/publish-update.mjs --upload build/updates/<id> --channel production --target r2 \
-  --base-url https://<update domain>
-git add docs/releases/updates.jsonl && git commit -m "Updates: manifest <id> on production" && git push origin main
+node scripts/publish-update.mjs verify --url https://<update domain>/manifest
 ```
+
+There is no beta step, so run "Test locally" below before an upload that changes more than copy: it is
+the only place an update runs on a device build before users get it. `--channel` and `--skip-beta` are
+refused with a message (there is one channel).
 
 What the upload does (`packages/updates-server/publish/publish-upload.js` and `upload.js`), stopping at
 the first problem, with nothing written before the first write:
 
-1. Refuses a `--local-test` bundle for `r2`, and a bundle that fails `verify` for that channel (signature,
-   released runtime, asset hashes, already on the channel, not newer than the channel's last update).
-2. **Beta first**: refuses `--channel production` for an update the public log never recorded on beta,
-   unless `--skip-beta` (meant for an emergency rollback directive).
-3. With `--base-url`, refuses a bundle whose asset URLs point at another server.
-4. `--dry-run` stops here: it prints every object it would write and the pointer change (from the log's
-   last entry for that channel) and reads or writes nothing in any bucket.
-5. Reads the channel pointer and refuses when it names something other than what the log's last entry
-   for that channel says (an upload that was never logged, or a log that is behind: add the missing
-   line from the bundle's `log-entry.json` plus `channel` and `uploadedAt`, then retry).
-6. Writes each asset (`assets/<sha256>`), then `updates/<id>/body` and `updates/<id>/signature`. An object
+1. Refuses a `--local-test` bundle for `r2`, and a bundle that fails `verify` (signature, released
+   runtime, asset hashes, already published, not newer than the last update for that runtime).
+2. With `--base-url`, refuses a bundle whose asset URLs point at another server.
+3. `--dry-run` stops here: it prints every object it would write and the pointer change (from the log's
+   last entry for that runtime) and reads or writes nothing in any bucket.
+4. Reads the pointer and refuses when it names something other than what the log's last entry says (an
+   upload that was never logged, or a log that is behind: add the missing line from the bundle's
+   `log-entry.json` plus `uploadedAt`, then retry).
+5. Writes each asset (`assets/<sha256>`), then `updates/<id>/body` and `updates/<id>/signature`. An object
    already present is skipped when its SHA-256 matches and refused when it does not: nothing is ever
-   overwritten (the same bundle on production finds everything already there from beta).
-7. Reads back every object it wrote and compares SHA-256 (assets through the deployed Worker with
+   overwritten.
+6. Reads back every object it wrote and compares SHA-256 (assets through the deployed Worker with
    `--base-url`, which also checks their content type; otherwise `wrangler r2 object get`). A failure
-   stops before the pointer: the channel keeps serving what it served.
-8. Writes the channel pointer, last. With `--base-url` it then asks `/manifest` as the app would and
-   requires this exact update; if that fails it puts the previous pointer back (or removes the new one
-   when there was none) and stops.
-9. Appends the entry to `docs/releases/updates.jsonl` and prints the git commands to commit and push it.
-   It never commits or pushes. **Commit and push the log line before the next upload**: the production
-   upload reads it for the beta-first rule, and step 5 compares the bucket with it.
+   stops before the pointer: the server keeps serving what it served.
+7. Writes the pointer, last. With `--base-url` it then asks `/manifest` as the app would and requires
+   this exact update; if that fails it puts the previous pointer back (or removes the new one when
+   there was none) and stops.
+8. Appends the entry to `docs/releases/updates.jsonl` and prints the git commands to commit and push it.
+   It never commits or pushes. **Commit and push the log line before the next upload**: step 4 compares
+   the bucket with it.
+
+The log's first line carries `"channel":"beta"`: the test update of 2026-11-14, from when there were two
+channels. Lines are never rewritten; readers skip that one (`isRetiredChannelEntry`), and its pointer in
+the bucket (`channels/ios/<runtime>/beta`) is read by nothing.
 
 `--target r2` runs `npx wrangler r2 object get|put|delete <bucket>/<key> --remote` (wrangler 4, which
 reads local storage unless told `--remote`). The repository does not pin wrangler; `npx` uses the
@@ -158,30 +159,25 @@ Everything that needs the key, the Cloudflare account or a store submission, in 
 5. **First store build with expo-updates** through TestFlight, then the App Store (release guide),
    with the official-build flag set to `https://<update domain>/manifest` (below); `release-ios.mjs`
    records its runtime version in `docs/releases/builds.json`; commit it.
-6. **First publish, to beta** (key + account): steps 1 to 4 of "Publish", with the log line
-   committed and pushed. Check on a TestFlight install with Early Updates on.
-7. **Then production**: step 5 of "Publish", the same bundle.
+6. **First publish** (key + account): "Publish", with the log line committed and pushed. Check on a
+   store or TestFlight install: Settings, About, the Update row shows the update's id after the second
+   cold start.
 
 ## Roll back
 
 Prefer **republishing the last good code**. Publishing runs only from `main`, so revert the bad
 change on `main` (`git revert`), push, and publish. The new update has a
-newer `createdAt`, so every device takes it on its next launch. Upload it to the channels that got the
-bad one.
+newer `createdAt`, so every device takes it on its next launch.
 
 Emergency, when no fix can be built quickly: a signed `rollBackToEmbedded` directive sends devices
 back to the JS inside their binary:
 
 ```sh
 node scripts/publish-update.mjs rollback --key /path/outside/the/repo/updates-key.pem
-node scripts/publish-update.mjs --upload build/updates/<id> --channel production --target r2 \
-  --base-url https://<update domain> --skip-beta
-node scripts/publish-update.mjs --upload build/updates/<id> --channel beta --target r2 \
+node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
   --base-url https://<update domain>
 # commit and push docs/releases/updates.jsonl as the upload prints
 ```
-
-`--skip-beta` is the explicit exception to beta first; use it only here.
 
 Expo warns that the embedded JS may not read state a newer update wrote
 ([error recovery](https://docs.expo.dev/eas-update/error-recovery/)). A later normal update replaces the
@@ -212,8 +208,8 @@ echo "[{\"platform\":\"ios\",\"version\":\"0.0.0\",\"build\":\"1\",\"runtimeVers
 L="--local-test --cert $T/cert.pem --builds $T/builds.json"
 
 node scripts/publish-update.mjs $L --key $T/key.pem --base-url http://127.0.0.1:8787
-node scripts/publish-update.mjs $L --upload build/updates/<id> --channel beta --target local
-node scripts/publish-update.mjs $L verify --url http://127.0.0.1:8787/manifest --channel beta --runtime $R --allow-unlogged
+node scripts/publish-update.mjs $L --upload build/updates/<id> --target local
+node scripts/publish-update.mjs $L verify --url http://127.0.0.1:8787/manifest --runtime $R --allow-unlogged
 ```
 
 Device check (ADR plan step 4, integrator): a Release simulator build pointed at the local server,
@@ -230,8 +226,7 @@ APNS_ENVIRONMENT=production UPDATES_URL=http://127.0.0.1:8787/manifest UPDATES_C
 
 Plain http reaches loopback through the `NSAllowsLocalNetworking` exception `withLocalPreview` already
 adds. Check: an update applies on the next cold start; a bad signature, a wrong runtime and an older
-`createdAt` are refused; a crash at launch rolls back; Settings shows the running update and Early
-Updates, and with it on the server sees `channel=beta` in `Expo-Extra-Params`.
+`createdAt` are refused; a crash at launch rolls back; Settings shows the running update.
 
 Run on 2026-11-14 (iPhone 17 Pro simulator, iOS 26.5, Release, `expo-updates` 58.0.22):
 
@@ -248,8 +243,12 @@ Two things the commands above need on this machine: the Release simulator build 
 `ONLY_ACTIVE_ARCH=YES ARCHS=arm64` (the SSH module's libssh2 has no x86_64 simulator slice), and zsh does
 not split `$L`, so pass the flags inline.
 
-Not checked on a device yet: the rollback after a crash at launch, `channel=beta` reaching the server with
-Early Updates on, a wrong runtime (the server never serves one: unit tested), Android.
+On a real phone (2026-11-14, a TestFlight install of 1.0.1 (5)): the first real update (manifest
+`80207f58`) applied on the second cold start and Settings showed its id; the server then saw that phone
+ask with the update as its current one and answered 204.
+
+Not checked on a device yet: the rollback after a crash at launch, a wrong runtime (the server never
+serves one: unit tested), Android.
 
 
 ## App config (ADR plan step 7, applied)
@@ -308,11 +307,9 @@ prebuild does.
 - `apps/mobile/src/updates/appUpdates.ts`: the `AppUpdates` interface over `expo-updates`, with a fake
   (`fakeUpdatesApi`) and `disabledUpdates`; `deviceUpdates.ts` loads the native module lazily and never on
   web. Tests run with updates off (`jest.setup.js`), as a build from source does.
-- **Early Updates** (Settings, Help section, under Version; setting `earlyUpdates`, off by default): on
-  sends `channel=beta` (`Updates.setExtraParamAsync('channel', 'beta')`), off removes the param, so the
-  server serves `production`. `UpdateChannelSync` applies it at launch and on every toggle; it rides on the
-  next update request. Shown only when the build has updates.
-- **Update** row (same place, same condition): "Built In" for the binary's own JS, or the running update's
+- No channel: the app sends none and has no setting for one. Builds up to 1.0.1 (5) still show an
+  "Early Updates" switch until they run newer JS; it sends `channel=beta`, which the server ignores.
+- **Update** row (Settings, About; only when the build has updates): "Built In" for the binary's own JS, or the running update's
   first 8 id characters as the value with its date as the row's second line (both on one line were cut
   on a phone); the Report a Problem text carries both as `- Update: <id> (<date>)`.
 - Updates download at launch and apply on the next cold start, silently. The app never checks, fetches or

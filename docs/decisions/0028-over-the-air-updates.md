@@ -1,10 +1,11 @@
 # 0028. Over-the-air JS updates: expo-updates, a signed static server on our Cloudflare account
 
 Status: accepted (2026-11-14). Researched 2026-11-13; the owner decided the open points on 2026-11-14
-(section "Decided"). Built: the update server (`packages/updates-server`), the publish script
+(section "Decided") and later that day chose a single channel (section "Amendment: one channel"). Built: the update server (`packages/updates-server`), the publish script
 (`scripts/publish-update.mjs`) with the real R2 upload, the Worker's deploy script, and the app side;
-how to use them is in the [updates guide](../guides/updates.md). Not yet: a key, a deployment, a store
-build with `expo-updates`; the R2 upload and the deploy have not run against a real account.
+how to use them is in the [updates guide](../guides/updates.md). Since then (2026-11-14): the
+signing key exists with the owner, the Worker is deployed, store build 1.0.1 (5) carries `expo-updates`, and
+the first real update was uploaded and applied on a phone.
 
 ## Context
 
@@ -329,6 +330,7 @@ applied silently on the next cold start, used only for fixes and polish of revie
   (the publish script takes a file path at publish time; tests make a throwaway key in a temp folder).
 - **Beta versus everyone:** a channel the app sets at runtime (section 5); the server and the publish
   script handle `beta` and `production`. How the app decides is a later step. No staged percentage.
+  **Superseded the same day by "Amendment: one channel" below.**
 - **The Worker is its own package**, `packages/updates-server`, not a route of the relay.
 - **iOS first.** Android is not enabled (the publish script refuses it) until its client's behaviour on
   a missing or bad signature is verified on a device.
@@ -339,6 +341,31 @@ applied silently on the next cold start, used only for fixes and polish of revie
   runtime version, channel, `createdAt`, commit, the SHA-256 of the signed bytes and the signature, so
   anyone can compare what the server serves with the log (`publish-update.mjs verify --url`) and rebuild
   the update from the commit.
+
+## Amendment (owner, 2026-11-14): one channel
+
+The beta channel and the "Early Updates" setting are removed. Every official build asks for the same
+updates, the app sends no channel, and an update that is uploaded reaches every build with its runtime.
+This replaces the "Channels" point of section 5, the "Beta versus everyone" point above and step 10 of
+the plan ("beta channel only, then everyone").
+
+- **Why.** The owner tried the first real update on a TestFlight install through the beta channel
+  (manifest `80207f58`, applied on his iPhone) and then chose not to carry a setting users could mistake
+  for the thing that turns updates on, nor a second channel to operate.
+- **What it costs, as he was told before deciding.** There is no step between "published" and
+  "everyone": a bad update reaches every official build at once, and no update can be tried on a real
+  phone before the rest receive it. What stands between a mistake and the users is what remains: the
+  tests, the bundle verification before and after the upload, the local end-to-end on a Release simulator
+  build (updates guide, "Test locally"), the code signature, expo-updates' own return to the previous
+  bundle when an update crashes at launch (not checked on a device), and a rollback by publishing again.
+- **Server.** `/manifest` serves one pointer per (platform, runtime version) and ignores
+  `Expo-Extra-Params`: a build from before this amendment that still sends `channel="beta"` gets what
+  everyone gets. The pointer keeps its key, `channels/<platform>/<runtime>/production`.
+- **Public log.** New entries carry no channel. The one entry with `"channel":"beta"` records the test
+  above; readers do not count it as something the server serves.
+- **Left in the bucket:** the retired pointer `channels/ios/84ef6352…/beta` and the objects of that
+  update. Nothing reads the pointer; the objects are content-addressed and are reused if the same bundle
+  is published.
 
 ## Not verified
 

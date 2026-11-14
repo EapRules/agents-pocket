@@ -126,8 +126,11 @@ so no program-specific branches.
   end-to-end on a Release simulator build, store build 1.0.1 (5) submitted with updates on, and the first real
   update: manifest `80207f58` on beta only (2026-11-14), applied on the owner's iPhone from a TestFlight
   install, with the server seeing that phone ask as `channel="beta"` and answer 204 once it ran the update.
-  Left: an update to production once 1.0.1 is approved, when the owner asks. Not checked on a device:
-  rollback after a crash at launch, Android.
+  The owner then chose **one channel** (ADR 0028, amendment): the beta channel and the Early Updates
+  setting are gone, the server ignores the old param, and an upload reaches every official build at once.
+  Left: the first update for everyone once 1.0.1 is approved, when the owner asks (it also removes the
+  Early Updates switch from builds that still show it). Not checked on a device: rollback after a crash
+  at launch, Android.
 - [ ] **Encryption declared in the app** (owner said yes, 2026-11-14): `ITSAppUsesNonExemptEncryption = NO`, so
   App Store Connect stops asking per build. Ready on the branch `encryption-declaration`. It changes the runtime
   fingerprint, and an update can only be published from a tree whose runtime matches a released build, so it
