@@ -120,6 +120,12 @@ so no program-specific branches.
 - [x] **Background Work sheet:** Running and Finished sections, rows by kind (Subagent, Workflow,
   background command), and a Subagent's prompt above its transcript. No stop control: whether a program
   lets a task be stopped from outside is not verified.
+- [x] **One answers component for every Blocked card, and a tall command shown as its request.** Found on
+  the owner's phone (2026-11-14): a permission dialog taller than the terminal fell to the raw card, which
+  drew its own stacked "1. Yes / 2. No" buttons. Every card now draws its answers through `Answers`; a
+  command cut by the top of the screen shows the waiting request when its last rows match exactly
+  (`shown-request.ts`, fixture `claude-tall-bash.ansi`, atlas `rn.blocked-card-tall`). What is sent is
+  unchanged. Not yet on a phone: it reaches build 5 with the first update.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
   the publish script with the real R2 upload, the app side behind the official-build flag, the signing
   certificate in the repo (the key is with the owner), the privacy policy and the store wording, a local
