@@ -123,11 +123,11 @@ so no program-specific branches.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server
   (deployed, bucket empty), the publish script with the real R2 upload, the app side behind the official-build
   flag, the signing certificate in the repo (the key is with the owner), the privacy policy (deployed) and the
-  store wording, a local end-to-end on a Release simulator build, and store build 1.0.1 (4) uploaded with
-  updates on. Left: paste the new review notes and descriptions into App Store Connect, the owner's export
-  compliance answer and submission of build 4, then the first real update to beta (the R2 upload has never
-  run against the real account). Not checked on a device: rollback after a crash at launch, Early Updates
-  reaching the server as `channel=beta`, Android.
+  store wording (entered in the 1.0.1 draft), a local end-to-end on a Release simulator build, and store build
+  1.0.1 (5) uploaded with updates on. Left: the owner's export compliance answer for build 5, choosing build 5
+  in the 1.0.1 draft (it still names build 4) and submitting it, then the first real update to beta (the R2
+  upload has never run against the real account). Not checked on a device: rollback after a crash at launch,
+  Early Updates reaching the server as `channel=beta`, Android.
 
 ## 5. Needs the owner
 
