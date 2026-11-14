@@ -18,10 +18,10 @@ import { View } from 'react-native';
 import { useSettings } from '@/settings/SettingsProvider';
 import { reviewPasteLabels } from '@/terminal/selectionLabels';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
+import { TerminalStatus } from '@/terminal/TerminalStatus';
 import { useDockSlot } from '../detailUi';
 import type { AgentTerminalSession } from './AgentTerminalSession';
 import { CONTROL_KEYS, FULL_KEYBOARD, type KeyRows, keyLabel } from './keyTables';
-import { StatusOverlay } from './StatusOverlay';
 import { TerminalToolbar } from './TerminalToolbar';
 import { useAgentTerminalSession } from './useAgentTerminalSession';
 import { useTerminalTextActions } from './useTerminalTextActions';
@@ -153,7 +153,17 @@ function LiveTerminal({
             />
           )}
         </TerminalGestures>
-        <StatusOverlay status={terminal.snapshot.status} onRetry={store.retry.bind(store)} />
+        <TerminalStatus
+          status={terminal.snapshot.status}
+          actions={[
+            {
+              title: t('Retry'),
+              kind: 'secondary',
+              onPress: store.retry.bind(store),
+              testID: 'terminal-retry',
+            },
+          ]}
+        />
       </View>
       {dock ? <KeyboardDock rows={dock.rows} onKey={dockKey(dock)} testID="keys-dock" /> : null}
       <ActionMenu items={items} {...context.menuProps} />

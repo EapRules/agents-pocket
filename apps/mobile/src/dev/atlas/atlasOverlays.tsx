@@ -4,9 +4,9 @@ import { type ConfirmOptions, confirm } from '@openagentspocket/ui';
 import { type ReactNode, useEffect, useState } from 'react';
 import { AgentDetailScreen } from '@/agent-detail/AgentDetailScreen';
 import { COMPOSER_MORE_ANCHOR } from '@/agent-detail/composer/AgentComposer';
-import { StatusOverlay } from '@/agent-detail/terminal/StatusOverlay';
 import { NotificationExplainerSheet } from '@/notifications/NotificationDisclosure';
 import { deviceStorage } from '@/settings/deviceStorage';
+import { TerminalStatus } from '@/terminal/TerminalStatus';
 
 const noop = () => {};
 
@@ -48,7 +48,10 @@ export function TerminalStatusAtlas({ status }: { status: AttachStatus }) {
         onSwitch={noop}
         menu={[{ key: 'changes', title: t('Changes'), onPress: noop }]}
       />
-      <StatusOverlay status={status} onRetry={noop} />
+      <TerminalStatus
+        status={status}
+        actions={[{ title: t('Retry'), kind: 'secondary', onPress: noop }]}
+      />
     </>
   );
 }

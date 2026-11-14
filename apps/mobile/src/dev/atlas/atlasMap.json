@@ -643,7 +643,7 @@
   },
   {
     "id": "agent-detail.terminal-status-overlay",
-    "rn": "StatusOverlay",
+    "rn": "TerminalStatus",
     "note": "Connecting state over an empty terminal canvas"
   },
   {

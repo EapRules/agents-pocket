@@ -1,49 +1,14 @@
-import type { AttachStatus, PoolEntry } from '@openagentspocket/core';
+import type { PoolEntry } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import {
-  Button,
-  EmptyState,
-  makeStyles,
-  TerminalView,
-  useAttachedTerminal,
-} from '@openagentspocket/ui';
+import { makeStyles, TerminalView, useAttachedTerminal } from '@openagentspocket/ui';
 import { useSyncExternalStore } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { renderMessage } from '@/lib/renderText';
+import { View } from 'react-native';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
+import { TerminalStatus } from '@/terminal/TerminalStatus';
 
-const useStyles = makeStyles((th) => ({
+const useStyles = makeStyles(() => ({
   fill: { flex: 1 },
-  overlay: { backgroundColor: th.backdrop },
 }));
-
-function Overlay({ status, store }: { status: AttachStatus; store: PoolEntry['store'] }) {
-  const styles = useStyles();
-  if (status.kind === 'live') return null;
-  const ended = status.kind === 'ended';
-  return (
-    <View style={[StyleSheet.absoluteFill, styles.overlay]} testID="terminal-status">
-      <EmptyState
-        icon={ended ? 'warning' : 'terminal'}
-        title={ended ? t('Terminal Closed') : t('Opening Terminal…')}
-        message={ended ? renderMessage(status.message) : undefined}
-        testID={ended ? 'terminal-ended' : 'terminal-connecting'}
-        actions={
-          ended ? (
-            <>
-              <Button title={t('Reattach')} onPress={() => store.retryTerminal()} />
-              <Button
-                kind="secondary"
-                title={t('Take Over')}
-                onPress={() => store.takeOverTerminal()}
-              />
-            </>
-          ) : undefined
-        }
-      />
-    </View>
-  );
-}
 
 /** The shell's terminal view and its connection overlay. The view is keyed by pipeline surface. */
 export function ShellSurface({ entry }: { entry: PoolEntry }) {
@@ -65,7 +30,13 @@ export function ShellSurface({ entry }: { entry: PoolEntry }) {
           />
         )}
       </TerminalGestures>
-      <Overlay status={terminal.snapshot.status} store={store} />
+      <TerminalStatus
+        status={terminal.snapshot.status}
+        actions={[
+          { title: t('Reattach'), onPress: () => store.retryTerminal() },
+          { title: t('Take Over'), kind: 'secondary', onPress: () => store.takeOverTerminal() },
+        ]}
+      />
     </View>
   );
 }
