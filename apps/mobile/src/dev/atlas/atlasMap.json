@@ -522,6 +522,26 @@
     "note": "blocked Agent p1, Blocked card in the dock"
   },
   {
+    "id": "rn.blocked-card-clipped",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: a dialog the parser could not name, shown from the one waiting request it provably shows"
+  },
+  {
+    "id": "rn.blocked-card-raw",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: a dialog the parser could not name and no request matches, raw excerpt"
+  },
+  {
+    "id": "rn.blocked-card-persistent",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: Codex command approval, three options with a persistent one below the pair"
+  },
+  {
+    "id": "rn.blocked-card-question",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: a question with three answers, a vertical list"
+  },
+  {
     "id": "agent-detail.direct-input",
     "rn": "AgentDetailScreen",
     "note": "terminal surface"

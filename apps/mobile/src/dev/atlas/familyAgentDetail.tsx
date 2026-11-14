@@ -8,7 +8,7 @@ import { slashRows } from '@/agent-detail/composer/useSlashPanel';
 import { closeTerminalConfirmation } from '@/features/terminals/closeConfirmation';
 import { SHELL_CLOSE_ANCHOR, ShellTerminalScreen } from '@/features/terminals/ShellTerminalScreen';
 import { deviceStorage } from '@/settings/deviceStorage';
-import { AtlasBlocked } from './atlasBlocked';
+import { AtlasBlocked, type AtlasBlockedVariant } from './atlasBlocked';
 import { AtlasChat } from './atlasChat';
 import { noop, titled } from './atlasHelpers';
 import { AlertOver, closePanePopover, TerminalStatusAtlas } from './atlasOverlays';
@@ -19,7 +19,7 @@ function detail(
   pane: 'p1' | 'p2' | 'p4' | 'p5',
   surface: 'chat' | 'terminal',
   press?: readonly string[],
-  blocked = false,
+  blocked: AtlasBlockedVariant | false = false,
   looking = false,
   background?: 'list' | 'blocked' | 'command',
 ): AtlasEntry {
@@ -29,7 +29,7 @@ function detail(
       <AtlasChat looking={looking} background={background}>
         <Stack.Screen options={{ headerShown: false }} />
         {blocked ? (
-          <AtlasBlocked>
+          <AtlasBlocked variant={blocked}>
             <AgentDetailScreen
               hostId="demo"
               paneId={pane}
@@ -165,7 +165,11 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.header-more-menu': detail('p2', 'chat', ['agent-header-more']),
   'agent-detail.session-drawer': detail('p2', 'chat', ['agent-header-sidebar']),
   'agent-detail.session-drawer--agents': detail('p2', 'chat', ['agent-header-sidebar']),
-  'agent-detail.chat-blocked-card': detail('p1', 'chat', undefined, true, false, 'blocked'),
+  'agent-detail.chat-blocked-card': detail('p1', 'chat', undefined, 'bash', false, 'blocked'),
+  'rn.blocked-card-clipped': detail('p1', 'chat', undefined, 'clipped', false, 'blocked'),
+  'rn.blocked-card-raw': detail('p1', 'chat', undefined, 'raw', false, 'blocked'),
+  'rn.blocked-card-persistent': detail('p1', 'chat', undefined, 'persistent', false, 'blocked'),
+  'rn.blocked-card-question': detail('p1', 'chat', undefined, 'question', false, 'blocked'),
   'agent-detail.direct-input': terminal,
   'agent-detail.direct-input-more-menu': detail('p2', 'terminal', ['toolbar-more']),
   'agent-detail.terminal-toolbar': terminal,
