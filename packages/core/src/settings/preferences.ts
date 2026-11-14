@@ -46,7 +46,6 @@ export interface SettingsValues {
   appLockGrace: GracePeriod;
   appLockForKeys: boolean;
   /** Over-the-air updates from the beta channel (docs/guides/updates.md); only builds with updates show it. */
-  earlyUpdates: boolean;
 }
 
 export type SettingKey = keyof SettingsValues;
@@ -71,7 +70,6 @@ export const SETTINGS_DEFAULTS: Readonly<SettingsValues> = {
   appLockEnabled: false,
   appLockGrace: 'immediately',
   appLockForKeys: false,
-  earlyUpdates: false,
 };
 
 export const SETTING_KEYS = Object.keys(SETTINGS_DEFAULTS) as SettingKey[];

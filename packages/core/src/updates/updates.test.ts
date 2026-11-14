@@ -1,19 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  channelParamValue,
-  runningUpdateReportText,
-  summarizeRunningUpdate,
-  updateChannel,
-} from './index';
-
-describe('update channel', () => {
-  it('Early Updates asks for beta; off is production, sent as no param at all', () => {
-    expect(updateChannel(true)).toBe('beta');
-    expect(updateChannel(false)).toBe('production');
-    expect(channelParamValue('beta')).toBe('beta');
-    expect(channelParamValue('production')).toBeNull();
-  });
-});
+import { runningUpdateReportText, summarizeRunningUpdate } from './index';
 
 describe('running update', () => {
   const id = '0f6a2b3c-1d2e-4f50-8a9b-0c1d2e3f4a5b';

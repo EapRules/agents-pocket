@@ -213,16 +213,6 @@ export const root: SettingsPage = {
           subtitle: (ctx) => ctx.updates.runningDate,
           when: (ctx) => ctx.updates.enabled,
         },
-        {
-          kind: 'toggle',
-          id: 'settings.about.earlyUpdates',
-          title: () => t('Early Updates'),
-          subtitle: () =>
-            t('Get fixes a few days before everyone else. They are the same signed updates.'),
-          icon: 'sparkles',
-          key: 'earlyUpdates',
-          when: (ctx) => ctx.updates.enabled,
-        },
         route('setupGuide', () => t('Setup Guide'), 'file'),
         route('reportProblem', () => t('Report a Problem'), 'warning'),
         {

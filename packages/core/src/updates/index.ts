@@ -1,23 +1,8 @@
 /**
- * Over-the-air updates, the pure part (docs/decisions/0028-over-the-air-updates.md, Rollout). The
- * update server picks a channel from the `channel` key of the request's `Expo-Extra-Params`: `beta`,
- * or `production` when the key is absent. Both channels serve the same signed bundles; beta gets
- * them a few days earlier.
+ * Over-the-air updates, the pure part (docs/decisions/0028-over-the-air-updates.md). There is one
+ * channel: every official build asks the update server for the same updates and the app sends no
+ * channel at all.
  */
-export type UpdateChannel = 'beta' | 'production';
-
-/** The extra param the server reads. */
-export const UPDATE_CHANNEL_PARAM = 'channel';
-
-/** The channel the Early Updates setting asks for. */
-export function updateChannel(earlyUpdates: boolean): UpdateChannel {
-  return earlyUpdates ? 'beta' : 'production';
-}
-
-/** The extra param's value for a channel: `production` is the absence of the param. */
-export function channelParamValue(channel: UpdateChannel): string | null {
-  return channel === 'beta' ? 'beta' : null;
-}
 
 /** What the app runs: the JS inside the binary, or a downloaded update. */
 export interface RunningUpdate {

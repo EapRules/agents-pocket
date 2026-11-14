@@ -99,23 +99,19 @@ describe('SettingsScreen', () => {
   it('shows nothing about updates in a build without them', async () => {
     await setup('root');
     expect(screen.queryByTestId('settings.about.update')).toBeNull();
-    expect(screen.queryByTestId('settings.about.earlyUpdates')).toBeNull();
   });
 
-  it('in a build with updates, names the running one and offers Early Updates, off by default', async () => {
+  it('in a build with updates, names the running one', async () => {
     const api = fakeUpdatesApi({
       isEmbeddedLaunch: false,
       updateId: '0f6a2b3c-1d2e-4f50-8a9b-0c1d2e3f4a5b',
       createdAt: new Date('2026-11-14T12:00:00.000Z'),
     });
-    const store = await setup('root', { updates: createAppUpdates(api) });
+    await setup('root', { updates: createAppUpdates(api) });
     expect(screen.getByTestId('settings.about.update')).toBeTruthy();
     // The short id is the value and the date its own line: together they do not fit a phone row.
     expect(screen.getByText('0f6a2b3c')).toBeTruthy();
     expect(screen.getByText('2026-11-14')).toBeTruthy();
-    expect(store.get('earlyUpdates')).toBe(false);
-    await fireEvent(screen.getByTestId('settings.about.earlyUpdates'), 'valueChange', true);
-    expect(store.get('earlyUpdates')).toBe(true);
   });
 
   it("opens the site's privacy page from Help", async () => {
