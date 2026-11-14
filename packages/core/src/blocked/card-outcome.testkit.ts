@@ -9,7 +9,7 @@ import type { ChatProgram } from '../chat/model/types';
 import { decodeAnsiScreen } from './ansi-decoder';
 import { blockedSupportFor, genericCardExcerpt, parseBlockedDialog } from './programs';
 import type { RequestContext } from './request-match';
-import type { AnsiScreen, ScreenRow } from './screen';
+import { type AnsiScreen, makeRow, makeScreen, type ScreenRow } from './screen';
 import { requestShownOnScreen } from './shown-request';
 
 const GOLDENS = fileURLToPath(new URL('../../goldens/', import.meta.url));
@@ -58,6 +58,17 @@ export function allCaptures(): Capture[] {
     captures.push({ id: `fixtures/${name}`, program: programOf(name), screen });
   }
   return captures;
+}
+
+/**
+ * `screen` as a shorter terminal shows it when the dialog is taller than the terminal: the rows
+ * from `keepFrom` on, renumbered from 0, so whatever was above (the dialog's top) is off screen.
+ */
+export function cutTop(screen: AnsiScreen, keepFrom: number): AnsiScreen {
+  if (keepFrom <= 0 || keepFrom >= screen.rows.length) {
+    throw new Error(`cutTop: ${keepFrom} is outside the screen's ${screen.rows.length} rows`);
+  }
+  return makeScreen(screen.rows.slice(keepFrom).map((row, index) => makeRow(index, row.runs)));
 }
 
 /**

@@ -5,9 +5,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { allCaptures, looksLikeDialog, readCard } from './card-outcome.testkit';
-import { degradedTable, KNOWN_DEGRADED } from './degraded-dialogs.testkit';
-import { NO_REQUESTS } from './request-match';
+import type { ChatPendingRequest } from '../chat/model/types';
+import { allCaptures, cutTop, looksLikeDialog, readCard } from './card-outcome.testkit';
+import { CUT_VARIANTS, degradedTable, KNOWN_DEGRADED } from './degraded-dialogs.testkit';
+import { NO_REQUESTS, type RequestContext } from './request-match';
 
 const captures = allCaptures();
 const known = new Map(KNOWN_DEGRADED.map((entry) => [entry.id, entry]));
@@ -43,6 +44,44 @@ describe('degraded dialogs', () => {
       ).toEqual(reading);
     });
   });
+});
+
+const command = (summary: string): ChatPendingRequest => ({
+  entryID: 'e1',
+  callID: 'call_1',
+  kind: 'command',
+  toolName: 'Bash',
+  summary,
+  detail: null,
+  questions: [],
+  planFilePath: null,
+});
+
+describe('approval dialogs cut at the top by a short terminal', () => {
+  const byId = new Map(captures.map((capture) => [capture.id, capture]));
+
+  it('cover every program with an approval card', () => {
+    const programs = new Set(CUT_VARIANTS.map((entry) => byId.get(entry.fixture)?.program));
+    expect([...programs].sort()).toEqual(['claude', 'codex', 'grok', 'omp', 'opencode']);
+  });
+
+  it.each(CUT_VARIANTS.map((entry) => [entry.fixture, entry.cut, entry] as const))(
+    '%s with its %s off screen reads as recorded',
+    (_fixture, _cut, entry) => {
+      const capture = byId.get(entry.fixture);
+      if (!capture) throw new Error(`No capture ${entry.fixture}`);
+      // The full capture is a named dialog: the cut alone makes the difference.
+      expect(readCard(capture.screen, capture.program, NO_REQUESTS, true).outcome).toBe('named');
+      const context: RequestContext = entry.command
+        ? { requests: [command(entry.command)], subagentRunning: false }
+        : NO_REQUESTS;
+      const screen = cutTop(capture.screen, entry.keepFrom);
+      expect(readCard(screen, capture.program, context, true)).toEqual({
+        outcome: entry.outcome,
+        answers: entry.answers,
+      });
+    },
+  );
 });
 
 const TABLE_FILE = fileURLToPath(new URL('./degraded-dialogs.testkit.ts', import.meta.url));

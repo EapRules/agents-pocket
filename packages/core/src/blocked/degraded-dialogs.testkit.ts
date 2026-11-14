@@ -11,6 +11,10 @@
  * `unreadable` the "Keys" card (↑ ↓ Enter Escape, no row of the dialog). Answers: `digits` are
  * buttons that press the option's number, `none` leaves only Show terminal.
  *
+ * No capture holds a dialog taller than the terminal but `fixtures/claude-tall-bash`, so
+ * `CUT_VARIANTS` derives them: each program's approval captures with the top of the screen cut
+ * (`cutTop`), and what the card does with each today. A change in that column fails a test too.
+ *
  * <degraded-table>
  * Known degraded captures:
  *
@@ -27,6 +31,40 @@
  * | opencode-25-reject-feedback-180 | generic | none | OpenCode reject note: by design typed in the terminal. User sees raw rows and the reason |
  * | opencode-42-reject-feedback-62 | generic | none | OpenCode reject note at 62 columns: as above. User sees raw rows and the reason |
  * | fixtures/claude-tall-bash | generic | digits | Claude Bash taller than the terminal: raw without a request; with the one waiting command it is `shown` (shown-request-tall.test.ts) |
+ *
+ * Approval dialogs cut at the top:
+ *
+ * | Capture | Cut | Card | Answers |
+ * |---|---|---|---|
+ * | claude-02-c1-bash-blocked | top | shown | digits |
+ * | claude-02-c1-bash-blocked | title | shown | digits |
+ * | claude-02-c1-bash-blocked | options | generic | digits |
+ * | claude-22-c7-edit | top | generic | digits |
+ * | claude-22-c7-edit | title | generic | digits |
+ * | claude-22-c7-edit | options | generic | digits |
+ * | codex-01-x1-exec | title | generic | digits |
+ * | codex-01-x1-exec | options | generic | digits |
+ * | codex-02-x2-patch | title | generic | digits |
+ * | codex-02-x2-patch | options | generic | digits |
+ * | opencode-10-permission-180 | top | named | - |
+ * | opencode-10-permission-180 | title | unreadable | - |
+ * | opencode-10-permission-180 | options | unreadable | - |
+ * | opencode-27-permission-shell-180 | top | named | - |
+ * | opencode-27-permission-shell-180 | title | unreadable | - |
+ * | opencode-27-permission-shell-180 | options | unreadable | - |
+ * | opencode-37-permission-long-62 | top | named | - |
+ * | opencode-37-permission-long-62 | title | unreadable | - |
+ * | opencode-37-permission-long-62 | options | unreadable | - |
+ * | grok-12-permission-command | top | named | - |
+ * | grok-12-permission-command | title | named | - |
+ * | grok-12-permission-command | options | named | - |
+ * | grok-14-permission-edit | top | named | - |
+ * | grok-14-permission-edit | title | named | - |
+ * | grok-14-permission-edit | options | named | - |
+ * | omp-24-approval-a-dialog | title | generic | none |
+ * | omp-24-approval-a-dialog | options | generic | none |
+ * | omp-36-approval-edit-18-12 | title | generic | none |
+ * | omp-36-approval-edit-18-12 | options | generic | none |
  * </degraded-table>
  */
 import type { CardOutcome, GenericAnswers } from './card-outcome.testkit';
@@ -111,7 +149,95 @@ export const KNOWN_DEGRADED: readonly KnownDegraded[] = [
   },
 ];
 
-/** The header table: one row per known degraded capture. */
+/** Which part of the dialog a size variant cuts off the top of the screen. */
+export type Cut = 'top' | 'title' | 'options';
+
+export interface CutVariant {
+  /** A golden stem (`allCaptures` id). */
+  readonly fixture: string;
+  /**
+   * `top`: the dialog's first row (its rule, border or padding) is off screen; `title`: its
+   * heading too; `options`: everything above the answers.
+   */
+  readonly cut: Cut;
+  /** The first screen row kept (`cutTop`). */
+  readonly keepFrom: number;
+  /** The waiting request's command when the dialog asks to run one, for `shown`. */
+  readonly command: string | null;
+  readonly outcome: CardOutcome;
+  readonly answers: GenericAnswers | null;
+}
+
+const variant = (
+  fixture: string,
+  command: string | null,
+  cuts: readonly [Cut, number, CardOutcome, GenericAnswers | null][],
+): CutVariant[] =>
+  cuts.map(([cut, keepFrom, outcome, answers]) => ({
+    fixture,
+    cut,
+    keepFrom,
+    command,
+    outcome,
+    answers,
+  }));
+
+/** Each program's approval captures with their top cut by the terminal, and what the card does today. */
+export const CUT_VARIANTS: readonly CutVariant[] = [
+  ...variant('claude-02-c1-bash-blocked', 'touch c1.txt', [
+    ['top', 12, 'shown', 'digits'],
+    ['title', 13, 'shown', 'digits'],
+    ['options', 19, 'generic', 'digits'],
+  ]),
+  ...variant('claude-22-c7-edit', null, [
+    ['top', 28, 'generic', 'digits'],
+    ['title', 29, 'generic', 'digits'],
+    ['options', 35, 'generic', 'digits'],
+  ]),
+  ...variant('codex-01-x1-exec', 'touch x1.txt', [
+    ['title', 27, 'generic', 'digits'],
+    ['options', 35, 'generic', 'digits'],
+  ]),
+  ...variant('codex-02-x2-patch', null, [
+    ['title', 30, 'generic', 'digits'],
+    ['options', 35, 'generic', 'digits'],
+  ]),
+  ...variant('opencode-10-permission-180', null, [
+    ['top', 38, 'named', null],
+    ['title', 39, 'unreadable', null],
+    ['options', 44, 'unreadable', null],
+  ]),
+  ...variant('opencode-27-permission-shell-180', 'git status', [
+    ['top', 39, 'named', null],
+    ['title', 40, 'unreadable', null],
+    ['options', 44, 'unreadable', null],
+  ]),
+  ...variant('opencode-37-permission-long-62', null, [
+    ['top', 26, 'named', null],
+    ['title', 27, 'unreadable', null],
+    ['options', 36, 'unreadable', null],
+  ]),
+  ...variant('grok-12-permission-command', 'chmod 644 README.md', [
+    ['top', 34, 'named', null],
+    ['title', 35, 'named', null],
+    ['options', 38, 'named', null],
+  ]),
+  ...variant('grok-14-permission-edit', null, [
+    ['top', 37, 'named', null],
+    ['title', 38, 'named', null],
+    ['options', 39, 'named', null],
+  ]),
+  ...variant('omp-24-approval-a-dialog', 'echo approved-2', [
+    ['title', 34, 'generic', 'none'],
+    ['options', 36, 'generic', 'none'],
+  ]),
+  ...variant('omp-36-approval-edit-18-12', null, [
+    ['title', 31, 'generic', 'none'],
+    ['options', 32, 'generic', 'none'],
+  ]),
+];
+
+/** The header table: one row per known degraded capture, then one per cut variant. */
 export function degradedTable(): string[] {
   const lines = [
     'Known degraded captures:',
@@ -121,6 +247,11 @@ export function degradedTable(): string[] {
   ];
   for (const entry of KNOWN_DEGRADED) {
     lines.push(`| ${entry.id} | ${entry.outcome} | ${entry.answers ?? '-'} | ${entry.why} |`);
+  }
+  lines.push('', 'Approval dialogs cut at the top:', '', '| Capture | Cut | Card | Answers |');
+  lines.push('|---|---|---|---|');
+  for (const entry of CUT_VARIANTS) {
+    lines.push(`| ${entry.fixture} | ${entry.cut} | ${entry.outcome} | ${entry.answers ?? '-'} |`);
   }
   return lines;
 }
