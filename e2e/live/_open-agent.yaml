@@ -8,6 +8,15 @@ appId: com.openagentspocket.app
     visible:
       id: "session-.*${PANE}"
     timeout: 30000
+# If the notification sheet is still up (02-add-host answers it), answer Not Now.
+- runFlow:
+    when:
+      visible:
+        id: notification-primer-secondary
+    commands:
+      - tapOn:
+          id: notification-primer-secondary
+      - waitForAnimationToEnd
 - tapOn:
     id: "session-.*${PANE}"
 - extendedWaitUntil:

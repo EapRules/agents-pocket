@@ -45,3 +45,16 @@ appId: com.openagentspocket.app
 - assertNotVisible: "Demo Host"
 - runFlow: ../sim/_guard.yaml
 - takeScreenshot: design/atlas/sim/${SHOTS}02-home
+# The notification sheet shows once, after the first Host connects and Home is in front. The lab
+# answers Not Now: it never asks the simulator for the system permission.
+- extendedWaitUntil:
+    visible:
+      id: notification-primer-secondary
+    timeout: 15000
+- takeScreenshot: design/atlas/sim/${SHOTS}02-notifications
+- tapOn:
+    id: notification-primer-secondary
+- extendedWaitUntil:
+    notVisible:
+      id: notification-primer-secondary
+    timeout: 10000
