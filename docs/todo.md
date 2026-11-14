@@ -120,14 +120,14 @@ so no program-specific branches.
 - [x] **Background Work sheet:** Running and Finished sections, rows by kind (Subagent, Workflow,
   background command), and a Subagent's prompt above its transcript. No stop control: whether a program
   lets a task be stopped from outside is not verified.
-- [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server
-  (deployed, bucket empty), the publish script with the real R2 upload, the app side behind the official-build
-  flag, the signing certificate in the repo (the key is with the owner), the privacy policy (deployed) and the
-  store wording (entered in the 1.0.1 draft), a local end-to-end on a Release simulator build, and store build
-  1.0.1 (5) uploaded with updates on. Left: the owner's export compliance answer for build 5, choosing build 5
-  in the 1.0.1 draft (it still names build 4) and submitting it, then the first real update to beta (the R2
-  upload has never run against the real account). Not checked on a device: rollback after a crash at launch,
-  Early Updates reaching the server as `channel=beta`, Android.
+- [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
+  the publish script with the real R2 upload, the app side behind the official-build flag, the signing
+  certificate in the repo (the key is with the owner), the privacy policy and the store wording, a local
+  end-to-end on a Release simulator build, store build 1.0.1 (5) submitted with updates on, and the first real
+  update: manifest `80207f58` on beta only (2026-11-14), applied on the owner's iPhone from a TestFlight
+  install, with the server seeing that phone ask as `channel="beta"` and answer 204 once it ran the update.
+  Left: an update to production once 1.0.1 is approved, when the owner asks. Not checked on a device:
+  rollback after a crash at launch, Android.
 - [ ] **Encryption declared in the app** (owner said yes, 2026-11-14): `ITSAppUsesNonExemptEncryption = NO`, so
   App Store Connect stops asking per build. Ready on the branch `encryption-declaration`. It changes the runtime
   fingerprint, and an update can only be published from a tree whose runtime matches a released build, so it
