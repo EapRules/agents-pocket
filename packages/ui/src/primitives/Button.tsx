@@ -86,6 +86,8 @@ interface CommonProps {
   tight?: boolean;
   /** Draws in the text color instead of the kind's: chrome that should not read as an accent. */
   neutral?: boolean;
+  /** Shows the whole label however long: for text the user approves, never cut at three lines. */
+  fullLabel?: boolean;
   /** Registers the button as a popover anchor (`confirm({ anchorKey })`). */
   anchorKey?: string;
   testID?: string;
@@ -112,6 +114,7 @@ export function Button({
   pill = false,
   tight = false,
   neutral = false,
+  fullLabel = false,
   anchorKey,
   testID,
 }: ButtonProps) {
@@ -158,7 +161,7 @@ export function Button({
         <Text
           variant={LABEL_VARIANT[size]}
           // Every button reads at one size: a long label wraps, and only a shared row may shrink it.
-          numberOfLines={tight ? 1 : 3}
+          numberOfLines={tight ? 1 : fullLabel ? undefined : 3}
           adjustsFontSizeToFit={tight}
           minimumFontScale={0.8}
           style={[styles.label, { color: ink }]}

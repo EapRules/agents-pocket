@@ -35,6 +35,8 @@ function AnswerButton({ answer, disabled }: { answer: Answer; disabled: boolean 
       kind={answer.kind}
       size="medium"
       disabled={disabled}
+      // A rule-saving answer names the scope the user approves: never cut it.
+      fullLabel={answer.persistent}
       onPress={answer.onPress}
       testID={answer.testID}
     />

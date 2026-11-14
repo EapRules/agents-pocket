@@ -7,7 +7,7 @@ import {
   message,
 } from '@openagentspocket/core';
 import { ThemeProvider } from '@openagentspocket/ui';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { BlockedCard, type BlockedCardProps } from './BlockedCard';
 import { optionKind, stopLabel } from './dialogModel';
 
@@ -85,6 +85,14 @@ describe('BlockedCard', () => {
     const dialog = bashDialog();
     await renderCard({ content: { kind: 'card', dialog } });
     expect(screen.getByTestId('blocked-subject-code').props.children).toBe(dialog.subject.command);
+  });
+
+  it('shows a rule-saving answer whole and still cuts an ordinary one', async () => {
+    await renderCard({ content: { kind: 'card', dialog: bashDialog() } });
+    const lines = (testID: string) =>
+      within(screen.getByTestId(testID)).getByText(/Yes/).props.numberOfLines;
+    expect(lines('blocked-option-2')).toBeUndefined();
+    expect(lines('blocked-option-1')).toBe(3);
   });
 
   it('disables every answer while keys go out or after an unconfirmed answer', async () => {
