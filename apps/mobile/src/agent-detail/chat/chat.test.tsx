@@ -89,13 +89,21 @@ describe('a message another agent sent', () => {
 });
 
 describe('the status line over the Composer', () => {
-  it('folds finished work into a count and opens the sheet, which lists the notices', async () => {
+  it('folds finished work into a count and opens the sheet, notices folded into its rows', async () => {
     await showAtlasChat('list');
     const line = await screen.findByTestId('background-work-strip-summary');
-    expect(line.props.accessibilityValue.text).toContain('2 done');
+    // It counts what the sheet lists: the running command, and the notice standing in as a row.
+    // (Running reads "not updating" here: the test has no connected Host.)
+    expect(line.props.accessibilityValue.text).toMatch(/^3 .+, 3 done, 1 failed$/);
     expect(screen.queryByTestId('work-row-w3')).toBeNull();
     await fireEvent.press(line);
-    await waitFor(() => expect(screen.getByTestId('work-notice-n1')).toBeTruthy());
+    // Something runs, so Finished starts collapsed.
+    await waitFor(() => expect(screen.getByTestId('work-sheet-c1')).toBeTruthy());
+    expect(screen.queryByTestId('work-sheet-w3')).toBeNull();
+    await fireEvent.press(screen.getByTestId('work-section-finished-header-toggle'));
+    // A notice for work the lines don't hold is its row; one for a listed command is not.
+    await waitFor(() => expect(screen.getByTestId('work-sheet-notice:n1')).toBeTruthy());
+    expect(screen.queryByTestId('work-sheet-notice:n2')).toBeNull();
     expect(screen.getByTestId('work-sheet-w3')).toBeTruthy();
   });
 });

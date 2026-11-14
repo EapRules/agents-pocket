@@ -4,12 +4,14 @@ import { Markdown } from '../markdown/Markdown';
 import { Button } from '../primitives/Button';
 import { EmptyState } from '../primitives/EmptyState';
 import { Icon, type IconName } from '../primitives/Icon';
+import { Section } from '../primitives/Section';
 import { Spinner } from '../primitives/Spinner';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { makeStyles, useTheme } from '../theme/theme';
 import { ChatToolRow } from './ChatToolRow';
 import { ChatUserBubble } from './ChatUserBubble';
+import { CollapsibleMarkdown } from './CollapsibleMarkdown';
 
 /** One row of a subagent's transcript. */
 export type SubagentRow =
@@ -30,6 +32,9 @@ export interface SubagentTranscriptLabels {
   missingMessage: string;
   failedTitle: string;
   retry: string;
+  prompt: string;
+  showMore: string;
+  showLess: string;
 }
 
 export const defaultSubagentLabels: SubagentTranscriptLabels = {
@@ -44,6 +49,9 @@ export const defaultSubagentLabels: SubagentTranscriptLabels = {
     'The Host has no transcript for this subagent. Claude Code may have cleaned it up.',
   failedTitle: "Couldn't Load the Transcript",
   retry: 'Try Again',
+  prompt: 'Prompt',
+  showMore: 'Show More',
+  showLess: 'Show Less',
 };
 
 const BACK_SIZE = 36;
@@ -85,7 +93,41 @@ const useStyles = makeStyles((t) => ({
   },
   bleed: { marginHorizontal: -t.spacing.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: t.spacing.sm },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: t.metrics.screenInset,
+    paddingVertical: t.spacing.sm,
+    gap: t.spacing.sm,
+  },
+  brief: { gap: t.spacing.xs },
 }));
+
+/** What the Subagent was asked: its description, then its prompt under a heading. */
+function Brief({
+  description,
+  prompt,
+  labels,
+}: {
+  description?: string;
+  prompt?: string;
+  labels: SubagentTranscriptLabels;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.brief} testID="subagent-brief">
+      {description ? <Text variant="headline">{description}</Text> : null}
+      {prompt ? (
+        <Section title={labels.prompt} grouped={false} testID="subagent-prompt">
+          <CollapsibleMarkdown
+            text={prompt}
+            labels={{ more: labels.showMore, less: labels.showLess }}
+            testID="subagent-prompt-text"
+          />
+        </Section>
+      ) : null}
+    </View>
+  );
+}
 
 function SubagentTool({ row }: { row: Extract<SubagentRow, { kind: 'tool' }> }) {
   const [open, setOpen] = useState(false);
@@ -100,9 +142,12 @@ function SubagentTool({ row }: { row: Extract<SubagentRow, { kind: 'tool' }> }) 
 }
 
 interface ClaudeSubagentTranscriptProps {
+  /** The subagent's type or name ("Explore"). */
   title: string;
-  /** The subagent's type ("Explore"), after "Read-only ·". */
-  kind?: string;
+  /** What the launch called the task ("Find callers"), over the prompt. */
+  description?: string;
+  /** What the launch asked of it, as markdown; collapsed to a few lines when long. */
+  prompt?: string;
   phase?: SubagentPhase;
   /** Only the tail of a long transcript was read. */
   partial?: boolean;
@@ -115,13 +160,14 @@ interface ClaudeSubagentTranscriptProps {
 }
 
 /**
- * A subagent's own transcript, pushed from its call row in Chat: back button, task title, a
- * read-only hint naming the subagent type, then the timeline. No composer, no status line, and
- * nothing here sends input anywhere.
+ * A subagent's own transcript, pushed from its call row in Chat: back button, its type as the
+ * title, a read-only hint, what it was asked (description and prompt), then the timeline. No
+ * composer, no status line, and nothing here sends input anywhere.
  */
 export function ClaudeSubagentTranscript({
   title,
-  kind,
+  description,
+  prompt,
   phase = 'loaded',
   partial = false,
   rows,
@@ -134,7 +180,7 @@ export function ClaudeSubagentTranscript({
   const styles = useStyles();
   const theme = useTheme();
   const text = { ...defaultSubagentLabels, ...labels };
-  const hint = [text.readOnly, kind, partial && phase === 'loaded' ? text.partial : undefined]
+  const hint = [text.readOnly, partial && phase === 'loaded' ? text.partial : undefined]
     .filter(Boolean)
     .join(' · ');
 
@@ -180,26 +226,25 @@ export function ClaudeSubagentTranscript({
           />
         );
       default:
-        return (
-          <ScrollView contentContainerStyle={styles.timeline} testID="subagent-timeline">
-            {rows.map((row) => {
-              if (row.kind === 'user')
-                return (
-                  <View key={row.id} style={styles.bleed}>
-                    <ChatUserBubble text={row.text} testID={`subagent-user-${row.id}`} />
-                  </View>
-                );
-              if (row.kind === 'assistant') return <Markdown key={row.id} text={row.text} />;
-              return (
-                <View key={row.id} style={styles.bleed}>
-                  <SubagentTool row={row} />
-                </View>
-              );
-            })}
-          </ScrollView>
-        );
+        return rows.map((row) => {
+          if (row.kind === 'user')
+            return (
+              <View key={row.id} style={styles.bleed}>
+                <ChatUserBubble text={row.text} testID={`subagent-user-${row.id}`} />
+              </View>
+            );
+          if (row.kind === 'assistant') return <Markdown key={row.id} text={row.text} />;
+          return (
+            <View key={row.id} style={styles.bleed}>
+              <SubagentTool row={row} />
+            </View>
+          );
+        });
     }
   };
+  const hasBrief = Boolean(description || prompt);
+  // The brief reads from the top; a bare timeline sits at the bottom, as a conversation does.
+  const scrolls = phase === 'loaded' || (hasBrief && phase !== 'loading');
 
   return (
     <View style={styles.root} testID={testID}>
@@ -231,7 +276,17 @@ export function ClaudeSubagentTranscript({
           </Text>
         </View>
       </View>
-      {content()}
+      {scrolls ? (
+        <ScrollView
+          contentContainerStyle={hasBrief ? styles.scroll : styles.timeline}
+          testID={phase === 'loaded' ? 'subagent-timeline' : 'subagent-scroll'}
+        >
+          {hasBrief ? <Brief description={description} prompt={prompt} labels={text} /> : null}
+          {content()}
+        </ScrollView>
+      ) : (
+        content()
+      )}
     </View>
   );
 }

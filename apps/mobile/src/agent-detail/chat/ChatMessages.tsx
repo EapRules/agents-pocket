@@ -8,6 +8,7 @@ import {
 } from '@openagentspocket/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { renderMessage } from '@/lib/renderText';
+import { useAgentBlocked } from '../detailUi';
 
 /** Who sent a message, as the line and the sheet name them. */
 export function senderName(from: ChatNotice['from']): string {
@@ -75,11 +76,12 @@ export function ChatLiveLine({ turn }: { turn: ChatLiveTurn }) {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
-  const line = liveLine(turn, now);
+  const line = liveLine(turn, now, useAgentBlocked());
   return (
     <ChatWorkingRow
       text={renderMessage(line.text)}
       accessibilityLabel={renderMessage(line.accessibilityLabel)}
+      waiting={line.waiting}
     />
   );
 }

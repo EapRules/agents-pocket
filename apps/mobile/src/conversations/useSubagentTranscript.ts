@@ -1,4 +1,4 @@
-import type { ClaudeSubagentRoute } from '@openagentspocket/core';
+import { type ClaudeSubagentRoute, subagentPrompt } from '@openagentspocket/core';
 import type { SubagentPhase, SubagentRow } from '@openagentspocket/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { subagentRows } from './subagentRows';
@@ -7,12 +7,23 @@ import { useConversationRegistry } from './useConversation';
 export interface SubagentTranscriptState {
   phase: SubagentPhase;
   route: ClaudeSubagentRoute | null;
+  /** What the Subagent was asked (markdown): its launch's, else its transcript's first message. */
+  prompt: string | null;
+  /** The timeline, without the message that repeats the prompt. */
   rows: SubagentRow[];
   /** Only the tail of a long transcript was read. */
   partial: boolean;
   failure?: string;
   retry: () => void;
 }
+
+const LOADING: Omit<SubagentTranscriptState, 'retry'> = {
+  phase: 'loading',
+  route: null,
+  prompt: null,
+  rows: [],
+  partial: false,
+};
 
 /**
  * One Subagent's transcript of an Agent, read once while `agentId` is set (and again on `retry`).
@@ -25,33 +36,32 @@ export function useSubagentTranscript(
 ): SubagentTranscriptState {
   const registry = useConversationRegistry();
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<Omit<SubagentTranscriptState, 'retry'>>({
-    phase: 'loading',
-    route: null,
-    rows: [],
-    partial: false,
-  });
+  const [state, setState] = useState<Omit<SubagentTranscriptState, 'retry'>>(LOADING);
   useEffect(() => {
     if (agentId === null || !registry) return;
     let live = true;
     void attempt;
-    setState({ phase: 'loading', route: null, rows: [], partial: false });
+    setState(LOADING);
     void registry.readSubagent(hostId, paneId, agentId).then(({ route, outcome }) => {
       if (!live) return;
+      const base = { route, prompt: route?.prompt ?? null, rows: [], partial: false };
       switch (outcome.type) {
-        case 'loaded':
+        case 'loaded': {
+          const { prompt, entryID } = subagentPrompt(route, outcome.transcript, outcome.isPartial);
           setState({
             phase: 'loaded',
             route,
-            rows: subagentRows(outcome.transcript),
+            prompt,
+            rows: subagentRows(outcome.transcript).filter((row) => row.id !== entryID),
             partial: outcome.isPartial,
           });
           break;
+        }
         case 'unreadable':
-          setState({ phase: 'failed', route, rows: [], partial: false, failure: outcome.reason });
+          setState({ ...base, phase: 'failed', failure: outcome.reason });
           break;
         default:
-          setState({ phase: outcome.type, route, rows: [], partial: false });
+          setState({ ...base, phase: outcome.type });
       }
     });
     return () => {

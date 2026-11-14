@@ -6,6 +6,7 @@ const themed = (ui: React.ReactElement) => <ThemeProvider themeId="indigo">{ui}<
 
 import {
   ClaudeSubagentTranscript,
+  CollapsibleMarkdown,
   ComposerAttachmentStrip,
   SkillContentSheet,
   type SubagentRow,
@@ -118,7 +119,7 @@ describe('ClaudeSubagentTranscript', () => {
   it('is read-only with a back button and expandable tool rows', async () => {
     const onBack = jest.fn();
     await renderThemed(
-      <ClaudeSubagentTranscript title="Task" kind="Explore" rows={rows} onBack={onBack} />,
+      <ClaudeSubagentTranscript title="Explore" description="Task" rows={rows} onBack={onBack} />,
     );
     expect(screen.getByTestId('subagent-read-only')).toBeTruthy();
     expect(screen.queryByTestId('composer')).toBeNull();
@@ -152,5 +153,45 @@ describe('ClaudeSubagentTranscript', () => {
     );
     await fireEvent.press(screen.getByRole('button', { name: 'Try Again' }));
     expect(onRetry).toHaveBeenCalled();
+  });
+
+  it('shows the prompt it was given above its timeline, and still when the file is gone', async () => {
+    const view = await renderThemed(
+      <ClaudeSubagentTranscript
+        title="Explore"
+        prompt="Find **every** caller."
+        rows={rows}
+        onBack={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('subagent-prompt')).toBeTruthy();
+    expect(screen.getByTestId('subagent-timeline')).toBeTruthy();
+    await view.rerender(
+      themed(
+        <ClaudeSubagentTranscript
+          title="Explore"
+          prompt="Find every caller."
+          phase="missing"
+          rows={[]}
+          onBack={jest.fn()}
+        />,
+      ),
+    );
+    expect(screen.getByTestId('subagent-prompt')).toBeTruthy();
+    expect(screen.getByTestId('subagent-missing')).toBeTruthy();
+  });
+});
+
+describe('CollapsibleMarkdown', () => {
+  const labels = { more: 'More', less: 'Less' };
+
+  it('offers Show More only once its text runs past the lines it shows', async () => {
+    await renderThemed(<CollapsibleMarkdown text="Long" labels={labels} />);
+    const content = screen.getByTestId('collapsible-markdown-content');
+    await fireEvent(content, 'layout', { nativeEvent: { layout: { height: 20 } } });
+    expect(screen.queryByTestId('collapsible-markdown-toggle')).toBeNull();
+    await fireEvent(content, 'layout', { nativeEvent: { layout: { height: 2000 } } });
+    await fireEvent.press(screen.getByRole('button', { name: 'More' }));
+    expect(screen.getByRole('button', { name: 'Less' })).toBeTruthy();
   });
 });

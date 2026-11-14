@@ -91,14 +91,26 @@ export function doingText(doing: ChatTurnDoing | null): Text | null {
 export interface ChatLiveLine {
   text: Text;
   accessibilityLabel: Text;
+  /** The turn waits on the user: the line wears the needs-you look, not the working one. */
+  waiting: boolean;
 }
 
-/** The live line: "Working… 1m 56s · pnpm test". */
-export function liveLine(turn: ChatLiveTurn, now: number): ChatLiveLine {
+/**
+ * The live line: "Working… 1m 56s · pnpm test", or "Waiting for you… 1m 56s" while the turn waits
+ * on the user (a request in its records, or `isBlocked`: herdr reports the Agent Blocked).
+ */
+export function liveLine(turn: ChatLiveTurn, now: number, isBlocked = false): ChatLiveLine {
   const seconds = Math.max(0, (now - Date.parse(turn.since)) / 1000);
-  const doing = doingText(turn.doing);
-  const shown: Text[] = [message('Working… %@', formatDuration(seconds))];
-  const spoken: Text[] = [message('Working for %@', formatDuration(seconds, 'wide'))];
+  const waiting = isBlocked || turn.doing?.kind === 'waiting';
+  // "Needs you" would repeat the line's own words.
+  const doing = turn.doing?.kind === 'waiting' ? null : doingText(turn.doing);
+  const key = waiting ? 'Waiting for you… %@' : 'Working… %@';
+  const shown: Text[] = [message(key, formatDuration(seconds))];
+  const spoken: Text[] = [
+    waiting
+      ? message(key, formatDuration(seconds, 'wide'))
+      : message('Working for %@', formatDuration(seconds, 'wide')),
+  ];
   if (doing !== null) {
     shown.push(doing);
     spoken.push(doing);
@@ -106,6 +118,7 @@ export function liveLine(turn: ChatLiveTurn, now: number): ChatLiveLine {
   return {
     text: { join: shown, separator: ' · ' },
     accessibilityLabel: { join: spoken, separator: ', ' },
+    waiting,
   };
 }
 
@@ -118,25 +131,24 @@ export function sameLiveTurn(a: ChatLiveTurn | null, b: ChatLiveTurn | null): bo
 export interface ChatStatusLineOptions {
   /** herdr reports the Agent Blocked: it waits on the user. */
   isBlocked: boolean;
-  /** The harness notices the sheet lists. */
-  notices?: number;
 }
 
 const n = (value: number) => String(value);
 
 /**
  * The line over the Composer: what is not the turn itself (the live line at the transcript's end
- * shows that). It says the running turn needs the user, and counts the Background Work, finished
- * work and notices included so they stay one tap away: the sheet lists them. Null with none of it.
+ * shows that). It says the running turn needs the user, and counts the Background Work the sheet
+ * lists (`backgroundSheetOf`: every kind, notices folded in), so it never promises a row the sheet
+ * lacks. Null with none of it.
  */
 export function chatStatusLine(
   turn: ChatLiveTurn | null,
   work: BackgroundWorkPresentation,
-  { isBlocked, notices = 0 }: ChatStatusLineOptions,
+  { isBlocked }: ChatStatusLineOptions,
 ): ChatStatusLine | null {
   // Waiting on the user belongs to a running turn.
   const waiting = turn !== null && (isBlocked || turn.doing?.kind === 'waiting');
-  if (!waiting && work.rows.length === 0 && notices === 0) return null;
+  if (!waiting && work.rows.length === 0) return null;
   const shown: Text[] = [];
   const spoken: Text[] = [];
   const both = (text: Text) => {
@@ -154,7 +166,6 @@ export function chatStatusLine(
     [count('completed'), '%lld done'],
     [count('failed'), '%lld failed'],
     [count('stopped'), '%lld stopped'],
-    [notices, '%lld notices'],
   ] as const) {
     if (value > 0) both(message(key, n(value)));
   }
@@ -167,7 +178,7 @@ export function chatStatusLine(
         ? 'unconfirmed'
         : failed
           ? 'failed'
-          : count('completed') > 0 || notices > 0
+          : count('completed') > 0
             ? 'completed'
             : 'stopped';
   return {

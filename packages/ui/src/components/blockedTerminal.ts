@@ -3,9 +3,12 @@
 export {
   type BackgroundWorkAgentItem,
   type BackgroundWorkDetailItem,
+  type BackgroundWorkItemKind,
   BackgroundWorkList,
   type BackgroundWorkListLabels,
-  type BackgroundWorkNoticeItem,
+  type BackgroundWorkSection,
+  type BackgroundWorkSections,
+  sectionOpen,
 } from './BackgroundWorkList';
 export {
   BackgroundWorkGlyph,

@@ -1,11 +1,10 @@
 import {
-  type BackgroundWorkNotice,
   type BackgroundWorkPresentation,
+  backgroundSheetOf,
   backgroundWorkOf,
   type ChatBackgroundWork,
   emptyBackgroundWork,
   holdsActivePace,
-  listedNotices,
   openableSubagentID,
   presentBackgroundWork,
 } from '@openagentspocket/core';
@@ -18,8 +17,11 @@ import { useConversation } from './useConversation';
 export interface BackgroundWorkView {
   work: ChatBackgroundWork;
   presentation: BackgroundWorkPresentation;
-  /** The harness's notices since the latest message, which the timeline leaves out. */
-  notices: BackgroundWorkNotice[];
+  /**
+   * What the sheet lists: every kind of work, background commands included, with the harness's
+   * notices attached to the work they announce (`backgroundSheetOf`).
+   */
+  sheet: BackgroundWorkPresentation;
   /** The time the presentation is as of (epoch milliseconds). */
   now: number;
   /** A live read shows work running: the conversation keeps its active pace. */
@@ -68,21 +70,34 @@ export function useBackgroundWork(
     () => presentBackgroundWork(work, { isHostConnected, now, locale: getLocaleTag() }),
     [work, isHostConnected, now],
   );
-  const ticks = presentation.ticks || ticking;
+  const sheet = useMemo(
+    () =>
+      presentBackgroundWork(
+        hasReadLive.current
+          ? backgroundSheetOf(snapshot.transcript, workflowProgress, isLive, now)
+          : emptyBackgroundWork(),
+        { isHostConnected, now, locale: getLocaleTag() },
+      ),
+    [snapshot.transcript, workflowProgress, isLive, isHostConnected, now],
+  );
+  const ticks = presentation.ticks || sheet.ticks || ticking;
   useEffect(() => {
     if (!ticks) return;
     setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [ticks]);
-  const notices = useMemo(
-    () => (hasReadLive.current ? listedNotices(snapshot.transcript) : []),
-    [snapshot.transcript],
-  );
   const items = snapshot.transcript.backgroundWork;
   const subagentIdOf = useCallback(
     (workId: string) => openableSubagentID(items, workId, program),
     [items, program],
   );
-  return { work, presentation, notices, now, holdsPace: holdsActivePace(work), subagentIdOf };
+  return {
+    work,
+    presentation,
+    sheet,
+    now,
+    holdsPace: holdsActivePace(work),
+    subagentIdOf,
+  };
 }

@@ -3,7 +3,7 @@ import { statusDot } from '@/console/agentStatus';
 import { useShownStatus } from '../blocked/BlockedCardProvider';
 import { BlockedCardSlot } from '../blocked/BlockedCardSlot';
 import { AgentBackgroundWork } from './background/AgentBackgroundWork';
-import { DockSlotView } from './detailUi';
+import { DockSlotView, useShareAgentBlocked } from './detailUi';
 import type { Surface } from './surface';
 
 interface Props {
@@ -18,6 +18,8 @@ interface Props {
 export function DetailDock({ row, surface }: Props) {
   const chat = surface === 'chat';
   const shown = useShownStatus(statusDot(row.agent.agent_status));
+  // The live line at the end of Chat says the Agent waits on the user, as the line here does.
+  useShareAgentBlocked(shown === 'blocked');
   return (
     <>
       {chat ? (

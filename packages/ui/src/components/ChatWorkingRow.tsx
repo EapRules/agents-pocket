@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { StatusDot } from '../primitives/StatusDot';
 import { Text } from '../primitives/Text';
 import { makeStyles } from '../theme/theme';
+import { BackgroundWorkGlyph } from './BackgroundWorkStrip';
 
 /** The glyph column of a tool line, so the live line's mark sits under the tool glyphs. */
 const LINE_GLYPH = 16;
@@ -23,6 +24,8 @@ interface ChatWorkingRowProps {
   text: string;
   /** The same as VoiceOver reads it; the text when omitted. */
   accessibilityLabel?: string;
+  /** The turn waits on the user: the needs-you mark and color of the line over the Composer. */
+  waiting?: boolean;
   testID?: string;
 }
 
@@ -33,6 +36,7 @@ interface ChatWorkingRowProps {
 export function ChatWorkingRow({
   text,
   accessibilityLabel,
+  waiting = false,
   testID = 'chat-working-row',
 }: ChatWorkingRowProps) {
   const styles = useStyles();
@@ -44,11 +48,11 @@ export function ChatWorkingRow({
       testID={testID}
     >
       <View style={styles.mark}>
-        <StatusDot status="working" pulse />
+        {waiting ? <BackgroundWorkGlyph state="waiting" /> : <StatusDot status="working" pulse />}
       </View>
       <Text
         variant="subheadline"
-        tone="secondary"
+        tone={waiting ? 'warning' : 'secondary'}
         tabularNums
         numberOfLines={1}
         style={styles.text}

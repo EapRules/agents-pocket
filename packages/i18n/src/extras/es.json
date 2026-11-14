@@ -281,5 +281,10 @@
   "Received message from %@": "Llegó un mensaje de {0}",
   "From:": "De:",
   "subagent": "subagente",
-  "another agent": "otro agente"
+  "another agent": "otro agente",
+  "View Transcript": "Ver transcripción",
+  "Prompt": "Prompt",
+  "Show More": "Ver más",
+  "Show Less": "Ver menos",
+  "Waiting for you… %@": "Esperándote… {0}"
 }

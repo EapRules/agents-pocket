@@ -25,7 +25,25 @@ appId: com.openagentspocket.app
       id: work-agent-k1
     timeout: 4000
 - takeScreenshot: design/atlas/sim/15-background-work-agents
+# Work runs, so Finished starts collapsed: its header opens it, which only a real section does.
+- tapOn:
+    id: work-section-finished-header-toggle
+- extendedWaitUntil:
+    visible:
+      id: work-open-w3
+    timeout: 4000
+# A notice for a command the lines don't hold stands in as its finished row.
+- scrollUntilVisible:
+    element:
+      id: work-sheet-notice:n1
+    direction: DOWN
+    timeout: 4000
 # A finished Subagent's transcript is the dock's other sheet: it opens after this one has left.
+- scrollUntilVisible:
+    element:
+      id: work-open-w3
+    direction: UP
+    timeout: 4000
 - tapOn:
     id: work-open-w3
 - extendedWaitUntil:
@@ -33,5 +51,10 @@ appId: com.openagentspocket.app
       id: work-done
     timeout: 8000
 - waitForAnimationToEnd
+# Titled by its type, with the prompt it was given above its timeline.
+- extendedWaitUntil:
+    visible:
+      id: subagent-prompt
+    timeout: 8000
 - takeScreenshot: design/atlas/sim/15-subagent-sheet
 - runFlow: _guard.yaml

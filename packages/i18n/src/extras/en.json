@@ -281,5 +281,10 @@
   "Received message from %@": "Received message from {0}",
   "From:": "From:",
   "subagent": "subagent",
-  "another agent": "another agent"
+  "another agent": "another agent",
+  "View Transcript": "View Transcript",
+  "Prompt": "Prompt",
+  "Show More": "Show More",
+  "Show Less": "Show Less",
+  "Waiting for you… %@": "Waiting for you… {0}"
 }

@@ -90,8 +90,9 @@ export const composerExtrasEntries: readonly CatalogEntry[] = [
         id: 'default',
         render: () => (
           <ClaudeSubagentTranscript
-            title="Check link anchors"
-            kind="Explore"
+            title="Explore"
+            description="Check link anchors"
+            prompt={'## Goal\nFind every broken `#anchor` link under `docs/`.'}
             rows={ROWS}
             onBack={noop}
           />
@@ -101,8 +102,8 @@ export const composerExtrasEntries: readonly CatalogEntry[] = [
         id: 'empty',
         render: () => (
           <ClaudeSubagentTranscript
-            title="Check link anchors"
-            kind="Explore"
+            title="Explore"
+            description="Check link anchors"
             phase="empty"
             rows={[]}
             onBack={noop}
@@ -113,8 +114,8 @@ export const composerExtrasEntries: readonly CatalogEntry[] = [
         id: 'failed',
         render: () => (
           <ClaudeSubagentTranscript
-            title="Check link anchors"
-            kind="Explore"
+            title="Explore"
+            description="Check link anchors"
             phase="failed"
             failureMessage="The Host did not answer in time."
             rows={[]}

@@ -71,6 +71,7 @@ export function SectionHeader({
           onPress={onToggle}
           accessibilityRole="header"
           accessibilityState={{ expanded: expanded ?? false }}
+          testID={testID ? `${testID}-toggle` : undefined}
         >
           {heading}
         </Tappable>

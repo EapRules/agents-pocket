@@ -1,17 +1,14 @@
 import {
   type BackgroundWorkAgent,
-  type BackgroundWorkNotice,
   type BackgroundWorkPresentedRow,
   type ChatStatusLine,
   isFinishedStatus,
-  noticeTitleText,
   type Text,
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import type {
   BackgroundWorkAgentItem,
   BackgroundWorkDetailItem,
-  BackgroundWorkNoticeItem,
   BackgroundWorkSummaryLine,
 } from '@openagentspocket/ui';
 import { renderMessage } from '@/lib/renderText';
@@ -28,18 +25,28 @@ function agentItem(agent: BackgroundWorkAgent, index: number): BackgroundWorkAge
   };
 }
 
-/** A sheet row: the work in full, what it is, how far along, and what it cost once it ended. */
+/**
+ * What a row says beyond its kind: a Workflow's description or phase, a described command's line.
+ * Nothing for a Subagent, whose type is its kind.
+ */
+function detailOf(row: BackgroundWorkPresentedRow): string | undefined {
+  if (row.detail) return row.detail;
+  if (row.kind === 'subagent') return undefined;
+  const caption = renderMessage(row.caption);
+  return caption === renderMessage(row.kindLabel) ? undefined : caption;
+}
+
+/** A sheet row: the work, its kind and state on one line, how far along, and what it cost. */
 export function detailItem(row: BackgroundWorkPresentedRow): BackgroundWorkDetailItem {
-  const finished =
-    row.status === 'completed' || row.status === 'failed' || row.status === 'stopped';
+  const finished = isFinishedStatus(row.status);
   return {
     id: row.id,
+    kind: row.kind,
     title: row.title,
-    monospaced: row.kind === 'workflow',
+    monospaced: row.monospaced,
     state: row.status,
-    time: row.time ?? undefined,
-    note: words(row.note),
-    body: row.detail ?? renderMessage(row.caption),
+    caption: `${renderMessage(row.kindLabel)} · ${renderMessage(row.stateLabel)}`,
+    detail: detailOf(row),
     fraction: row.fraction ?? undefined,
     // While it runs, a Workflow can start more agents.
     fractionText: row.fraction
@@ -54,8 +61,8 @@ export function detailItem(row: BackgroundWorkPresentedRow): BackgroundWorkDetai
 }
 
 /**
- * A sheet row that opens its finished Subagent's transcript, when `subagentIdOf` names one (the
- * program reads Subagent transcripts and the launch named it). Otherwise the row opens nothing.
+ * A sheet row whose finished Subagent's transcript it can open, when `subagentIdOf` names one (the
+ * program reads Subagent transcripts and the launch named it). Otherwise the row shows no action.
  */
 export function openableItem(
   row: BackgroundWorkPresentedRow,
@@ -66,7 +73,7 @@ export function openableItem(
   const agentId =
     row.kind === 'subagent' && isFinishedStatus(row.status) ? subagentIdOf(row.id) : null;
   if (agentId === null) return item;
-  return { ...item, openLabel: t('Open Subagent Transcript'), onOpen: () => open(agentId) };
+  return { ...item, action: { label: t('View Transcript'), onPress: () => open(agentId) } };
 }
 
 /** The status line over the Composer, in the current locale. */
@@ -76,9 +83,4 @@ export function statusLineItem(line: ChatStatusLine): BackgroundWorkSummaryLine 
     text: renderMessage(line.text),
     accessibilityValue: renderMessage(line.accessibilityValue),
   };
-}
-
-/** A harness notice in the sheet: its title as Chat words it, and what the program reported. */
-export function noticeItem({ id, notice }: BackgroundWorkNotice): BackgroundWorkNoticeItem {
-  return { id, title: renderMessage(noticeTitleText(notice)), detail: notice.detail ?? undefined };
 }

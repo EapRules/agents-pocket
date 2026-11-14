@@ -6,5 +6,6 @@ export {
   type SubagentRow,
   type SubagentTranscriptLabels,
 } from './ClaudeSubagentTranscript';
+export { CollapsibleMarkdown, type CollapsibleMarkdownLabels } from './CollapsibleMarkdown';
 export { type ComposerAttachmentItem, ComposerAttachmentStrip } from './ComposerAttachmentStrip';
 export { SkillContentSheet, type SkillContentState } from './SkillContentSheet';

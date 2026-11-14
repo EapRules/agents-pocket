@@ -1,18 +1,17 @@
 import {
-  type ChatBackgroundWorkItem,
   type ChatEntry,
   type ConversationState,
   type ConversationStore,
   divider,
   emptyTranscript,
   initialSnapshot,
-  notice,
   toolActivity,
   userMessage,
 } from '@openagentspocket/core';
 import type { ReactNode } from 'react';
 import type { ConversationRegistry } from '@/conversations/ConversationRegistry';
 import { ConversationsProvider } from '@/conversations/useConversation';
+import { LONG_PROMPT, longWorkStateOf, work, workStateOf } from './atlasBackgroundWork';
 import { FOLDED_CALLS } from './atlasChatCalls';
 import { COMMAND_OUTPUT } from './atlasChatCommand';
 import { withAgentMessage } from './atlasChatMessage';
@@ -211,7 +210,8 @@ const subagentTranscript = {
   ],
 };
 
-const registryFor = (conversation: ConversationState) =>
+/** `prompt`: what the launch asked, as a background Subagent's route carries it; else the transcript's first message stands in. */
+const registryFor = (conversation: ConversationState, prompt: string | null = null) =>
   ({
     get: () => storeFor(conversation),
     readSubagent: async (_host: string, _pane: string, agentID: string) => ({
@@ -220,120 +220,11 @@ const registryFor = (conversation: ConversationState) =>
         path: `/demo/subagents/${agentID}.jsonl`,
         title: 'Check screenshots',
         subtitle: 'general-purpose',
+        prompt,
       },
       outcome: { type: 'loaded' as const, transcript: subagentTranscript, isPartial: false },
     }),
   }) as unknown as ConversationRegistry;
-const work = (
-  id: string,
-  title: string,
-  options: Partial<ChatBackgroundWorkItem> & { launchedAgo: number },
-): ChatBackgroundWorkItem => ({
-  id,
-  kind: 'subagent',
-  title,
-  subtitle: null,
-  state: 'running',
-  journalPath: null,
-  launchOffset: 100,
-  endOffset: null,
-  launchedAt: at(options.launchedAgo),
-  agentID: options.kind === 'workflow' ? null : `a-${id}`,
-  resume: null,
-  endedAt: null,
-  usage: null,
-  ...options,
-});
-
-const usage = (
-  fields: Partial<NonNullable<ChatBackgroundWorkItem['usage']>>,
-): NonNullable<ChatBackgroundWorkItem['usage']> => ({
-  tokens: null,
-  toolUses: null,
-  durationMilliseconds: null,
-  agents: null,
-  agentsDone: null,
-  agentsFailed: null,
-  ...fields,
-});
-
-/** Mid-session with Background Work: two running, two finished, one Workflow with its journal. */
-const workState: ConversationState = {
-  ...state,
-  snapshot: {
-    ...state.snapshot,
-    transcript: {
-      ...state.snapshot.transcript,
-      latestPromptOffset: 50,
-      entries: [
-        ...state.snapshot.transcript.entries,
-        ...[
-          ['w1', 'Find old pairing steps', 'Explore', 'started'],
-          ['w3', 'Check screenshots', 'general-purpose', 'succeeded'],
-          ['w4', 'Check link anchors', 'Explore', 'succeeded'],
-        ].map(([id = '', title = '', kind = '', status = ''], index) => ({
-          id,
-          sourceOffset: 100 + index,
-          content: {
-            type: 'tool' as const,
-            value: toolActivity({
-              kind: 'agent',
-              name: 'Task',
-              title,
-              subtitle: kind,
-              status: status as 'started' | 'succeeded',
-              subagentAgentID: `a-${id}`,
-            }),
-          },
-        })),
-        {
-          id: 'n1',
-          sourceOffset: 140,
-          content: {
-            type: 'notice' as const,
-            value: notice('taskNotification', 'Background task completed', {
-              detail: 'pnpm test --filter attach: 24 passed',
-            }),
-          },
-        },
-      ],
-      backgroundWork: [
-        work('w1', 'Find old pairing steps', { subtitle: 'Explore', launchedAgo: 246 }),
-        work('w2', 'docs-audit', {
-          kind: 'workflow',
-          subtitle: 'Check every guide page against the QR code flow',
-          launchedAgo: 237,
-        }),
-        work('w3', 'Check screenshots', {
-          subtitle: 'general-purpose',
-          state: 'completed',
-          launchedAgo: 200,
-          endOffset: 120,
-          endedAt: at(76),
-          usage: usage({ tokens: 41_200, toolUses: 14, durationMilliseconds: 124_000 }),
-        }),
-        work('w4', 'Check link anchors', {
-          subtitle: 'Explore',
-          state: 'completed',
-          launchedAgo: 150,
-          endOffset: 130,
-          endedAt: at(79),
-          usage: usage({ durationMilliseconds: 71_000 }),
-        }),
-      ],
-    },
-  },
-  workflowProgress: {
-    w2: {
-      updatedAt: at(5),
-      agents: [
-        { id: 'k1', label: 'audit:setup', phase: 'Audit', state: 'done' },
-        { id: 'k2', label: 'audit:index', phase: 'Audit', state: 'done' },
-        { id: 'k3', label: null, phase: 'Verify', state: 'running' },
-      ],
-    },
-  },
-};
 
 /** The Blocked card's screen: one Subagent running, condensed to a line over the card. */
 const blockedWorkState: ConversationState = {
@@ -364,10 +255,21 @@ const commandState: ConversationState = {
 
 const registry = registryFor(state);
 const commandRegistry = registryFor(commandState);
-const workRegistry = registryFor(workState);
+const workRegistry = registryFor(workStateOf(state));
+const longWorkRegistry = registryFor(longWorkStateOf(state), LONG_PROMPT);
 const blockedWorkRegistry = registryFor(blockedWorkState);
 const lookingRegistry = registryFor(lookingState);
 const messageRegistry = registryFor(withAgentMessage(state));
+
+export type AtlasBackground = 'list' | 'long' | 'blocked' | 'command' | 'message';
+
+const BACKGROUND_REGISTRIES: Record<AtlasBackground, ConversationRegistry> = {
+  list: workRegistry,
+  long: longWorkRegistry,
+  blocked: blockedWorkRegistry,
+  command: commandRegistry,
+  message: messageRegistry,
+};
 
 /** Gives the atlas a scripted conversation, so Chat renders as it does mid-session. */
 export function AtlasChat({
@@ -378,19 +280,16 @@ export function AtlasChat({
   children: ReactNode;
   /** The conversation is still being located and the last read failed (chat-banners). */
   looking?: boolean;
-  /** Background Work over the Composer, or in place of it a local command's output or a Subagent's report. */
-  background?: 'list' | 'blocked' | 'command' | 'message';
+  /**
+   * Background Work over the Composer (`long`: a dozen finished, Subagents with a long prompt), or
+   * in place of it a local command's output or a Subagent's report.
+   */
+  background?: AtlasBackground;
 }) {
   const scripted = looking
     ? lookingRegistry
-    : background === 'list'
-      ? workRegistry
-      : background === 'blocked'
-        ? blockedWorkRegistry
-        : background === 'command'
-          ? commandRegistry
-          : background === 'message'
-            ? messageRegistry
-            : registry;
+    : background
+      ? BACKGROUND_REGISTRIES[background]
+      : registry;
   return <ConversationsProvider registry={scripted}>{children}</ConversationsProvider>;
 }

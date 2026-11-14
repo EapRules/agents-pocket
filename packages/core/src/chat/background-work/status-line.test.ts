@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { renderText } from '../../errors/text';
-import { notice, toolActivity, userMessage } from '../model/factories';
+import { backgroundWorkItem, notice, toolActivity, userMessage } from '../model/factories';
 import { type ChatBackgroundWorkItem, emptyTranscript } from '../model/types';
 import { type ChatRow, type ChatRowContent, chatRow, rowID } from '../timeline/row';
 import { presentBackgroundWork } from './presentation';
+import { backgroundSheetOf } from './sheet';
 import {
   chatStatusLine,
   liveLine,
@@ -66,11 +67,11 @@ function work(items: Item[]): ChatBackgroundWork {
   };
 }
 
-const line = (rows: ChatRow[], items: Item[] = [], isBlocked = false, notices = 0) =>
+const line = (rows: ChatRow[], items: Item[] = [], isBlocked = false) =>
   chatStatusLine(
     liveTurnOf(rows),
     presentBackgroundWork(work(items), { isHostConnected: true, now: NOW, locale: 'en' }),
-    { isBlocked, notices },
+    { isBlocked },
   );
 const text = (rows: ChatRow[], items: Item[] = []) => {
   const shown = line(rows, items);
@@ -83,14 +84,70 @@ describe('the status line over the Composer', () => {
     expect(line([user], [], true)).toBeNull();
   });
 
-  it('stays after the turn while the sheet lists finished work or notices, with counts only', () => {
+  it('stays after the turn while the sheet lists finished work, with counts only', () => {
     const done = line([user], [{ state: 'completed', endedAt: ago(5) }, { state: 'failed' }], true);
     expect(renderText(done?.text ?? '')).toBe('1 done · 1 failed');
     expect(done?.state).toBe('failed');
     expect(done?.ticks).toBe(false);
-    const notices = line([user], [], false, 2);
-    expect(renderText(notices?.text ?? '')).toBe('2 notices');
-    expect(notices?.state).toBe('completed');
+  });
+
+  it('counts what the sheet lists: a running background command runs, a stray notice is a row', () => {
+    const command = backgroundWorkItem({
+      id: 'c1',
+      kind: 'command',
+      title: 'Build',
+      launchOffset: 20,
+      launchedAt: ago(30),
+    });
+    const transcript = {
+      ...emptyTranscript(),
+      latestPromptOffset: 10,
+      backgroundWork: [command],
+      entries: [
+        {
+          id: 'n1',
+          sourceOffset: 40,
+          content: {
+            type: 'notice' as const,
+            value: notice('taskNotification', 'Background command "Lint" completed', {
+              task: {
+                callID: null,
+                taskID: 'b9',
+                kind: 'command',
+                state: 'completed',
+                label: 'Lint',
+                exitCode: 0,
+              },
+            }),
+          },
+        },
+      ],
+    };
+    const listed = presentBackgroundWork(backgroundSheetOf(transcript, {}, true, NOW), {
+      isHostConnected: true,
+      now: NOW,
+      locale: 'en',
+    });
+    const shown = chatStatusLine(null, listed, { isBlocked: false });
+    expect(renderText(shown?.text ?? '')).toBe('1 running · 1 done');
+    // A notice that names no work is no row of the sheet, so the line has nothing to count.
+    const stray = {
+      ...emptyTranscript(),
+      latestPromptOffset: 10,
+      entries: [
+        {
+          id: 'n2',
+          sourceOffset: 40,
+          content: { type: 'notice' as const, value: notice('taskNotification', 'Done') },
+        },
+      ],
+    };
+    const empty = presentBackgroundWork(backgroundSheetOf(stray, {}, true, NOW), {
+      isHostConnected: true,
+      now: NOW,
+      locale: 'en',
+    });
+    expect(chatStatusLine(null, empty, { isBlocked: false })).toBeNull();
   });
 
   it('leaves the turn itself to the live line: no time, nothing it does', () => {
@@ -155,7 +212,16 @@ describe('the live line at the end of the transcript', () => {
     expect(said([user, header(ago(116)), reasoning])).toBe('Working… 1m 56s · Thinking');
     expect(said([user, header(ago(5)), call('running')])).toBe('Working… 5s · pnpm test');
     expect(said([user, header(ago(5)), call('succeeded')])).toBe('Working… 5s');
-    expect(said([user, header(ago(5)), call('awaitingApproval')])).toBe('Working… 5s · Needs you');
+  });
+
+  it('says it waits for the user, not that it works, on a request or a Blocked report', () => {
+    expect(said([user, header(ago(5)), call('awaitingApproval')])).toBe('Waiting for you… 5s');
+    const turn = liveTurnOf([user, header(ago(116)), reasoning]);
+    if (turn === null) throw new Error('no turn');
+    const blocked = liveLine(turn, NOW, true);
+    expect(renderText(blocked.text)).toBe('Waiting for you… 1m 56s · Thinking');
+    expect(blocked.waiting).toBe(true);
+    expect(liveLine(turn, NOW).waiting).toBe(false);
   });
 });
 

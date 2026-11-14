@@ -9,7 +9,7 @@ import { closeTerminalConfirmation } from '@/features/terminals/closeConfirmatio
 import { SHELL_CLOSE_ANCHOR, ShellTerminalScreen } from '@/features/terminals/ShellTerminalScreen';
 import { deviceStorage } from '@/settings/deviceStorage';
 import { AtlasBlocked, type AtlasBlockedVariant } from './atlasBlocked';
-import { AtlasChat } from './atlasChat';
+import { type AtlasBackground, AtlasChat } from './atlasChat';
 import { noop, titled } from './atlasHelpers';
 import { AlertOver, closePanePopover, TerminalStatusAtlas } from './atlasOverlays';
 import type { AtlasEntry } from './entries';
@@ -21,7 +21,7 @@ function detail(
   press?: readonly string[],
   blocked: AtlasBlockedVariant | false = false,
   looking = false,
-  background?: 'list' | 'blocked' | 'command' | 'message',
+  background?: AtlasBackground,
 ): AtlasEntry {
   return {
     script: press ? { press } : undefined,
@@ -134,7 +134,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.subagent-transcript': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary', 'work-open-w3'],
+    ['background-work-strip-summary', 'work-section-finished-header-toggle', 'work-open-w3'],
     false,
     false,
     'list',
@@ -146,6 +146,31 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
     false,
     false,
     'list',
+  ),
+  // Something runs, so Finished starts collapsed; then opened by its header.
+  'agent-detail.chat-background-sheet-long': detail(
+    'p5',
+    'chat',
+    ['background-work-strip-summary'],
+    false,
+    false,
+    'long',
+  ),
+  'agent-detail.chat-background-sheet-long-open': detail(
+    'p5',
+    'chat',
+    ['background-work-strip-summary', 'work-section-finished-header-toggle'],
+    false,
+    false,
+    'long',
+  ),
+  'agent-detail.subagent-transcript-prompt': detail(
+    'p5',
+    'chat',
+    ['background-work-strip-summary', 'work-section-finished-header-toggle', 'work-open-l0'],
+    false,
+    false,
+    'long',
   ),
   'agent-detail.chat-banners': detail('p2', 'chat', undefined, false, true),
   'agent-detail.chat-command-suggestions': chat,

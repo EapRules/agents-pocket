@@ -111,7 +111,12 @@ export class ConversationRegistry {
     }
     const { snapshot } = this.get(hostId, paneId).getState();
     const path = snapshot.phase.type === 'following' ? snapshot.phase.path : null;
-    const route = subagentRoute(agentID, path, snapshot.transcript.entries);
+    const route = subagentRoute(
+      agentID,
+      path,
+      snapshot.transcript.entries,
+      snapshot.transcript.backgroundWork,
+    );
     if (route === null) return { route, outcome: { type: 'missing' } };
     return { route, outcome: await readSubagentTranscript(this.filesOf(hostId), route.path) };
   }

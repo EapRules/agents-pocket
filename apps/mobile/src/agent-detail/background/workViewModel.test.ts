@@ -1,11 +1,12 @@
 import {
+  backgroundSheetOf,
   backgroundWorkItem,
   backgroundWorkOf,
   emptyTranscript,
   openableSubagentID,
   presentBackgroundWork,
 } from '@openagentspocket/core';
-import { openableItem } from './workViewModel';
+import { detailItem, openableItem } from './workViewModel';
 
 const NOW = Date.parse('2026-11-13T12:00:00Z');
 
@@ -39,8 +40,8 @@ function opens(program: string, state: 'running' | 'completed' = 'completed'): s
       opened = agentId;
     },
   );
-  item.onOpen?.();
-  return item.onOpen ? opened : null;
+  item.action?.onPress();
+  return item.action ? opened : null;
 }
 
 describe('a Background Work row that opens a Subagent transcript', () => {
@@ -54,5 +55,37 @@ describe('a Background Work row that opens a Subagent transcript', () => {
 
   it('opens nothing while the Subagent runs', () => {
     expect(opens('claude', 'running')).toBeNull();
+  });
+});
+
+describe('a Background Work row of the sheet', () => {
+  it('says its kind and state on one line, and a described command its line under it', () => {
+    const transcript = {
+      ...emptyTranscript(),
+      backgroundWork: [
+        backgroundWorkItem({
+          id: 'call-2',
+          kind: 'command',
+          title: 'Build the app',
+          subtitle: 'npx expo export',
+          launchOffset: 1,
+          state: 'completed',
+          endOffset: 2,
+        }),
+      ],
+    };
+    const work = backgroundSheetOf(transcript, {}, true, NOW);
+    const [row] = presentBackgroundWork(work, {
+      isHostConnected: true,
+      now: NOW,
+      locale: 'en',
+    }).rows;
+    if (!row) throw new Error('no row');
+    const item = detailItem(row);
+    expect(item.kind).toBe('command');
+    expect(item.caption).toContain(' · ');
+    expect(item.detail).toBe('npx expo export');
+    expect(item.monospaced).toBe(false);
+    expect(item.action).toBeUndefined();
   });
 });

@@ -449,7 +449,17 @@
   {
     "id": "agent-detail.chat-background-sheet",
     "rn": "AgentBackgroundWork sheet (BackgroundWorkList)",
-    "note": "opened from the status line; running, finished, and a harness notice"
+    "note": "opened from the status line; Running and Finished sections, icons by kind (Subagent, Workflow, command), a notice standing in as a finished command"
+  },
+  {
+    "id": "agent-detail.chat-background-sheet-long",
+    "rn": "AgentBackgroundWork sheet (BackgroundWorkList)",
+    "note": "a long autonomous turn: one running, a dozen finished; Finished starts collapsed while something runs"
+  },
+  {
+    "id": "agent-detail.chat-background-sheet-long-open",
+    "rn": "AgentBackgroundWork sheet (BackgroundWorkList)",
+    "note": "the long list with Finished opened by its header"
   },
   {
     "id": "agent-detail.chat-banners",
@@ -469,7 +479,12 @@
   {
     "id": "agent-detail.subagent-transcript",
     "rn": "AgentDetailScreen (DetailUiProvider SubagentSheet, ClaudeSubagentTranscript)",
-    "note": "opened from the finished Subagent row of the Background Work sheet"
+    "note": "opened from the finished Subagent row of the Background Work sheet; titled by its type, its prompt (the transcript's first message) above the timeline"
+  },
+  {
+    "id": "agent-detail.subagent-transcript-prompt",
+    "rn": "AgentDetailScreen (DetailUiProvider SubagentSheet, ClaudeSubagentTranscript)",
+    "note": "a Subagent whose launch carried a long markdown prompt, folded behind Show More"
   },
   {
     "id": "agent-detail.select-text-sheet",

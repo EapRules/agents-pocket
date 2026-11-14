@@ -251,6 +251,12 @@ describe('ChatWorkingRow', () => {
     expect(screen.getByLabelText('Working, 5 seconds')).toBeTruthy();
     expect(screen.getByTestId('status-dot-working', { includeHiddenElements: true })).toBeTruthy();
   });
+
+  it('wears the needs-you mark, not the working one, while the turn waits on the user', async () => {
+    await renderThemed(<ChatWorkingRow text="Waiting 5s" waiting />);
+    expect(screen.getByTestId('work-glyph-waiting', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByTestId('status-dot-working', { includeHiddenElements: true })).toBeNull();
+  });
 });
 
 describe('ChatMessageSheet', () => {

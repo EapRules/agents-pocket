@@ -65,6 +65,7 @@ export function Section({
           action={action}
           expanded={open}
           onToggle={onToggle}
+          testID={testID ? `${testID}-header` : undefined}
         />
       ) : null}
       {open && rows.length > 0 ? (
