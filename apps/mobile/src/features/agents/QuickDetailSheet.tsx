@@ -9,6 +9,7 @@ import { t } from '@openagentspocket/i18n';
 import {
   type AgentRowLabels,
   Button,
+  ButtonRow,
   Chip,
   KeyValueGroup,
   type KeyValueRow,
@@ -25,8 +26,6 @@ import { ageText, inboxAge } from '../../home/inboxAge';
 
 const useStyles = makeStyles((theme) => ({
   stack: { gap: theme.spacing.xs },
-  pair: { flexDirection: 'row', gap: theme.spacing.xs },
-  fill: { flex: 1 },
 }));
 
 interface QuickDetailSheetProps {
@@ -81,46 +80,38 @@ export function QuickDetailSheet({
       testID="quick-detail"
       footer={
         <View style={styles.stack}>
-          <View style={styles.pair}>
-            <View style={styles.fill}>
-              <Button
-                size="dense"
-                icon="bot"
-                title={t('Open Chat')}
-                onPress={() => onOpen(row)}
-                testID="quick-open-chat"
-              />
-            </View>
-            <View style={styles.fill}>
-              <Button
-                size="dense"
-                icon="terminal"
-                title={t('Open Terminal')}
-                onPress={() => onOpen(row)}
-                testID="quick-open-terminal"
-              />
-            </View>
-          </View>
-          <View style={styles.pair}>
-            <View style={styles.fill}>
-              <Button
-                size="dense"
-                kind="secondary"
-                icon="pin"
-                title={pinned ? labels.unpin : labels.pin}
-                onPress={() => onTogglePin(row)}
-              />
-            </View>
-            <View style={styles.fill}>
-              <Button
-                size="dense"
-                kind="destructive"
-                icon="close"
-                title={labels.close}
-                onPress={() => onCloseAgent(row)}
-              />
-            </View>
-          </View>
+          <ButtonRow>
+            <Button
+              size="dense"
+              icon="bot"
+              title={t('Open Chat')}
+              onPress={() => onOpen(row)}
+              testID="quick-open-chat"
+            />
+            <Button
+              size="dense"
+              icon="terminal"
+              title={t('Open Terminal')}
+              onPress={() => onOpen(row)}
+              testID="quick-open-terminal"
+            />
+          </ButtonRow>
+          <ButtonRow>
+            <Button
+              size="dense"
+              kind="secondary"
+              icon="pin"
+              title={pinned ? labels.unpin : labels.pin}
+              onPress={() => onTogglePin(row)}
+            />
+            <Button
+              size="dense"
+              kind="destructive"
+              icon="close"
+              title={labels.close}
+              onPress={() => onCloseAgent(row)}
+            />
+          </ButtonRow>
         </View>
       }
     >
