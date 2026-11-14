@@ -12,6 +12,9 @@
       "bundleIdentifier": "com.openagentspocket.app",
       "deploymentTarget": "18.0",
       "buildNumber": "5",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.openagentspocket.app"]
       },

@@ -109,7 +109,7 @@ Re-run them alone on any IPA: `node scripts/release-ios.mjs check <ipa> --archiv
 | version and build equal in the app and both extensions (`widgets.appex`, `notification-service.appex`) | App Store Connect rejects a mismatch |
 | `EXConstants.bundle/app.config`: `aps-environment` production, build number | the app tags its push token with this value |
 | every purpose string (keys of `apps/mobile/locales/es.json`) in `Info.plist` and `es.lproj` | App Review rejects a missing one |
-| no `ITSAppUsesNonExemptEncryption` in `Info.plist` | the encryption answer is given per build in App Store Connect |
+| `ITSAppUsesNonExemptEncryption` is `false` in `Info.plist` | App Store Connect does not ask the encryption question for the build |
 | a dSYM per bundle in the archive | crash symbolication |
 | `EXUpdates.bundle/fingerprint` equals the runtime version this commit computes | updates are published for the recorded runtime; a different one would reach no device |
 | `Expo.plist`: updates disabled without `UPDATES_URL`; with it, enabled, that URL, a code signing certificate, key id `main` / `rsa-v1_5-sha256`, runtime `file:fingerprint` | an official build never accepts unsigned updates, and a build from source never asks for any |
@@ -162,9 +162,13 @@ runtime version recorded there ([updates guide](updates.md)).
 ## 6. In App Store Connect
 
 1. **TestFlight processing**: the build shows as Processing, then Ready (an email arrives). Minutes to an hour.
-2. **Export compliance** (the build shows "Missing Compliance"): the owner declares it per build. The app links
-   libssh2 with OpenSSL, so the answer is standard encryption algorithms, not the ones the operating system
-   provides; the app is not distributed in France, so no French declaration. No `Info.plist` key is set.
+2. **Export compliance**: declared once in the app, not per build. `ios.config.usesNonExemptEncryption: false`
+   in `apps/mobile/app.json` writes `ITSAppUsesNonExemptEncryption = NO` (owner's decision, 2026-11-14). The app
+   links libssh2 with OpenSSL and uses AES-GCM: standard encryption algorithms, and it is not distributed in
+   France, so Apple asks for no export documentation. Change the declaration before distributing in France or
+   adding encryption that is not a standard algorithm. Apple notes that an app using exempt encryption may owe
+   a year-end self-classification report to the U.S. government; whether it applies is the owner's to check.
+   A build from before this key (1.0.1 (5) and earlier) shows "Missing Compliance" until the owner answers.
 3. **TestFlight**: What to Test, internal testers; external testers need Beta App Review (the same review notes).
 4. **App Store version page**: select the build, then the fields that live only in App Store Connect:
    - name, subtitle, category, age rating questionnaire

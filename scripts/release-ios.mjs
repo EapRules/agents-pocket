@@ -242,8 +242,8 @@ function checkBundle(appPath, { archive, runtimeVersion }) {
     `app bundle id ${info.CFBundleIdentifier}, expected ${BUNDLE_ID}`,
   );
   expect(
-    !('ITSAppUsesNonExemptEncryption' in info),
-    'no ITSAppUsesNonExemptEncryption key (answered per build in App Store Connect)',
+    info.ITSAppUsesNonExemptEncryption === false,
+    'ITSAppUsesNonExemptEncryption is false (no encryption question per build in App Store Connect)',
   );
   for (const key of PURPOSE_KEYS) expect(Boolean(info[key]?.trim()), `purpose string ${key}`);
   const es = join(appPath, 'es.lproj/InfoPlist.strings');
