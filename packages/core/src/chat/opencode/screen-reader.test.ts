@@ -8,11 +8,14 @@ import { describe, expect, it } from 'vitest';
 import { decodeAnsiScreen } from '../../blocked/ansi-decoder';
 import { textWidth } from '../../blocked/cell-width';
 import { screenFixtures } from '../../blocked/golden-fixtures.testkit';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { detectInputBox } from '../send/detect';
 import { type InputBoxState, preSendCheck } from '../send/input-box';
 import { sendPolicyFor } from '../send/registry';
 import { SGR, syntheticScreen } from '../send/send.testkit';
 import { type OpenCodeRoute, readOpenCodeScreen } from './screen-reader';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const policy = sendPolicyFor('opencode');
 const fixtures = new Map(screenFixtures('opencode').map((fixture) => [fixture.name, fixture]));

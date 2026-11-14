@@ -1,12 +1,15 @@
 import '../programs';
 import { describe, expect, it } from 'vitest';
 import type { ComposerRefusal } from '../../composer/policy';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { makeSkill } from '../../skills/agent-skill';
 import { chatCommands, chatInsertionText, commandSuggestions } from './command-menu';
 import { conservativeSendPolicy } from './defaults';
 import { sendPolicyFor } from './registry';
 import { createSendRules } from './rules';
 import { rulesFor, SKILLS } from './send.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const unsafe = (reason: string): ComposerRefusal => ({ kind: 'unsafeText', reason });
 const SHELL = 'A message starting with ! runs a shell command. Open the terminal to run one.';

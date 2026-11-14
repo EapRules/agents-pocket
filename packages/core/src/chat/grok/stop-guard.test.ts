@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { sourceTextEquality } from '../../errors/text-testing';
 import type { ChatAgentActivity } from '../model/types';
 import type { StopVerdict } from '../send/policy';
 import { readGrokScreen } from './screen';
 import { capture, grokScreen } from './screen.testkit';
 import { grokStopVerdict } from './stop-guard';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const NOT_WORKING =
   "Agentico can't see Grok Build working, so Stop pressed nothing. Stop it in the terminal with Ctrl+C.";

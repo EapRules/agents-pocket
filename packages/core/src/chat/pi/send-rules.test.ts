@@ -2,8 +2,11 @@ import '../programs';
 // Pi and Oh My Pi send rules and policy: the Swift ChatSendRules tests for `.pi` and `.omp`.
 
 import { describe, expect, it } from 'vitest';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { sendPolicyFor } from '../send/registry';
 import { rulesFor } from '../send/send.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const pi = sendPolicyFor('pi');
 const omp = sendPolicyFor('omp');

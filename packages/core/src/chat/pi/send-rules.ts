@@ -2,6 +2,7 @@
 // profile entries for `.pi` and `.omp`), and how it takes `/compact`.
 
 import type { ComposerRefusal } from '../../composer/policy';
+import { message, type Text } from '../../errors/text';
 import { normalizingNewlines } from '../../terminal/text-safety';
 import type { ChatCommand, CommandSubmission } from '../send/policy';
 import { TRAILING_SPACE } from '../send/policy';
@@ -13,7 +14,7 @@ export const OMP_EXIT_WORDS: ReadonlySet<string> = new Set(['exit', 'quit', 'q']
 /** Oh My Pi offers a paste of this many lines as an attachment menu, whose Enter picks an entry. */
 const OMP_LARGE_PASTE_LINES = 100;
 
-const unsafe = (reason: string): ComposerRefusal => ({ kind: 'unsafeText', reason });
+const unsafe = (reason: Text): ComposerRefusal => ({ kind: 'unsafeText', reason });
 
 /** Oh My Pi runs `$ code` and `$$ code` as Python, without asking; `$HOME` and `$5` stay text. */
 function runsPython(trimmed: string): boolean {
@@ -28,21 +29,25 @@ export function ompRefusal(clean: string, trimmed: string): ComposerRefusal | un
   const lowered = trimmed.toLowerCase();
   if (runsPython(trimmed)) {
     return unsafe(
-      'A message starting with $ runs Python in Oh My Pi. Open the terminal to run it.',
+      message('A message starting with $ runs Python in Oh My Pi. Open the terminal to run it.'),
     );
   }
   if (trimmed === '.' || lowered === 'c') {
-    return unsafe('Oh My Pi reads this as Continue. Open the terminal to continue.');
+    return unsafe(message('Oh My Pi reads this as Continue. Open the terminal to continue.'));
   }
   if (trimmed.startsWith('->') || trimmed.startsWith('=>')) {
     return unsafe(
-      'Oh My Pi queues a message starting with -> or => for later. Open the terminal to queue one.',
+      message(
+        'Oh My Pi queues a message starting with -> or => for later. Open the terminal to queue one.',
+      ),
     );
   }
   const lines = trimmingTrailingWhitespace(normalizingNewlines(clean)).split('\n');
   if (lines.length >= OMP_LARGE_PASTE_LINES) {
     return unsafe(
-      'Oh My Pi opens a menu for pastes of 100 lines or more. Shorten the message or paste it in the terminal.',
+      message(
+        'Oh My Pi opens a menu for pastes of 100 lines or more. Shorten the message or paste it in the terminal.',
+      ),
     );
   }
   return undefined;
@@ -55,7 +60,7 @@ export function ompRefusal(clean: string, trimmed: string): ComposerRefusal | un
  */
 const COMPACT_BARE: CommandSubmission = {
   kind: 'bare',
-  argumentsRefusal: 'Add compaction focus in the Agent terminal.',
+  argumentsRefusal: message('Add compaction focus in the Agent terminal.'),
 };
 
 export const ompSubmission = (command: ChatCommand): CommandSubmission =>

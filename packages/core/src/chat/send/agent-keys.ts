@@ -2,11 +2,13 @@
 // never through the Attach PTY. One request at a time, in the order pressed, as typed keys would
 // arrive (Swift ChatAgentKeysStore).
 
+import type { Text } from '../../errors/text';
+
 /** What became of keys queued with `deliver`. */
 export type KeyDelivery =
   | { readonly kind: 'sent' }
   /** The check gave this reason, so nothing was sent. */
-  | { readonly kind: 'withheld'; readonly reason: string }
+  | { readonly kind: 'withheld'; readonly reason: Text }
   /** The request failed, so the keys may not have arrived. */
   | { readonly kind: 'failed' };
 
@@ -24,7 +26,7 @@ export class AgentKeysQueue {
    * `check`, when given, runs once those earlier keys have gone, so it sees their effect; a reason
    * from it sends nothing and leaves `failure` alone. `[]` sends nothing and returns `failed`.
    */
-  deliver(names: readonly string[], check?: () => Promise<string | null>): Promise<KeyDelivery> {
+  deliver(names: readonly string[], check?: () => Promise<Text | null>): Promise<KeyDelivery> {
     if (names.length === 0) return Promise.resolve({ kind: 'failed' });
     const task = this.tail.then(async (): Promise<KeyDelivery> => {
       if (check) {

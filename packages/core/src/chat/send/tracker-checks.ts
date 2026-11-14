@@ -2,6 +2,7 @@
 // program's prompt log, the input box after a stop, and refused compactions. Each check reads the
 // Host or the screen once and settles sends; the owner runs them after every transcript read.
 
+import { message } from '../../errors/text';
 import { detectInputBox } from './detect';
 import type { InputBoxState } from './input-box';
 import { witnessAppended, witnessMark, witnessVerdict } from './send-witness';
@@ -138,7 +139,10 @@ export async function checkSendWitnesses(context: CheckContext): Promise<void> {
     } else if (verdict === 'elsewhere') {
       state.misdirected.add(send.id);
       state.sessionConcern = {
-        reason: `Your last message went to another ${host.policy.chatName} session. Switch back to this conversation in the terminal, so its newest message shows there, or send from the terminal; then send again here.`,
+        reason: message(
+          'Your last message went to another %@ session. Switch back to this conversation in the terminal, so its newest message shows there, or send from the terminal; then send again here.',
+          host.policy.chatName,
+        ),
         raisedBy: send.id,
         promptFloor: host.conversation().readOffset,
         generation,

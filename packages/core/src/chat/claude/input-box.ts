@@ -4,6 +4,7 @@
 import { locateClaudeInputBox, readFieldText } from '../../blocked/claude-models';
 import { runsFrom } from '../../blocked/row-scanner';
 import { type AnsiScreen, trimmedText } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import { emptyBox, type InputBoxState } from '../send/input-box';
 
 /**
@@ -21,7 +22,7 @@ const OVERLAY_PATTERNS = [/^(❯|>)\s+\S/u, /^\d+\.\s/u, /^\/[\w:-]+\s{2,}\S/u];
  */
 export function readClaudeInputBox(screen: AnsiScreen): InputBoxState {
   const box = locateClaudeInputBox(screen);
-  if (!box) return { kind: 'unknown', reason: "Claude's input box is not on screen." };
+  if (!box) return { kind: 'unknown', reason: message("Claude's input box is not on screen.") };
   const rows = screen.rows;
   const first = rows[box.inputRows.start];
   const field = readFieldText(first ? runsFrom(first, 2) : []);

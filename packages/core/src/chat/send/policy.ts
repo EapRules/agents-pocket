@@ -6,6 +6,7 @@
 import type { AnsiScreen, ScreenRow } from '../../blocked/screen';
 import type { ComposerRefusal } from '../../composer/policy';
 import type { AgentStopWait } from '../../composer/stop';
+import type { Text } from '../../errors/text';
 import type { AgentSkill } from '../../skills/agent-skill';
 import type { ChatAgentActivity, ChatProgram, ChatTranscript } from '../model/types';
 import type { InputBoxState } from './input-box';
@@ -32,7 +33,7 @@ export type CommandSubmission =
   /** `/name arguments ` with one trailing space, like any message. */
   | { readonly kind: 'trailingSpace' }
   /** `/name` alone; a draft with arguments is refused with the reason. */
-  | { readonly kind: 'bare'; readonly argumentsRefusal: string };
+  | { readonly kind: 'bare'; readonly argumentsRefusal: Text };
 
 export const TRAILING_SPACE: CommandSubmission = { kind: 'trailingSpace' };
 
@@ -57,7 +58,7 @@ export interface StopContext {
 export type StopVerdict =
   | { readonly kind: 'press' }
   /** Pressing now could quit the program, clear a draft, act on a picker or do nothing; why. */
-  | { readonly kind: 'refuse'; readonly reason: string };
+  | { readonly kind: 'refuse'; readonly reason: Text };
 
 /** What Chat's Stop does in one program. */
 export interface StopPlanSpec {
@@ -86,7 +87,7 @@ export interface SessionCheckInput {
 export type ScreenSessionVerdict =
   | { readonly kind: 'thisSession' }
   /** The screen shows another session; why, as the hold. */
-  | { readonly kind: 'otherSession'; readonly reason: string }
+  | { readonly kind: 'otherSession'; readonly reason: Text }
   | { readonly kind: 'unknown' };
 
 /** Which conversation a program's terminal title says its TUI shows. */
@@ -118,7 +119,7 @@ export interface CompactionScreenReader {
   /** The row of the latest refusal sitting just above the input box, if any. */
   latestFailure(screen: AnsiScreen): ScreenRow | null;
   /** What the refusal row says, as the send's refusal. */
-  refusalText(failureRowText: string): string;
+  refusalText(failureRowText: string): Text;
 }
 
 export interface ProgramSendPolicy {
@@ -159,9 +160,9 @@ export interface ProgramSendPolicy {
   /** Names a dialog that holds the box, for the hold's wording (a plan selector): null for none. */
   dialogTitle?(screen: AnsiScreen): string | null;
   /** Why Chat holds a message while the input box reads as `text`. */
-  readonly textHoldReason: string;
+  readonly textHoldReason: Text;
   /** Replaces the generic dialog hold for a named dialog; undefined keeps the generic one. */
-  dialogHoldReason?(title: string | null): string | undefined;
+  dialogHoldReason?(title: string | null): Text | undefined;
 
   // Stop
   /** The terminal Composer shows Stop (false where Esc does not interrupt and Send stays). */

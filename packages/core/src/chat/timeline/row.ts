@@ -63,11 +63,11 @@ export type ChatPendingEchoState =
   | { kind: 'sent' }
   /** Sent a while ago, and the transcript still does not show it. */
   | { kind: 'unconfirmed' }
-  | { kind: 'failed'; reason: string }
+  | { kind: 'failed'; reason: Text }
   /** The text stayed in the Agent's input box. Never resent. */
   | { kind: 'notDelivered' }
   | { kind: 'discarded' }
-  | { kind: 'refused'; reason: string }
+  | { kind: 'refused'; reason: Text }
   | { kind: 'misdirected' };
 
 /** A message sent from Chat, shown at the end of the timeline until the transcript records it. */

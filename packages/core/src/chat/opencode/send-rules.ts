@@ -8,11 +8,13 @@
 // slash in it, which the shared rules leave to prose such as `/usr/bin/env`, is refused too.
 
 import type { ComposerRefusal } from '../../composer/policy';
+import { message } from '../../errors/text';
 
 const PATH_ONLY_REFUSAL: ComposerRefusal = {
   kind: 'unsafeText',
-  reason:
+  reason: message(
     "OpenCode can take a message that is only a file path as an attachment instead of text. Start with a few words, such as what to do with the file, and OpenCode's agent can read it from its path.",
+  ),
 };
 
 /** The most paths OpenCode reads from one paste; more is text. */
@@ -34,7 +36,10 @@ export function openCodeRefusal(_clean: string, trimmed: string): ComposerRefusa
   if (name !== null) {
     return {
       kind: 'unsafeText',
-      reason: `OpenCode can run a message starting with /${name} as one of its commands. Start with another word, or open the terminal to run it.`,
+      reason: message(
+        'OpenCode can run a message starting with /%@ as one of its commands. Start with another word, or open the terminal to run it.',
+        name,
+      ),
     };
   }
   return undefined;

@@ -3,6 +3,7 @@
 // composer wires them in when it learns about per-program send policies.
 
 import type { ComposerRefusal } from '../../composer/policy';
+import { message } from '../../errors/text';
 import { decodeUtf8 } from '../../events/utf8';
 import { groupDirectoryOfTranscript } from './locator-paths';
 
@@ -189,16 +190,18 @@ export function grokSlashRefusal(clean: string, trimmed: string): ComposerRefusa
   if (tokens.has('goal')) {
     return {
       kind: 'unsafeText',
-      reason:
+      reason: message(
         "Grok Build runs /goal only at the start of a message and wouldn't send this. Set goals in the terminal.",
+      ),
     };
   }
   // It asks the rest of the message as a side question, which never reaches the conversation.
   if (tokens.has('btw')) {
     return {
       kind: 'unsafeText',
-      reason:
+      reason: message(
         'Grok Build would treat this as a /btw side question and keep it out of the conversation. Rephrase it, or ask in the terminal.',
+      ),
     };
   }
   // Grok 1.0.62 answers `/compact` with text after it with the toast "/compact takes no
@@ -206,7 +209,7 @@ export function grokSlashRefusal(clean: string, trimmed: string): ComposerRefusa
   if (isCompactWithFocus(trimmed)) {
     return {
       kind: 'commandUnavailable',
-      reason: "Grok Build's /compact takes no focus. Send /compact on its own.",
+      reason: message("Grok Build's /compact takes no focus. Send /compact on its own."),
     };
   }
   return null;

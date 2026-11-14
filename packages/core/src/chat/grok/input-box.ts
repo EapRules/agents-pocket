@@ -4,24 +4,32 @@
 // agent shows that agent's own box, read the same way; whose agent it is, the session check reads.
 
 import type { AnsiScreen } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import { emptyBox, type InputBoxState } from '../send/input-box';
 import { composerIsEditingQueued, composerIsMultiline, readGrokScreen } from './screen';
 
-export const GROK_DASHBOARD_REASON =
-  'Grok Build is showing its dashboard, where a message starts a new agent. Go back to the conversation in the terminal first.';
-export const GROK_MINIMAL_REASON =
-  "Grok Build is in minimal mode, which Chat can't read. Switch back with /fullscreen in the terminal.";
-export const GROK_NO_BOX_REASON = "Agentico can't find Grok Build's input box on screen.";
-export const GROK_MULTILINE_REASON =
-  'Grok Build is in /multiline mode, where Enter adds a line instead of sending. Turn it off in the terminal with /multiline.';
-export const GROK_EDITING_QUEUED_REASON =
-  'Grok Build is editing a queued message. Finish it in the terminal first.';
-export const GROK_REMEMBER_REASON =
-  "Grok Build's input box is in remember mode, where a message is saved as a memory. Leave it in the terminal first.";
-export const GROK_SENDABLE_WAIT_REASON =
-  'Grok Build is waiting on a subagent or a background task, and a message now would cancel that turn.';
-export const GROK_UNFOCUSED_REASON =
-  "Grok Build's input box doesn't have focus. Go back to it in the terminal, then send again.";
+export const GROK_DASHBOARD_REASON = message(
+  'Grok Build is showing its dashboard, where a message starts a new agent. Go back to the conversation in the terminal first.',
+);
+export const GROK_MINIMAL_REASON = message(
+  "Grok Build is in minimal mode, which Chat can't read. Switch back with /fullscreen in the terminal.",
+);
+export const GROK_NO_BOX_REASON = message("Agentico can't find Grok Build's input box on screen.");
+export const GROK_MULTILINE_REASON = message(
+  'Grok Build is in /multiline mode, where Enter adds a line instead of sending. Turn it off in the terminal with /multiline.',
+);
+export const GROK_EDITING_QUEUED_REASON = message(
+  'Grok Build is editing a queued message. Finish it in the terminal first.',
+);
+export const GROK_REMEMBER_REASON = message(
+  "Grok Build's input box is in remember mode, where a message is saved as a memory. Leave it in the terminal first.",
+);
+export const GROK_SENDABLE_WAIT_REASON = message(
+  'Grok Build is waiting on a subagent or a background task, and a message now would cancel that turn.',
+);
+export const GROK_UNFOCUSED_REASON = message(
+  "Grok Build's input box doesn't have focus. Go back to it in the terminal, then send again.",
+);
 
 export function readGrokInputBox(screen: AnsiScreen): InputBoxState {
   const grok = readGrokScreen(screen);
@@ -30,7 +38,10 @@ export function readGrokInputBox(screen: AnsiScreen): InputBoxState {
   if (grok.pendingDoublePress !== null) {
     return {
       kind: 'disabled',
-      reason: `Grok Build is waiting for a second key press (“${grok.pendingDoublePress}”). Wait a second, then send again.`,
+      reason: message(
+        'Grok Build is waiting for a second key press (“%@”). Wait a second, then send again.',
+        grok.pendingDoublePress,
+      ),
     };
   }
   const { composer } = grok;

@@ -6,6 +6,7 @@ import '../programs';
 import { describe, expect, it } from 'vitest';
 import { screenFixtures } from '../../blocked/golden-fixtures.testkit';
 import type { AnsiScreen } from '../../blocked/screen';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { encodeUtf8 } from '../../events/utf8';
 import { FakeClock } from '../../hosts/cancellation';
 import { VolatileChatTranscriptCache } from '../model/cache';
@@ -14,6 +15,8 @@ import type { ChatHostFiles } from '../model/host-files';
 import type { OpenCodeQueryResponse } from '../opencode/query';
 import { ConversationStore } from './store';
 import type { ChatAgentView } from './store-types';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const APPLE = 'ses_0a1b2c3d4e5fK2mN8pQ4rT6vX9';
 const OTHER = 'ses_0a1b2c3d4e6aW3nT9cXq2LmB8v';
@@ -169,7 +172,7 @@ describe('before a send', () => {
     await chat.store.step();
     expect(chat.phase()).toEqual(following(APPLE));
     chat.answer(view(OTHER, 'OC | Other secret title'));
-    expect(await chat.store.confirmSessionBeforeSend()).toBe(
+    expect(await chat.store.confirmSessionBeforeSend()).toEqual(
       'herdr now reports another OpenCode conversation for this Agent. Chat is switching to it; check it, then send again.',
     );
     await chat.store.step();
@@ -180,7 +183,7 @@ describe('before a send', () => {
     const chat = setup();
     await chat.store.step();
     chat.answer(view(APPLE, 'OC | Other secret title'));
-    expect(await chat.store.confirmSessionBeforeSend()).toBe(
+    expect(await chat.store.confirmSessionBeforeSend()).toEqual(
       "OpenCode's terminal shows another conversation (Other secret title). Open this one in the terminal, then send again.",
     );
   });
@@ -196,7 +199,7 @@ describe('before a send', () => {
     const chat = setup();
     await chat.store.step();
     chat.failRecord();
-    expect(await chat.store.confirmSessionBeforeSend()).toBe(
+    expect(await chat.store.confirmSessionBeforeSend()).toEqual(
       "Agentico couldn't check which conversation OpenCode shows, so it sent nothing. Try again.",
     );
   });
@@ -213,7 +216,7 @@ describe('the start-screen watch', () => {
     await chat.recheck();
     await chat.recheck();
     expect(chat.queries()).toBe(queries);
-    expect(await chat.store.confirmSessionBeforeSend()).toBe(
+    expect(await chat.store.confirmSessionBeforeSend()).toEqual(
       "OpenCode is on its home screen, so this conversation isn't open there. Open it in the terminal first.",
     );
   });

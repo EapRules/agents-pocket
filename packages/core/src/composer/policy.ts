@@ -1,4 +1,5 @@
 import type { ChatAgentActivity } from '../chat/model/types';
+import { message, type Text } from '../errors/text';
 
 /** Which surface a Composer message was sent from; each shows only its own failures. */
 export type ComposerRoute = 'terminal' | 'chat';
@@ -8,7 +9,7 @@ export type ComposerRefusal =
   /** The Agent is waiting on a dialog; Chat answers dialogs with its own cards. */
   | { readonly kind: 'agentBlocked' }
   /** The text would make the Agent do something other than read a message. */
-  | { readonly kind: 'unsafeText'; readonly reason: string }
+  | { readonly kind: 'unsafeText'; readonly reason: Text }
   /**
    * A leading `/command` the menu does not offer. `terminalText` is what the Agent's terminal
    * accepts for it, with the arguments typed; `known` says the program's own command list has it.
@@ -22,9 +23,9 @@ export type ComposerRefusal =
   /** A command the menu offers only while the Agent is idle. */
   | { readonly kind: 'commandAwaitsIdle'; readonly name: string }
   /** A command the menu offers, but not in the form typed. */
-  | { readonly kind: 'commandUnavailable'; readonly reason: string }
+  | { readonly kind: 'commandUnavailable'; readonly reason: Text }
   /** The Agent's input box is not in a state to take a message. */
-  | { readonly kind: 'inputNotReady'; readonly reason: string };
+  | { readonly kind: 'inputNotReady'; readonly reason: Text };
 
 /** The one refusal sentence the String Catalog localizes. */
 export const AGENT_BLOCKED_KEY = 'The Agent is waiting for an answer. Answer it first.';
@@ -37,9 +38,6 @@ export const UNKNOWN_COMMAND_KEY =
 export const UNKNOWN_COMMAND_OPEN_KEY =
   "The app can't tell what %@ does. Open the terminal to run it.";
 
-/** The words a refusal shows: a catalog key with its arguments, or plain text. */
-export type RefusalText = { key: string; args?: string[] } | { plain: string };
-
 /**
  * The words a refusal shows. `terminalReachable` says whether the Composer can take the user to the
  * Agent's terminal: a command's text then offers the way, and otherwise only says to open it.
@@ -47,21 +45,21 @@ export type RefusalText = { key: string; args?: string[] } | { plain: string };
 export function refusalText(
   refusal: ComposerRefusal,
   options: { terminalReachable: boolean } = { terminalReachable: true },
-): RefusalText {
+): Text {
   switch (refusal.kind) {
     case 'agentBlocked':
-      return { key: AGENT_BLOCKED_KEY };
+      return message(AGENT_BLOCKED_KEY);
     case 'unknownCommand': {
-      const args = [`/${refusal.name}`];
+      const name = `/${refusal.name}`;
       const reachable = options.terminalReachable;
       if (refusal.known)
-        return { key: reachable ? KNOWN_COMMAND_KEY : KNOWN_COMMAND_OPEN_KEY, args };
-      return { key: reachable ? UNKNOWN_COMMAND_KEY : UNKNOWN_COMMAND_OPEN_KEY, args };
+        return message(reachable ? KNOWN_COMMAND_KEY : KNOWN_COMMAND_OPEN_KEY, name);
+      return message(reachable ? UNKNOWN_COMMAND_KEY : UNKNOWN_COMMAND_OPEN_KEY, name);
     }
     case 'commandAwaitsIdle':
-      return { plain: `/${refusal.name} is available once the Agent is idle.` };
+      return message('/%@ is available once the Agent is idle.', refusal.name);
     default:
-      return { plain: refusal.reason };
+      return refusal.reason;
   }
 }
 

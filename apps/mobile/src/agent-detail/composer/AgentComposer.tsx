@@ -3,7 +3,6 @@ import {
   chatActivityOf,
   composerPlaceholder,
   ESCAPE_WAIT,
-  message,
   primaryControl,
   refusalAction,
   refusalText,
@@ -171,11 +170,7 @@ export function AgentComposerBar({
       {notice ? (
         <Banner
           tone="warning"
-          title={
-            'key' in notice
-              ? renderMessage(message(notice.key, ...(notice.args ?? [])))
-              : notice.plain
-          }
+          title={renderMessage(notice)}
           actionLabel={
             noticeAction?.kind === 'runInTerminal'
               ? t('Run in Terminal')
@@ -188,7 +183,7 @@ export function AgentComposerBar({
         />
       ) : null}
       {stopNotice ? (
-        <Banner tone="warning" title={stopNotice} testID="composer-stop-notice" />
+        <Banner tone="warning" title={renderMessage(stopNotice)} testID="composer-stop-notice" />
       ) : null}
       <StagingStatusBar store={menus.staging} />
       <ComposerAttachments

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { emptyBox } from '../send/input-box';
 import {
   GROK_DASHBOARD_REASON,
@@ -11,6 +12,8 @@ import {
 } from './input-box';
 import { readGrokScreen } from './screen';
 import { capture, grokScreen } from './screen.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const WORKING = ['Shift+Tab:mode', 'Ctrl+c:cancel', 'Ctrl+.:shortcuts'];
 

@@ -1,6 +1,7 @@
 // Claude Code on the send side (Swift ChatSendProfile, ChatCommandMenu.offers, ChatStopPlan and
 // InputBoxStateDetector for `.claude`): the first implementation of ProgramSendPolicy.
 
+import { message } from '../../errors/text';
 import type { ProgramSendPolicy } from '../send/policy';
 import { ESCAPE_STOP } from '../send/stop-plan';
 import { readClaudeInputBox } from './input-box';
@@ -24,7 +25,9 @@ export const claudeSendPolicy: ProgramSendPolicy = {
   whileWorking: 'queuesForNextStep',
   mayRefillInputBoxAfterSend: false,
   readInputBox: readClaudeInputBox,
-  textHoldReason: "The Agent's input box already has text. Send or clear it in the terminal first.",
+  textHoldReason: message(
+    "The Agent's input box already has text. Send or clear it in the terminal first.",
+  ),
   terminalStop: true,
   stop: ESCAPE_STOP,
 };

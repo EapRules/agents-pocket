@@ -5,26 +5,30 @@
 // focused and empty and no second press pending. The first condition that fails says why nothing
 // was pressed.
 
+import { message, type Text } from '../../errors/text';
 import type { StopContext, StopVerdict } from '../send/policy';
 import { type GrokScreen, readGrokScreen } from './screen';
 
-const ASKING =
-  'Grok Build is asking something, so Stop pressed nothing. Answer it in Chat or the terminal.';
-const NOT_WORKING =
-  "Agentico can't see Grok Build working, so Stop pressed nothing. Stop it in the terminal with Ctrl+C.";
-const DRAFT =
-  "Grok Build's input box has text, and Ctrl+C would only clear it. Stop it in the terminal.";
+const ASKING = message(
+  'Grok Build is asking something, so Stop pressed nothing. Answer it in Chat or the terminal.',
+);
+const NOT_WORKING = message(
+  "Agentico can't see Grok Build working, so Stop pressed nothing. Stop it in the terminal with Ctrl+C.",
+);
+const DRAFT = message(
+  "Grok Build's input box has text, and Ctrl+C would only clear it. Stop it in the terminal.",
+);
 
-const refuse = (reason: string): StopVerdict => ({ kind: 'refuse', reason });
+const refuse = (reason: Text): StopVerdict => ({ kind: 'refuse', reason });
 
 /** Why Stop presses nothing while Grok waits for a second press or a cancel: Ctrl+C may confirm a pending quit. */
-function pendingRefusal(grok: GrokScreen): string | null {
+function pendingRefusal(grok: GrokScreen): Text | null {
   if (grok.pendingDoublePress !== null) {
     return grok.pendingDoublePress.includes('press again to quit')
-      ? 'Grok Build is waiting for a second key press to quit, so Stop pressed nothing.'
-      : 'Grok Build is waiting for a second key press, so Stop pressed nothing.';
+      ? message('Grok Build is waiting for a second key press to quit, so Stop pressed nothing.')
+      : message('Grok Build is waiting for a second key press, so Stop pressed nothing.');
   }
-  return grok.isCancelling ? 'Grok Build is already cancelling the turn.' : null;
+  return grok.isCancelling ? message('Grok Build is already cancelling the turn.') : null;
 }
 
 export function grokStopVerdict(context: StopContext): StopVerdict {
@@ -39,7 +43,9 @@ export function grokStopVerdict(context: StopContext): StopVerdict {
     if (pending !== null) return refuse(pending);
     if (grok.composer !== null && grok.composer.draft !== '') return refuse(DRAFT);
     return refuse(
-      'Grok Build is showing an agent from its dashboard, so Stop pressed nothing. Stop it in the terminal with Ctrl+C.',
+      message(
+        'Grok Build is showing an agent from its dashboard, so Stop pressed nothing. Stop it in the terminal with Ctrl+C.',
+      ),
     );
   }
   // Minimal mode draws no box either.
@@ -47,7 +53,9 @@ export function grokStopVerdict(context: StopContext): StopVerdict {
   const { composer } = grok;
   if (composer === null || composer.mode !== 'prompt' || !showsConversation) {
     return refuse(
-      'Grok Build is showing a menu or another view, so Stop pressed nothing. Close it in the terminal first.',
+      message(
+        'Grok Build is showing a menu or another view, so Stop pressed nothing. Close it in the terminal first.',
+      ),
     );
   }
   const pending = pendingRefusal(grok);
@@ -60,7 +68,9 @@ export function grokStopVerdict(context: StopContext): StopVerdict {
   if (composer.draft !== '') return refuse(DRAFT);
   if (!grok.promptHasFocus && !offersCancel) {
     return refuse(
-      "Grok Build's input box doesn't have focus, so Stop pressed nothing. Stop it in the terminal.",
+      message(
+        "Grok Build's input box doesn't have focus, so Stop pressed nothing. Stop it in the terminal.",
+      ),
     );
   }
   return { kind: 'press' };

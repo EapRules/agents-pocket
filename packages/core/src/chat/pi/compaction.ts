@@ -9,6 +9,7 @@ import {
   type ScreenStyle,
   trimmedText,
 } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import type { CompactionScreenReader } from '../send/policy';
 
 const COMPACTING = 'Compacting context...';
@@ -62,7 +63,7 @@ export function piCompaction(program: 'pi' | 'omp'): CompactionScreenReader {
     latestFailure: (screen) => latestFailure(screen, program),
     refusalText: (failureRowText) =>
       failureRowText.includes('Nothing to compact')
-        ? `${chatName} had nothing to compact.`
-        : `${chatName} couldn't compact.`,
+        ? message('%@ had nothing to compact.', chatName)
+        : message("%@ couldn't compact.", chatName),
   };
 }

@@ -1,17 +1,18 @@
 import { errorMessage } from '../errors/message';
+import type { Text } from '../errors/text';
 import type { Clock } from '../hosts/cancellation';
 
 /** What a Stop tap came to. `sent` means only that the keys left the app. */
 export type AgentInterruptOutcome =
   | { readonly kind: 'sent' }
-  | { readonly kind: 'failed'; readonly message: string };
+  | { readonly kind: 'failed'; readonly message: Text };
 
 /** How one surface's Stop waits after a press. */
 export interface AgentStopWait {
   /** How long Stop waits for Agent Status to leave Working, ignoring taps. */
   readonly windowMs: number;
   /** What Stop says when the window passed with the Agent still Working. */
-  readonly unconfirmedNotice: string;
+  readonly unconfirmedNotice: Text;
   /** The least time from the end of one attempt to the next press. Zero keeps Esc's behavior. */
   readonly minimumGapMs?: number;
 }
@@ -46,7 +47,7 @@ export type StopPhase =
   /** The window passed with the Agent still Working. */
   | { readonly kind: 'unconfirmed' }
   /** Nothing was pressed, or the keys may not have gone; Stop works again at once. */
-  | { readonly kind: 'failed'; readonly message: string };
+  | { readonly kind: 'failed'; readonly message: Text };
 
 /**
  * The Composer's Stop. Each tap presses the surface's keys once, then waits for Agent Status to
@@ -90,7 +91,7 @@ export class ComposerStopStore {
   }
 
   /** Why the last Stop has not shown its effect. */
-  get notice(): string | undefined {
+  get notice(): Text | undefined {
     if (this.current.kind === 'unconfirmed') return this.unconfirmedNotice;
     return this.current.kind === 'failed' ? this.current.message : undefined;
   }

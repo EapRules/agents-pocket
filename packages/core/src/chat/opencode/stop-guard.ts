@@ -6,40 +6,49 @@
 // leaves the box as it is.
 
 import { parseOpenCodeDialog } from '../../blocked/opencode-parser';
+import { message, type Text } from '../../errors/text';
 import type { StopContext, StopVerdict } from '../send/policy';
 import { readOpenCodeScreen } from './screen-reader';
 
-const refuse = (reason: string): StopVerdict => ({ kind: 'refuse', reason });
+const refuse = (reason: Text): StopVerdict => ({ kind: 'refuse', reason });
 
 export function openCodeStopGuard(context: StopContext): StopVerdict {
   if (context.activity !== 'working') {
-    return refuse('The turn already ended, so Stop pressed nothing.');
+    return refuse(message('The turn already ended, so Stop pressed nothing.'));
   }
   // herdr may not report Blocked yet.
   const parsed = parseOpenCodeDialog(context.screen);
   if (parsed.kind === 'dialog' || parsed.kind === 'unrecognized') {
     return refuse(
-      'OpenCode is asking for an answer, and Esc would reject it. Answer the card, or stop in the terminal.',
+      message(
+        'OpenCode is asking for an answer, and Esc would reject it. Answer the card, or stop in the terminal.',
+      ),
     );
   }
   const screen = readOpenCodeScreen(context.screen);
   if (screen.route !== 'session') {
     return refuse(
-      "OpenCode isn't showing this conversation's prompt, so Stop pressed nothing. Stop it in the terminal.",
+      message(
+        "OpenCode isn't showing this conversation's prompt, so Stop pressed nothing. Stop it in the terminal.",
+      ),
     );
   }
   if (screen.overlayTitle !== null) {
     return refuse(
-      "A menu is open over OpenCode's prompt, and Esc would only close it. Close it in the terminal first.",
+      message(
+        "A menu is open over OpenCode's prompt, and Esc would only close it. Close it in the terminal first.",
+      ),
     );
   }
   if (screen.state.kind === 'shellMode') {
     return refuse(
-      "OpenCode's prompt is in shell mode, where Esc only leaves it. Stop it in the terminal.",
+      message(
+        "OpenCode's prompt is in shell mode, where Esc only leaves it. Stop it in the terminal.",
+      ),
     );
   }
   if (!screen.isRunning) {
-    return refuse("OpenCode's screen shows no running turn, so Stop pressed nothing.");
+    return refuse(message("OpenCode's screen shows no running turn, so Stop pressed nothing."));
   }
   return { kind: 'press' };
 }

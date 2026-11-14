@@ -70,6 +70,12 @@ describe('Chat Composer echoes', () => {
     });
   });
 
+  it('keeps a failure keyed, so the app renders it in the user language', () => {
+    const keyed = { key: 'The Host did not answer. Check the connection and retry.' };
+    const echoes = pendingEchoes([message('a', { kind: 'failed', text: keyed })], statuses([]));
+    expect(echoes[0]?.state).toEqual({ kind: 'failed', reason: keyed });
+  });
+
   it.each([
     [{ kind: 'overdue' }, { kind: 'unconfirmed' }],
     [{ kind: 'returned' }, { kind: 'notDelivered' }],

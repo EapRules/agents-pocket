@@ -280,13 +280,22 @@ export function explanation(shown: TransportErrorPresentation, translate?: Trans
   return detail.endsWith(ELLIPSIS) ? `${summary}: ${detail}` : `${summary}: ${detail}.`;
 }
 
+/** The whole presentation, unrendered: explanation [+ " " + recovery]. */
+export function presentationText(shown: TransportErrorPresentation): Text {
+  const parts: Text[] = [shown.summary];
+  if (shown.detail !== undefined) parts.push(': ', shown.detail);
+  // A detail cut short with an ellipsis already ends the sentence.
+  if (shown.detail === undefined || !renderText(shown.detail).endsWith(ELLIPSIS)) parts.push('.');
+  if (shown.recovery !== undefined) parts.push(' ', shown.recovery);
+  return { join: parts, separator: '' };
+}
+
 /** The whole presentation: explanation [+ " " + recovery]. */
 export function presentationMessage(
   shown: TransportErrorPresentation,
   translate?: Translate,
 ): string {
-  const told = explanation(shown, translate);
-  return shown.recovery === undefined ? told : `${told} ${renderText(shown.recovery, translate)}`;
+  return renderText(presentationText(shown), translate);
 }
 
 /**
@@ -294,9 +303,12 @@ export function presentationMessage(
  * herdr's own rejection through its message, anything else through its own description.
  */
 export function userFacingDescription(thrown: unknown, translate?: Translate): string {
-  if (thrown instanceof TransportFailure) {
-    return presentationMessage(presentation(thrown.error), translate);
-  }
+  return renderText(userFacingText(thrown), translate);
+}
+
+/** `userFacingDescription`, unrendered, so the app shows it in the user's language. */
+export function userFacingText(thrown: unknown): Text {
+  if (thrown instanceof TransportFailure) return presentationText(presentation(thrown.error));
   if (thrown instanceof HerdrApiError) return thrown.message;
   if (thrown instanceof Error) return thrown.message;
   return String(thrown);

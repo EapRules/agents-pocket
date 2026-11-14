@@ -6,22 +6,27 @@
 // Each says nothing when unsure; the post-send witness catches what they miss.
 
 import type { AnsiScreen } from '../../blocked/screen';
+import { message, type Text } from '../../errors/text';
 import type { ChatTranscript } from '../model/types';
 import type { ScreenSessionVerdict, SessionCheckInput } from '../send/policy';
 import { type GrokScreen, type GrokUserRow, readGrokScreen } from './screen';
 
-export const GROK_WELCOME_REASON =
-  'Grok Build is on its welcome screen, where a message starts a new session. Go back with Resume session (Ctrl+R) in the terminal, or start the new one there.';
-export const GROK_SESSION_LINE_REASON =
-  "Grok Build's screen shows another session. If you just ran /new or /clear, Chat follows it in a moment; send again then. Otherwise switch back to this conversation in the terminal first.";
-export const GROK_UNKNOWN_PROMPT_REASON =
-  "Grok Build's screen shows a message this conversation doesn't have. It may be in another session, or the terminal may be scrolled up. Check the terminal, then send again.";
-export const GROK_AGENT_VIEW_REASON =
-  'Grok Build is showing an agent from its dashboard, which may not be this conversation. Go back to the conversation in the terminal first.';
+export const GROK_WELCOME_REASON = message(
+  'Grok Build is on its welcome screen, where a message starts a new session. Go back with Resume session (Ctrl+R) in the terminal, or start the new one there.',
+);
+export const GROK_SESSION_LINE_REASON = message(
+  "Grok Build's screen shows another session. If you just ran /new or /clear, Chat follows it in a moment; send again then. Otherwise switch back to this conversation in the terminal first.",
+);
+export const GROK_UNKNOWN_PROMPT_REASON = message(
+  "Grok Build's screen shows a message this conversation doesn't have. It may be in another session, or the terminal may be scrolled up. Check the terminal, then send again.",
+);
+export const GROK_AGENT_VIEW_REASON = message(
+  'Grok Build is showing an agent from its dashboard, which may not be this conversation. Go back to the conversation in the terminal first.',
+);
 
 const UNKNOWN: ScreenSessionVerdict = { kind: 'unknown' };
 const THIS: ScreenSessionVerdict = { kind: 'thisSession' };
-const other = (reason: string): ScreenSessionVerdict => ({ kind: 'otherSession', reason });
+const other = (reason: Text): ScreenSessionVerdict => ({ kind: 'otherSession', reason });
 
 const squeezed = (text: string): string => [...text].filter((c) => !/\s/u.test(c)).join('');
 

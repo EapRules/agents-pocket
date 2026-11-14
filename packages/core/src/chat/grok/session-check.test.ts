@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { Text } from '../../errors/text';
 import { type ChatAgentActivity, type ChatTranscript, emptyTranscript } from '../model/types';
 import type { SessionCheckInput } from '../send/policy';
 import { readGrokScreen } from './screen';
@@ -58,7 +59,7 @@ function input(
 }
 
 const screen = (rows: string[], columns = 120) => grokScreen({ columns, scrollback: rows });
-const other = (reason: string) => ({ kind: 'otherSession', reason });
+const other = (reason: Text) => ({ kind: 'otherSession', reason });
 const THIS = { kind: 'thisSession' };
 const UNKNOWN = { kind: 'unknown' };
 

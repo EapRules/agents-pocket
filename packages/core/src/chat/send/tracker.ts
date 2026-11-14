@@ -4,6 +4,7 @@
 // between. Pure over a `SendTrackerHost`; the conversation store owns one per followed Agent.
 
 import type { AnsiScreen } from '../../blocked/screen';
+import type { Text } from '../../errors/text';
 import type { ChatAgentActivity } from '../model/types';
 import type { SendStatus, SentMessage } from './echoes';
 import type { SessionCheckInput } from './policy';
@@ -48,7 +49,7 @@ export class SendTracker {
   }
 
   /** Why every later send waits: a send the program's log put in another session. */
-  get sessionConcern(): string | null {
+  get sessionConcern(): Text | null {
     return this.state.sessionConcern?.reason ?? null;
   }
 
@@ -128,7 +129,7 @@ export class SendTracker {
    * and keeps the witness mark of the newest unsent send of that text if it landed before this.
    * Synchronous: nothing is awaited between the screen read and the paste.
    */
-  sendConcern(outgoing: string, screen: AnsiScreen): string | null {
+  sendConcern(outgoing: string, screen: AnsiScreen): Text | null {
     const { state, host } = this;
     let verdict: ReturnType<NonNullable<typeof host.policy.sessionCheck>> = { kind: 'unknown' };
     const check = host.policy.sessionCheck;

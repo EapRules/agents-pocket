@@ -1,10 +1,14 @@
 import '../programs';
 import { describe, expect, it } from 'vitest';
 import { decodeAnsiScreen } from '../../blocked/ansi-decoder';
+import { renderText } from '../../errors/text';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { divider } from '../model/factories';
 import type { ChatEntry } from '../model/types';
 import type { ProgramSendPolicy } from './policy';
 import { harness } from './tracker.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const delivered = (id: string, text: string) => ({ id, text, isDelivered: true });
 const unsent = (id: string, text: string) => ({ id, text, isDelivered: false });
@@ -303,8 +307,8 @@ describe('SendTracker send witness', () => {
     h.tracker.match();
     await h.tracker.checkSendWitnesses();
     expect(h.status('a')).toBe('misdirected');
-    expect(h.tracker.sessionConcern).toContain('another Claude Code session');
-    expect(h.tracker.sendConcern('next', decodeAnsiScreen(''))).toContain(
+    expect(renderText(h.tracker.sessionConcern ?? '')).toContain('another Claude Code session');
+    expect(renderText(h.tracker.sendConcern('next', decodeAnsiScreen('')) ?? '')).toContain(
       'another Claude Code session',
     );
     // A recorded copy clears the concern and the echo.

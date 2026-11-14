@@ -3,7 +3,7 @@
 // terminal sent are not Chat's and never echo.
 
 import type { ComposerMessage } from '../../composer/progress';
-import { renderText } from '../../errors/text';
+import type { Text } from '../../errors/text';
 import type { ChatPendingEcho, ChatPendingEchoState } from '../timeline/row';
 import type { SendRules } from './rules';
 
@@ -28,7 +28,7 @@ export type SendStatus =
   /** Returned, then gone from the input box without the transcript recording it. */
   | { readonly kind: 'discarded' }
   /** Overdue, and the program said on screen that it would not do it. */
-  | { readonly kind: 'refused'; readonly reason: string }
+  | { readonly kind: 'refused'; readonly reason: Text }
   /** Unrecorded, and the program's prompt log names one other session as the one that took it. */
   | { readonly kind: 'misdirected' }
   /** Unrecorded and no longer worth an echo. */
@@ -93,7 +93,7 @@ export function pendingEchoes(
       }
       case 'failed':
         if (message.id !== latest) continue;
-        state = { kind: 'failed', reason: renderText(message.state.text) };
+        state = { kind: 'failed', reason: message.state.text };
         break;
     }
     echoes.push({ id: message.id, text: message.text, state });

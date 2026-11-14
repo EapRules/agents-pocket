@@ -3,6 +3,7 @@
 // through the host below. The store owns when it checks; this owns what it checks with.
 
 import type { AnsiScreen } from '../../blocked/screen';
+import type { Text } from '../../errors/text';
 import type { ChatAgentActivity, ChatProgram } from '../model/types';
 import type { SendStatus, SentMessage } from '../send/echoes';
 import { sendPolicyFor } from '../send/registry';
@@ -35,7 +36,7 @@ export class ConversationSends {
     this.ensure()?.updateSends(messages);
   }
 
-  concern(outgoing: string, screen: AnsiScreen): string | null {
+  concern(outgoing: string, screen: AnsiScreen): Text | null {
     return this.tracker?.sendConcern(outgoing, screen) ?? null;
   }
 

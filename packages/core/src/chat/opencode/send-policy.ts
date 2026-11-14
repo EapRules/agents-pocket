@@ -3,6 +3,7 @@
 // in the menu, an input box read from the screen, a double-Esc Stop behind a screen guard, and the
 // terminal title that says which conversation its TUI shows.
 
+import { message } from '../../errors/text';
 import { conservativeSendPolicy } from '../send/defaults';
 import type { CommandSubmission, ProgramSendPolicy } from '../send/policy';
 import { readOpenCodeScreen } from './screen-reader';
@@ -19,16 +20,19 @@ const EXIT_WORDS: ReadonlySet<string> = new Set(['exit', 'quit', ':q', ':q!', ':
  */
 const COMPACT_BARE: CommandSubmission = {
   kind: 'bare',
-  argumentsRefusal: "OpenCode's /compact takes no instructions. Send /compact alone.",
+  argumentsRefusal: message("OpenCode's /compact takes no instructions. Send /compact alone."),
 };
 const COMMAND_BARE: CommandSubmission = {
   kind: 'bare',
-  argumentsRefusal: 'OpenCode runs its commands alone. Send the command without anything after it.',
+  argumentsRefusal: message(
+    'OpenCode runs its commands alone. Send the command without anything after it.',
+  ),
 };
 
 /** OpenCode's interrupt resumes: a message waiting during the turn runs after it. */
-const UNCONFIRMED_NOTICE =
-  'Esc went twice, but OpenCode still shows Working. If a message was waiting during this turn, OpenCode runs it after a stop; tap Stop again to stop that too. In the terminal, use Esc, not Ctrl+C, which exits OpenCode when its input is empty.';
+const UNCONFIRMED_NOTICE = message(
+  'Esc went twice, but OpenCode still shows Working. If a message was waiting during this turn, OpenCode runs it after a stop; tap Stop again to stop that too. In the terminal, use Esc, not Ctrl+C, which exits OpenCode when its input is empty.',
+);
 
 export function openCodeSendPolicy(): ProgramSendPolicy {
   return conservativeSendPolicy('opencode', 'OpenCode', {
@@ -51,8 +55,9 @@ export function openCodeSendPolicy(): ProgramSendPolicy {
     whileWorking: 'queuesForTurnEnd',
     readInputBox: (screen) => readOpenCodeScreen(screen).state,
     // `/undo` puts the undone prompt back in the box, and Up recalls an earlier one.
-    textHoldReason:
+    textHoldReason: message(
       "The Agent's input box already has text, such as a draft, a prompt /undo put back, or one recalled with Up. Send or clear it in the terminal first.",
+    ),
     terminalStop: true,
     stop: {
       keys: ['esc', 'esc'],

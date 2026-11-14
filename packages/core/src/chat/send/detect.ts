@@ -3,6 +3,7 @@
 
 import { parseBlockedDialog } from '../../blocked/programs';
 import type { AnsiScreen } from '../../blocked/screen';
+import { message, type Text } from '../../errors/text';
 import type { InputBoxState } from './input-box';
 import type { ProgramSendPolicy } from './policy';
 
@@ -16,26 +17,26 @@ export function detectInputBox(screen: AnsiScreen, policy: ProgramSendPolicy): I
 }
 
 /** Why Chat holds a message while the input box reads this way. Every case is one the terminal can resolve. */
-export function holdReason(state: InputBoxState, policy: ProgramSendPolicy): string {
+export function holdReason(state: InputBoxState, policy: ProgramSendPolicy): Text {
   switch (state.kind) {
     case 'empty':
-      return "The Agent's input box is ready.";
+      return message("The Agent's input box is ready.");
     case 'text':
       return policy.textHoldReason;
     case 'shellMode':
-      return "The Agent's input box is in shell mode. Leave it in the terminal first.";
+      return message("The Agent's input box is in shell mode. Leave it in the terminal first.");
     case 'disabled':
-      return `The Agent isn't taking messages: ${state.reason}`;
+      return message("The Agent isn't taking messages: %@", state.reason);
     case 'overlay':
-      return "A menu is open over the Agent's input box. Close it in the terminal first.";
+      return message("A menu is open over the Agent's input box. Close it in the terminal first.");
     case 'dialog':
       return (
         policy.dialogHoldReason?.(state.title) ??
-        'The Agent is showing a dialog. Answer it in the terminal first.'
+        message('The Agent is showing a dialog. Answer it in the terminal first.')
       );
     case 'noComposer':
       return state.reason;
     case 'unknown':
-      return "Agentico can't find the Agent's input box on screen.";
+      return message("Agentico can't find the Agent's input box on screen.");
   }
 }

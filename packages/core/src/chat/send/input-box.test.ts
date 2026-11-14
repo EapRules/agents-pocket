@@ -1,6 +1,7 @@
 import '../programs';
 import { describe, expect, it } from 'vitest';
 import { loadScreen } from '../../blocked/golden-fixtures.testkit';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { detectInputBox } from './detect';
 import {
   DELIVERY_CHECK_DELAY_MS,
@@ -12,6 +13,8 @@ import {
 } from './input-box';
 import { sendPolicyFor } from './registry';
 import { SGR, syntheticScreen } from './send.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const claude = sendPolicyFor('claude');
 const codex = sendPolicyFor('codex');

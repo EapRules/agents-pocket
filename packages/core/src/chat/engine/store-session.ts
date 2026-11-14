@@ -1,3 +1,4 @@
+import { message, type Text } from '../../errors/text';
 import { programDefinition } from '../programs/registry';
 // Which conversation a program that can leave it without a report is really in (the session half of
 // Swift AgentChatStore: `adoptRecord`, `confirmSessionBeforeSend` and the start-screen watch, ADR
@@ -99,7 +100,7 @@ export class SessionWatch {
    * conversation's. Why the message would land outside the conversation Chat shows, or null to go on.
    * Null without a policy that asks for it, and for a transport that cannot read the record.
    */
-  async confirmBeforeSend(): Promise<string | null> {
+  async confirmBeforeSend(): Promise<Text | null> {
     const { options } = this.host;
     const view = this.view();
     if (!view || view.program === null) return null;
@@ -111,23 +112,36 @@ export class SessionWatch {
     try {
       fresh = await options.agentInfo();
     } catch {
-      return `Agentico couldn't check which conversation ${name} shows, so it sent nothing. Try again.`;
+      return message(
+        "Agentico couldn't check which conversation %@ shows, so it sent nothing. Try again.",
+        name,
+      );
     }
     this.override = { view: fresh, baseline: JSON.stringify(options.agent() ?? null) };
     this.host.rebind(fresh);
     if (!sameReference(this.host.followed(), shown)) {
       this.host.wake();
-      return `herdr now reports another ${name} conversation for this Agent. Chat is switching to it; check it, then send again.`;
+      return message(
+        'herdr now reports another %@ conversation for this Agent. Chat is switching to it; check it, then send again.',
+        name,
+      );
     }
     if (this.stale) {
-      return `${name} is on its home screen, so this conversation isn't open there. Open it in the terminal first.`;
+      return message(
+        "%@ is on its home screen, so this conversation isn't open there. Open it in the terminal first.",
+        name,
+      );
     }
     const verdict = policy.terminalTitle?.verdict(
       fresh.terminalTitle ?? null,
       this.host.transcriptTitle(),
     );
     if (verdict?.kind === 'differs') {
-      return `${name}'s terminal shows another conversation (${verdict.title}). Open this one in the terminal, then send again.`;
+      return message(
+        "%@'s terminal shows another conversation (%@). Open this one in the terminal, then send again.",
+        name,
+        verdict.title,
+      );
     }
     return null;
   }

@@ -16,6 +16,7 @@ import {
   trimBlanks,
   trimmedText,
 } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import { emptyBox, type InputBoxState } from '../send/input-box';
 
 /** The composer's placeholders. A narrow screen can cut them short. */
@@ -68,7 +69,7 @@ export function readCodexInputBox(screen: AnsiScreen): InputBoxState {
     const reason = disabledReason(screen);
     return reason !== null
       ? { kind: 'disabled', reason }
-      : { kind: 'unknown', reason: "Codex's composer is not on screen." };
+      : { kind: 'unknown', reason: message("Codex's composer is not on screen.") };
   }
   const rows = screen.rows;
   const row = rows[composer.row];
@@ -85,14 +86,17 @@ export function readCodexInputBox(screen: AnsiScreen): InputBoxState {
   const visible = runs.filter((run) => !isBlankRun(run));
   if (composer.glyph === '!') return { kind: 'shellMode', command: lines.join('\n') };
   if (lines.length === 0) {
-    return { kind: 'unknown', reason: "Codex's composer shows neither text nor its placeholder." };
+    return {
+      kind: 'unknown',
+      reason: message("Codex's composer shows neither text nor its placeholder."),
+    };
   }
   if (lines.length === 1 && visible.length > 0 && visible.every((run) => run.style.isDim)) {
     const shown = firstLine.endsWith('…') ? firstLine.slice(0, -1) : firstLine;
     if (!PLACEHOLDERS.some((placeholder) => placeholder.startsWith(shown))) {
       return {
         kind: 'unknown',
-        reason: `The composer shows “${firstLine}”, which Agentico does not know.`,
+        reason: message('The composer shows “%@”, which Agentico does not know.', firstLine),
       };
     }
     const overlay = overlayAround(composer.row, screen);

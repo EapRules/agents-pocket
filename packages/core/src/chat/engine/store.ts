@@ -4,6 +4,7 @@
 
 import type { AnsiScreen } from '../../blocked/screen';
 import { asTransportError } from '../../errors';
+import type { Text } from '../../errors/text';
 import type { ConversationReference } from '../model/conversation-reference';
 import type { ChatProgram } from '../model/types';
 import { projectionContext } from '../model/types';
@@ -285,15 +286,14 @@ export class ConversationStore {
   readonly updateSends = (messages: readonly SentMessage[]): void => this.sends.update(messages);
 
   /** Why a send the input box would take waits all the same (another session's screen or log), or null. */
-  readonly sendConcern = (outgoing: string, screen: AnsiScreen): string | null =>
+  readonly sendConcern = (outgoing: string, screen: AnsiScreen): Text | null =>
     this.sends.concern(outgoing, screen);
 
   /** The Agent's screen was read for another reason (the check before a send). */
   readonly inputBoxWasRead = (screen: AnsiScreen): void => this.sends.inputBoxWasRead(screen);
 
   /** The check before a send (`SessionWatch.confirmBeforeSend`): why it would land outside the conversation shown, or null. */
-  readonly confirmSessionBeforeSend = (): Promise<string | null> =>
-    this.session.confirmBeforeSend();
+  readonly confirmSessionBeforeSend = (): Promise<Text | null> => this.session.confirmBeforeSend();
 
   /** The pause after each turn. */
   get interval(): number {

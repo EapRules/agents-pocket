@@ -1,6 +1,7 @@
 // Pi and Oh My Pi on the send side (Swift ChatSendProfile `.pi`/`.omp`, ChatCommandMenu.offers,
 // PiInputBoxDetector, ChatStopPlan and the Pi flags of ChatProgram).
 
+import { message } from '../../errors/text';
 import { SKILL_COMMAND_PREFIX } from '../send/command-menu';
 import type { ProgramSendPolicy } from '../send/policy';
 import { ESCAPE_STOP } from '../send/stop-plan';
@@ -32,8 +33,9 @@ export function piSendPolicy(program: 'pi' | 'omp'): ProgramSendPolicy {
     readInputBox: (screen) => readPiInputBox(screen, program),
     // Their Esc returns steers the turn has not taken to the box, but the text may as well be a
     // draft typed there.
-    textHoldReason:
+    textHoldReason: message(
       "The Agent's input box already has text, such as a draft or a steer that Stop returned. Send or clear it in the terminal first.",
+    ),
     terminalStop: true,
     stop: ESCAPE_STOP,
   };

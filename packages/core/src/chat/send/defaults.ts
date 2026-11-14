@@ -2,6 +2,7 @@
 // no skills in the menu, an Esc Stop, and an input box it never claims to recognize (so nothing is
 // sent into it). Program send policies spread this and override what their program does.
 
+import { message } from '../../errors/text';
 import type { ChatProgram } from '../model/types';
 import type { ProgramSendPolicy } from './policy';
 import { ESCAPE_STOP } from './stop-plan';
@@ -26,8 +27,9 @@ export function conservativeSendPolicy(
       kind: 'unknown',
       reason: `Agentico can't read ${chatName}'s input box yet.`,
     }),
-    textHoldReason:
+    textHoldReason: message(
       "The Agent's input box already has text. Send or clear it in the terminal first.",
+    ),
     terminalStop: true,
     stop: ESCAPE_STOP,
     ...overrides,

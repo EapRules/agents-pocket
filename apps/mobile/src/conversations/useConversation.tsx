@@ -5,6 +5,7 @@ import {
   type ConversationStore,
   initialSnapshot,
   type SentMessage,
+  type Text,
 } from '@openagentspocket/core';
 import {
   createContext,
@@ -60,7 +61,7 @@ export interface ConversationHandle {
   /** The messages Chat's Composer holds (`sentMessages`): each is followed until the transcript records it. */
   updateSends(messages: readonly SentMessage[]): void;
   /** Why a send the input box would take waits all the same, or null. */
-  sendConcern(outgoing: string, screen: AnsiScreen): string | null;
+  sendConcern(outgoing: string, screen: AnsiScreen): Text | null;
   /** The Agent's screen was read for another reason; a returned send it no longer holds is discarded. */
   inputBoxWasRead(screen: AnsiScreen): void;
 }

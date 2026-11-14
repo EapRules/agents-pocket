@@ -5,11 +5,14 @@ import '../programs';
 import { describe, expect, it } from 'vitest';
 import { decodeAnsiScreen } from '../../blocked/ansi-decoder';
 import { loadScreen } from '../../blocked/golden-fixtures.testkit';
+import { sourceTextEquality } from '../../errors/text-testing';
 import type { ChatAgentActivity } from '../model/types';
 import { detectInputBox } from '../send/detect';
 import { emptyBox, isSendable, preSendCheck } from '../send/input-box';
 import { sendPolicyFor } from '../send/registry';
 import { SGR } from '../send/send.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const pi = sendPolicyFor('pi');
 const omp = sendPolicyFor('omp');
@@ -302,8 +305,8 @@ describe('declined compaction on screen', () => {
   it('words a refusal with the program name', () => {
     expect(
       reader('pi')?.refusalText('Error: Compaction failed: Nothing to compact (session too small)'),
-    ).toBe('Pi had nothing to compact.');
-    expect(reader('omp')?.refusalText('Compaction failed: boom')).toBe(
+    ).toEqual('Pi had nothing to compact.');
+    expect(reader('omp')?.refusalText('Compaction failed: boom')).toEqual(
       "Oh My Pi couldn't compact.",
     );
   });

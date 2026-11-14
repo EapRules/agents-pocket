@@ -6,6 +6,7 @@ import type {
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import type { ChatUserBubbleStatus, IconName } from '@openagentspocket/ui';
+import { renderMessage } from '@/lib/renderText';
 
 type RowToolStatus = 'running' | 'waiting' | 'done' | 'failed';
 
@@ -74,7 +75,11 @@ export function echoStatus(state: ChatPendingEchoState): ChatUserBubbleStatus | 
         tone: 'secondary',
       };
     case 'failed':
-      return { text: t('Not sent. %@', state.reason), icon: 'warning', tone: 'danger' };
+      return {
+        text: t('Not sent. %@', renderMessage(state.reason)),
+        icon: 'warning',
+        tone: 'danger',
+      };
     case 'notDelivered':
       return {
         text: t("Not delivered. The text is still in the Agent's input box."),
@@ -88,7 +93,7 @@ export function echoStatus(state: ChatPendingEchoState): ChatUserBubbleStatus | 
         tone: 'warning',
       };
     case 'refused':
-      return { text: state.reason, icon: 'info', tone: 'secondary' };
+      return { text: renderMessage(state.reason), icon: 'info', tone: 'secondary' };
     case 'misdirected':
       return {
         text: t('Sent, but the Agent recorded it in another session.'),

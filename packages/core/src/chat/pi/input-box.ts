@@ -13,6 +13,7 @@ import {
   trimBlanks,
   trimmedText,
 } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import { emptyBox, type InputBoxState } from '../send/input-box';
 
 type PiProgram = 'pi' | 'omp';
@@ -138,7 +139,7 @@ function ompBand(screen: AnsiScreen): InputBoxState | null {
   return working
     ? {
         kind: 'disabled',
-        reason: "Oh My Pi is working. Send once it's idle, or steer from the terminal.",
+        reason: message("Oh My Pi is working. Send once it's idle, or steer from the terminal."),
       }
     : emptyBox();
 }
@@ -190,7 +191,7 @@ export function readPiInputBox(screen: AnsiScreen, program: PiProgram): InputBox
       if (stats < 0) {
         return {
           kind: 'unknown',
-          reason: "Pi's footer is not recognized. Continue in the Agent terminal.",
+          reason: message("Pi's footer is not recognized. Continue in the Agent terminal."),
         };
       }
       if (stats !== bottom + 2) {
@@ -220,7 +221,7 @@ export function readPiInputBox(screen: AnsiScreen, program: PiProgram): InputBox
       if (boxed) {
         const trimmed = trimBlanks(value);
         if (!trimmed.startsWith('│') && !trimmed.startsWith('╰')) {
-          return { kind: 'unknown', reason: 'The OMP editor is not recognized.' };
+          return { kind: 'unknown', reason: message('The OMP editor is not recognized.') };
         }
         value = [...trimmed].slice(1).join('');
         if (value.endsWith('│') || value.endsWith('╯')) value = [...value].slice(0, -1).join('');

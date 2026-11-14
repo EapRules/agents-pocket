@@ -3,6 +3,7 @@
 // the Composer's interrupt from it.
 
 import { type AgentInterruptOutcome, type AgentStopWait, ESCAPE_WAIT } from '../../composer/stop';
+import { message, type Text } from '../../errors/text';
 import type { AgentKeysQueue } from './agent-keys';
 import type { StopContext, StopPlanSpec } from './policy';
 
@@ -16,10 +17,11 @@ export const ESCAPE_STOP: StopPlanSpec = {
 };
 
 /** The request failed, so the keys may not have arrived. */
-export const STOP_UNREACHABLE = "Couldn't reach the Agent, so it may still be working.";
+export const STOP_UNREACHABLE = message("Couldn't reach the Agent, so it may still be working.");
 /** A guard had no screen to decide on, so nothing was pressed. */
-export const STOP_UNREADABLE_SCREEN =
-  "Agentico couldn't check the Agent's screen, so Stop pressed nothing.";
+export const STOP_UNREADABLE_SCREEN = message(
+  "Agentico couldn't check the Agent's screen, so Stop pressed nothing.",
+);
 
 /** One surface's Stop: what a tap does, the wait after it, and its hint. */
 export interface ComposerInterrupt {
@@ -40,7 +42,7 @@ export function composerInterrupt(
 ): ComposerInterrupt {
   const { screenGuard } = plan;
   const check = screenGuard
-    ? async (): Promise<string | null> => {
+    ? async (): Promise<Text | null> => {
         let context: StopContext;
         try {
           context = await deps.context();

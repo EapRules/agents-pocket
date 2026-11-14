@@ -1,5 +1,5 @@
 import { HerdrApiError } from '../errors/herdr-api-error';
-import { presentation, presentationMessage } from '../errors/presentation';
+import { presentation, presentationText } from '../errors/presentation';
 import { message, type Text } from '../errors/text';
 import { asTransportError, TransportFailure } from '../errors/transport-error';
 import { type ComposerRefusal, refusalText } from './policy';
@@ -25,7 +25,7 @@ export function deliveryFailureText(error: unknown): Text {
       case 'apiRejected':
         return message('herdr rejected the message: %@', shown.message);
       default:
-        return presentationMessage(presentation(shown));
+        return presentationText(presentation(shown));
     }
   }
   return message('The message could not be sent. Check the connection and retry.');
@@ -33,6 +33,5 @@ export function deliveryFailureText(error: unknown): Text {
 
 /** A refusal as the failure line of a message that was already echoed. */
 export function refusalFailureText(refusal: ComposerRefusal): Text {
-  const text = refusalText(refusal);
-  return 'key' in text ? message(text.key, ...(text.args ?? [])) : text.plain;
+  return refusalText(refusal);
 }

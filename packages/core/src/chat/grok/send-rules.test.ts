@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { encodeUtf8 } from '../../events/utf8';
 import {
   GROK_BUILT_INS,
@@ -6,6 +7,8 @@ import {
   promptHistoryEntry,
   promptHistoryPath,
 } from './send-rules';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const SIDE_QUESTION = {
   kind: 'unsafeText',

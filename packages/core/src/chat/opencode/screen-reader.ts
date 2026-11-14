@@ -23,6 +23,7 @@ import {
   trimmedText,
   visibleRuns,
 } from '../../blocked/screen';
+import { message } from '../../errors/text';
 import type { InputBoxState } from '../send/input-box';
 
 export type OpenCodeRoute =
@@ -46,11 +47,15 @@ export interface OpenCodeScreen {
   overlayTitle: string | null;
 }
 
-const HOME_REASON =
-  'OpenCode is on its home screen, where a message starts a new conversation. Open this conversation in the terminal first.';
-const SUBAGENT_PANEL_REASON =
-  'OpenCode shows its subagent panel instead of the input box. Close it in the terminal first.';
-const WORKING_REASON = "OpenCode is working. Send once it's idle, or steer from the terminal.";
+const HOME_REASON = message(
+  'OpenCode is on its home screen, where a message starts a new conversation. Open this conversation in the terminal first.',
+);
+const SUBAGENT_PANEL_REASON = message(
+  'OpenCode shows its subagent panel instead of the input box. Close it in the terminal first.',
+);
+const WORKING_REASON = message(
+  "OpenCode is working. Send once it's idle, or steer from the terminal.",
+);
 /** The top row of the logo the home screen draws above its box. */
 const LOGO_TOP_ROW = '█▀▀█ █▀▀█ █▀▀█ █▀▀▄';
 
@@ -161,7 +166,7 @@ export function readOpenCodeScreen(screen: AnsiScreen): OpenCodeScreen {
     }
     return {
       route: 'unknown',
-      state: { kind: 'unknown', reason: "OpenCode's input box is not on screen." },
+      state: { kind: 'unknown', reason: message("OpenCode's input box is not on screen.") },
       isRunning: false,
       isArmed: false,
       overlayTitle: null,
@@ -183,7 +188,7 @@ export function readOpenCodeScreen(screen: AnsiScreen): OpenCodeScreen {
   const overlayTitle = modalTitle(edge, rows) ?? popupRow(top, column, rows);
   const read: OpenCodeScreen = {
     route: hasLogo ? 'home' : 'unknown',
-    state: { kind: 'unknown', reason: "OpenCode's input box is not recognized." },
+    state: { kind: 'unknown', reason: message("OpenCode's input box is not recognized.") },
     isRunning,
     isArmed,
     overlayTitle,

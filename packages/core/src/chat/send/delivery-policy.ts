@@ -5,7 +5,8 @@
 
 import type { AnsiScreen } from '../../blocked/screen';
 import type { ComposerDeliveryPolicy, ComposerRefusal } from '../../composer/policy';
-import { userFacingDescription } from '../../errors/presentation';
+import { userFacingText } from '../../errors/presentation';
+import { message, type Text } from '../../errors/text';
 import { TransportFailure } from '../../errors/transport-error';
 import type { Clock } from '../../hosts/cancellation';
 import type { ChatAgentActivity } from '../model/types';
@@ -23,9 +24,9 @@ export interface ChatDeliveryDeps {
    * For a program that can leave its conversation without herdr reporting it: why the message would
    * land outside the conversation Chat shows, or null to go on. Runs before the screen read.
    */
-  readonly confirmSession?: () => Promise<string | null>;
+  readonly confirmSession?: () => Promise<Text | null>;
   /** Gets the text as sent and the screen the box passed on; may hold the message for what Chat knows beyond the box. */
-  readonly sendConcern?: (outgoing: string, screen: AnsiScreen) => string | null;
+  readonly sendConcern?: (outgoing: string, screen: AnsiScreen) => Text | null;
   /** The conversation shows a question waiting for an answer, whatever herdr reports. */
   readonly questionOpen?: () => boolean;
   /** Runs just before the first read, once the Agent is not Blocked. */
@@ -34,9 +35,11 @@ export interface ChatDeliveryDeps {
   readonly clock: Clock;
 }
 
-const unreadable = (error: unknown): string => {
-  const prefix = "Agentico couldn't check the Agent's input box.";
-  return error instanceof TransportFailure ? `${prefix} ${userFacingDescription(error)}` : prefix;
+const unreadable = (error: unknown): Text => {
+  const prefix = message("Agentico couldn't check the Agent's input box.");
+  return error instanceof TransportFailure
+    ? { join: [prefix, userFacingText(error)], separator: ' ' }
+    : prefix;
 };
 
 export function chatDeliveryPolicy(
@@ -45,7 +48,7 @@ export function chatDeliveryPolicy(
 ): ComposerDeliveryPolicy {
   const { rules, activity, readScreen } = deps;
   const pause = (ms: number) => new Promise<void>((resolve) => deps.clock.setTimeout(resolve, ms));
-  const notReady = (reason: string): ComposerRefusal => ({ kind: 'inputNotReady', reason });
+  const notReady = (reason: Text): ComposerRefusal => ({ kind: 'inputNotReady', reason });
   return {
     route: 'chat',
     insertsIntoAttachWhenBlocked: false,

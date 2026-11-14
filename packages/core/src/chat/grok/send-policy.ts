@@ -1,6 +1,7 @@
 // Grok Build on the send side (Swift ChatSendProfile `.grok`, ChatCommandMenu.offers, ChatStopPlan,
 // GrokInputBoxDetector, GrokSessionCheck, GrokPromptHistoryWitness and the adapter's echo clock).
 
+import { message } from '../../errors/text';
 import type { ProgramSendPolicy } from '../send/policy';
 import { readGrokInputBox } from './input-box';
 import {
@@ -39,8 +40,9 @@ export function grokSendPolicy(): ProgramSendPolicy {
     // It restores a draft stashed with Ctrl+S after the next send, so a draft is not necessarily the message.
     mayRefillInputBoxAfterSend: true,
     readInputBox: readGrokInputBox,
-    textHoldReason:
+    textHoldReason: message(
       "The Agent's input box already has text. Send or clear it in the terminal first.",
+    ),
     // Esc only shows a toast there; Stop is Ctrl+C (below), so the terminal's Esc Stop stays off.
     terminalStop: false,
     // Ctrl+C cancels Grok Build's turn; it can also clear a draft, answer a card or quit, so the
@@ -50,8 +52,9 @@ export function grokSendPolicy(): ProgramSendPolicy {
       screenGuard: grokStopVerdict,
       wait: {
         windowMs: 3000,
-        unconfirmedNotice:
+        unconfirmedNotice: message(
           'Ctrl+C went, but the Agent still shows Working. A queued message may have started.',
+        ),
         minimumGapMs: 1500,
       },
       accessibilityHint: 'Presses Ctrl+C to cancel the turn',

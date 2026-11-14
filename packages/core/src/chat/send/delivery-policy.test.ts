@@ -2,6 +2,8 @@ import '../programs';
 import { describe, expect, it } from 'vitest';
 import { loadScreen } from '../../blocked/golden-fixtures.testkit';
 import type { AnsiScreen } from '../../blocked/screen';
+import { message, renderText } from '../../errors/text';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { TransportFailure } from '../../errors/transport-error';
 import { FakeClock } from '../../hosts/cancellation';
 import type { ChatAgentActivity } from '../model/types';
@@ -9,6 +11,8 @@ import { chatDeliveryPolicy } from './delivery-policy';
 import { DELIVERY_CHECK_DELAY_MS } from './input-box';
 import { sendPolicyFor } from './registry';
 import { rulesFor, SGR, syntheticScreen } from './send.testkit';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const codex = sendPolicyFor('codex');
 const claude = sendPolicyFor('claude');
@@ -126,7 +130,9 @@ describe('Chat delivery policy', () => {
     const refusal = await delivery.preflight?.('hello');
     expect(refusal).toEqual({
       kind: 'inputNotReady',
-      reason: expect.stringContaining('such as a draft or a message Stop returned'),
+      reason: message(
+        "The Agent's input box already has text, such as a draft or a message Stop returned. Send or clear it in the terminal first.",
+      ),
     });
     const claudeBox = setup({
       program: claude,
@@ -185,7 +191,7 @@ describe('Chat delivery policy', () => {
       },
     });
     const refusal = await transport.delivery.preflight?.('hello');
-    expect(refusal?.kind === 'inputNotReady' && refusal.reason).toContain(
+    expect(refusal?.kind === 'inputNotReady' && renderText(refusal.reason)).toContain(
       "Agentico couldn't check the Agent's input box. ",
     );
   });

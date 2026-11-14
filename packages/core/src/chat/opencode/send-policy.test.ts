@@ -5,11 +5,14 @@ import '../programs';
 
 import { describe, expect, it } from 'vitest';
 import { screenFixtures } from '../../blocked/golden-fixtures.testkit';
+import { sourceTextEquality } from '../../errors/text-testing';
 import { detectInputBox, holdReason } from '../send/detect';
 import { sendPolicyFor } from '../send/registry';
 import { rulesFor } from '../send/send.testkit';
 import { openCodeStopGuard } from './stop-guard';
 import { expectedOpenCodeTitle, openCodeTitleVerdict } from './terminal-title';
+
+expect.addEqualityTesters([sourceTextEquality]);
 
 const policy = sendPolicyFor('opencode');
 const screens = new Map(
@@ -122,16 +125,18 @@ describe('OpenCode send policy', () => {
 
 describe('OpenCode holds', () => {
   it('names undo and history beside a draft', () => {
-    expect(holdReason({ kind: 'text', text: 'draft' }, policy)).toBe(
+    expect(holdReason({ kind: 'text', text: 'draft' }, policy)).toEqual(
       "The Agent's input box already has text, such as a draft, a prompt /undo put back, or one recalled with Up. Send or clear it in the terminal first.",
     );
   });
 
   it('holds home and a working turn with their own reasons', () => {
-    expect(holdReason(detectInputBox(screen('opencode-01-home-empty-180'), policy), policy)).toBe(
+    expect(
+      holdReason(detectInputBox(screen('opencode-01-home-empty-180'), policy), policy),
+    ).toEqual(
       'OpenCode is on its home screen, where a message starts a new conversation. Open this conversation in the terminal first.',
     );
-    expect(holdReason(detectInputBox(screen('opencode-08-working-180'), policy), policy)).toBe(
+    expect(holdReason(detectInputBox(screen('opencode-08-working-180'), policy), policy)).toEqual(
       "The Agent isn't taking messages: OpenCode is working. Send once it's idle, or steer from the terminal.",
     );
   });

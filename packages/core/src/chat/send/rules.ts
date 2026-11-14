@@ -4,6 +4,7 @@
 // bytes, `/` commands the menu does not offer, and what the program's `SendProfile` adds.
 
 import type { ComposerRefusal } from '../../composer/policy';
+import { message, type Text } from '../../errors/text';
 import { containsOnlySafeScalars, normalizingNewlines } from '../../terminal/text-safety';
 import { commandNamed } from './command-menu';
 import { unknownCommandRefusal } from './command-shortcut';
@@ -44,7 +45,7 @@ export function removingInvisibles(text: string): string {
 
 export const trimmingTrailingWhitespace = (text: string): string => text.replace(/\s+$/u, '');
 
-const unsafe = (reason: string): ComposerRefusal => ({ kind: 'unsafeText', reason });
+const unsafe = (reason: Text): ComposerRefusal => ({ kind: 'unsafeText', reason });
 
 export interface SendRules {
   readonly policy: ProgramSendPolicy;
@@ -74,21 +75,23 @@ export function createSendRules(
     if (!containsOnlySafeScalars(clean)) {
       return {
         kind: 'refused',
-        refusal: unsafe('The message contains terminal control characters.'),
+        refusal: unsafe(message('The message contains terminal control characters.')),
       };
     }
     if (trimmed.startsWith('!')) {
       return {
         kind: 'refused',
         refusal: unsafe(
-          'A message starting with ! runs a shell command. Open the terminal to run one.',
+          message('A message starting with ! runs a shell command. Open the terminal to run one.'),
         ),
       };
     }
     if (profile.exitWords.has(trimmed.toLowerCase())) {
       return {
         kind: 'refused',
-        refusal: unsafe(`Sending this would exit ${policy.chatName}. Open the terminal to exit.`),
+        refusal: unsafe(
+          message('Sending this would exit %@. Open the terminal to exit.', policy.chatName),
+        ),
       };
     }
     const own = profile.refusal?.(clean, trimmed);

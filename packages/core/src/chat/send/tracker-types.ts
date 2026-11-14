@@ -2,6 +2,7 @@
 // TrackedSend, WitnessState, the sets and clocks `matchSends` and the checks read).
 
 import type { AnsiScreen } from '../../blocked/screen';
+import type { Text } from '../../errors/text';
 import type { Clock } from '../../hosts/cancellation';
 import type { ChatPhase } from '../engine/snapshot';
 import type { ChatHostFiles } from '../model/host-files';
@@ -101,7 +102,7 @@ export interface WitnessState {
 
 /** A send the program's own log says went into another session, which holds every later send. */
 export interface SessionConcern {
-  readonly reason: string;
+  readonly reason: Text;
   /** The misdirected send. */
   readonly raisedBy: string;
   /** How far the transcript had been read when it was raised. */
@@ -117,7 +118,7 @@ export interface TrackerState {
   discarded: Set<string>;
   extended: Set<string>;
   returnChecked: Set<string>;
-  refused: Map<string, string>;
+  refused: Map<string, Text>;
   compactChecked: Set<string>;
   compactingSeen: Map<string, number>;
   witnesses: Map<string, WitnessState>;

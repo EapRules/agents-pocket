@@ -3,6 +3,7 @@
 // be read as empty first; the check after the send tells whether Enter took it. Reading a box is a
 // program's own business (`ProgramSendPolicy.readInputBox`); everything here is program-neutral.
 
+import type { Text } from '../../errors/text';
 import type { ChatAgentActivity } from '../model/types';
 
 export type InputBoxState =
@@ -13,15 +14,15 @@ export type InputBoxState =
   /** Shell mode (`!`), with the command typed so far. */
   | { readonly kind: 'shellMode'; readonly command: string }
   /** Input is disabled; the program's explanation. */
-  | { readonly kind: 'disabled'; readonly reason: string }
+  | { readonly kind: 'disabled'; readonly reason: Text }
   /** A popup, picker, help view or transient hint over the box: the row that shows it. */
   | { readonly kind: 'overlay'; readonly row: string }
   /** A dialog took the box's place: its title when Chat names it in the hold. */
   | { readonly kind: 'dialog'; readonly title: string | null }
   /** No input box for this conversation is on screen: the program's reason, shown as the hold. */
-  | { readonly kind: 'noComposer'; readonly reason: string }
+  | { readonly kind: 'noComposer'; readonly reason: Text }
   /** The screen does not show a box Agentico recognizes; why. */
-  | { readonly kind: 'unknown'; readonly reason: string };
+  | { readonly kind: 'unknown'; readonly reason: Text };
 
 export const emptyBox = (placeholder: string | null = null): InputBoxState => ({
   kind: 'empty',
