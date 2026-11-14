@@ -1,6 +1,7 @@
 import {
   type BlockedCardState,
   type BlockedDialog,
+  excerptReading,
   isApprovalDialog,
   optionAt,
   splitAnswers,
@@ -217,7 +218,7 @@ export function BlockedCard(props: BlockedCardProps) {
       : content.kind === 'generic'
         ? content.shown
           ? headlineTitle({ actor: content.shown.toolName, verb: 'run' })
-          : t('Needs you')
+          : (excerptReading(content.excerpt).question ?? t('Needs you'))
         : t('Keys');
   return (
     <Card accent="warning" testID="blocked-card">

@@ -1,5 +1,6 @@
 import {
   type AnswerLayout,
+  excerptReading,
   type GenericDialogExcerpt,
   genericAnswerRole,
   genericOffersKeys,
@@ -47,7 +48,7 @@ export function genericAnswers(
 
 /**
  * A dialog no parser names. When the one waiting request provably is what it asks (`shown`), the
- * request's command; otherwise the rows verbatim and why they did not parse. The answers are the
+ * request's command; otherwise the rows as `excerptReading` shows them and why they did not parse. The answers are the
  * same component either way (`genericAnswers`, drawn by `Answers`); rows with no numbered answer
  * get the card's key pad instead (`genericOffersKeys`).
  */
@@ -81,13 +82,16 @@ export function GenericDialog({
     );
   }
   const reason = cardText(excerpt.reason);
+  const { body } = excerptReading(excerpt);
   return (
     <>
-      <BoundedScroll testID="blocked-excerpt">
-        <Card level="control" style={styles.code}>
-          <Text variant="mono">{excerpt.rows.map((row) => row.text.trimEnd()).join('\n')}</Text>
-        </Card>
-      </BoundedScroll>
+      {body.length > 0 ? (
+        <BoundedScroll testID="blocked-excerpt">
+          <Card level="control" style={styles.code}>
+            <Text variant="mono">{body.join('\n')}</Text>
+          </Card>
+        </BoundedScroll>
+      ) : null}
       {reason ? (
         <Text variant="footnote" tone="secondary" testID="blocked-generic-reason">
           {reason}

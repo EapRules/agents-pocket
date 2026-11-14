@@ -10,6 +10,7 @@
 import { genericAnswerRole } from './answer-layout';
 import type { CardContent } from './card-support';
 import { comparable } from './comparable';
+import { blocksOf, SEPARATOR } from './excerpt-rows';
 import type { RequestContext } from './request-match';
 import type { GenericDialogExcerpt } from './types';
 
@@ -115,28 +116,6 @@ function permissionAnswers(excerpt: GenericDialogExcerpt): boolean {
     roles.includes('approve') &&
     roles.includes('decline')
   );
-}
-
-/** A gutter or rule glyph: box drawing and block elements. */
-const GLYPH = '[\\u2500-\\u259F]';
-const SEPARATOR = new RegExp(`^[\\s${GLYPH.slice(1, -1)}_=-]*$`);
-const LEADING = new RegExp(`^\\s*(?:${GLYPH} ?)?`);
-const TRAILING = new RegExp(`\\s*(?:${GLYPH}\\s*)?$`);
-
-/** Runs of rows between blank or rule rows, each row without its gutter and edge spaces. */
-function blocksOf(texts: readonly string[]): string[][] {
-  const blocks: string[][] = [];
-  let current: string[] = [];
-  for (const text of texts) {
-    if (SEPARATOR.test(text)) {
-      if (current.length > 0) blocks.push(current);
-      current = [];
-    } else {
-      current.push(text.replace(LEADING, '').replace(TRAILING, ''));
-    }
-  }
-  if (current.length > 0) blocks.push(current);
-  return blocks;
 }
 
 /**

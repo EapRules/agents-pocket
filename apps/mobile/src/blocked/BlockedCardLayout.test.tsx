@@ -2,6 +2,7 @@ import {
   type BlockedCardState,
   type BlockedDialog,
   type CardContent,
+  decodeAnsiScreen,
   type GenericDialogExcerpt,
   makeFocus,
   makeOption,
@@ -37,9 +38,20 @@ function bashDialog(): BlockedDialog {
   };
 }
 
+const QUESTION = 'Do you want to proceed?';
+
+/** The rows a cut Claude dialog leaves: a line of its body, the question, the options, the hint. */
 function excerpt(numbered: [number, string][]): GenericDialogExcerpt {
+  const rows = [
+    ' Create c1',
+    '',
+    ` ${QUESTION}`,
+    ...numbered.map(([number, label]) => `   ${number}. ${label}`),
+    '',
+    ' Esc to cancel',
+  ];
   return {
-    rows: [],
+    rows: decodeAnsiScreen(rows.join('\n')).rows,
     numbered: new Map(numbered),
     reason: message('The top of the dialog is off screen.'),
     fingerprint: { value: 'x', requestLines: null, ruleLines: null },
@@ -144,6 +156,9 @@ describe('a dialog no parser names', () => {
     });
     expect(screen.getByTestId('blocked-excerpt')).toBeTruthy();
     expect(screen.getByTestId('blocked-generic-reason')).toBeTruthy();
+    // The dialog's own question heads the card; the answers read once, as buttons.
+    expect(screen.getByText(QUESTION)).toBeTruthy();
+    expect(screen.queryByText(/\d\. (?:Yes|No)/)).toBeNull();
     expect(screen.queryByTestId('blocked-subject-code')).toBeNull();
     const ids = pair()
       .getAllByTestId(/^blocked-generic-/)

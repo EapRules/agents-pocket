@@ -26,6 +26,7 @@ export {
 export { parseClaudeDialog } from './claude-parser';
 export { codexPlanPromptShows, codexQueuedNoticeShows, locateCodexComposer } from './codex-extras';
 export { parseCodexDialog } from './codex-parser';
+export { type ExcerptReading, excerptReading } from './excerpt-rows';
 export {
   type DialogFingerprint,
   describeFingerprint,

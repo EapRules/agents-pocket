@@ -29,11 +29,11 @@ describe('the Blocked card and the keyboard', () => {
   afterEach(() => dismiss.mockClear());
 
   it('closes the keyboard when a card asks, once per dialog', async () => {
-    const view = await render(show(handle('generic')));
+    const view = await render(show(handle('unreadable')));
     expect(dismiss).toHaveBeenCalledTimes(1);
-    await view.rerender(show(handle('generic')));
+    await view.rerender(show(handle('unreadable')));
     expect(dismiss).toHaveBeenCalledTimes(1);
-    await view.rerender(show(handle('generic', 2)));
+    await view.rerender(show(handle('unreadable', 2)));
     expect(dismiss).toHaveBeenCalledTimes(2);
   });
 
