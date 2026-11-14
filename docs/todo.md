@@ -108,6 +108,18 @@ so no program-specific branches.
 - [x] **Air at the end of the Chat** above the status line, the Blocked card and the Composer.
 - [x] **Notifications asked after the first Host**, with a sheet that says why (`PermissionPrimer`). Approve
   from Notifications stays off by default (owner, 2026-11-14). Not yet seen on a real phone.
+- [x] **The approval card reads like a request, for every program.** The title says who asks for what
+  ("Bash wants to run:"), the command sits in its own block, decline and the single-use approve share a
+  row, and an option that saves a rule stays apart with its warning. A dialog the terminal clips shows the
+  request Chat already knows. What is sent is unchanged (`answer-layout.ts`, `shown-request.ts`). Checked
+  against a real OpenCode in the agent lab.
+- [x] **The running turn is the live line at the end of the Chat** ("Working… 1m 45s", or "Waiting for
+  you…" while a request is pending or herdr reports Blocked). The line over the Composer counts only what
+  the Background Work sheet lists.
+- [x] **A message from another agent is one line** that opens a sheet with its sender and whole text.
+- [x] **Background Work sheet:** Running and Finished sections, rows by kind (Subagent, Workflow,
+  background command), and a Subagent's prompt above its transcript. No stop control: whether a program
+  lets a task be stopped from outside is not verified.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server
   (deployed, bucket empty), the publish script with the real R2 upload, the app side behind the official-build
   flag, the signing certificate in the repo (the key is with the owner), the privacy policy (deployed) and the
