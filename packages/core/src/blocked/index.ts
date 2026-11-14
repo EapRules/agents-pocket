@@ -65,6 +65,7 @@ export {
 export {
   type BlockedProgramSupport,
   blockedSupportFor,
+  genericCardExcerpt,
   parseBlockedDialog,
   planDialogAction,
   planGenericOption,

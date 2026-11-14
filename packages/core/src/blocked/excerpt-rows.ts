@@ -3,6 +3,7 @@
 // (`blocksOf`), and as the generic card shows them (`excerptReading`). Presentation only: words are
 // never reordered or rewritten, only decoration and the rows the card draws as buttons dropped.
 
+import type { AnsiScreen } from './screen';
 import type { GenericDialogExcerpt } from './types';
 
 /** A gutter or rule glyph: box drawing and block elements. */
@@ -61,8 +62,8 @@ export interface ExcerptReading {
    */
   readonly question: string | null;
   /**
-   * The rows without gutters, frames and rules, blank runs as one blank row and the common
-   * indentation removed. When the excerpt has numbered options the card draws every one as a
+   * The rows without gutters, frames, rules and key-hint rows (`isKeyHints`), blank runs as one
+   * blank row and the common indentation removed. When the excerpt has numbered options the card draws every one as a
    * button, so their rows (a numbered row and the deeper rows that continue it) are left out.
    */
   readonly body: readonly string[];
@@ -87,7 +88,7 @@ export function excerptReading(excerpt: GenericDialogExcerpt): ExcerptReading {
   }
   const lines: ShownRow[] = [];
   for (const [index, text] of texts.entries()) {
-    if (owned[index]) continue;
+    if (owned[index] || isKeyHints(text)) continue;
     const line = SEPARATOR.test(text) ? { text: '', flush: true } : shownRow(text);
     if (line.text === '' && (lines.length === 0 || lines.at(-1)?.text === '')) continue;
     lines.push(line);
@@ -101,6 +102,47 @@ export function excerptReading(excerpt: GenericDialogExcerpt): ExcerptReading {
     question,
     body: lines.map((line) => (line.flush ? line.text : line.text.slice(indent))),
   };
+}
+
+/** A key the programs name in their hints: Enter, Esc, Tab, Space, an arrow, `ctrl+x` and the like. */
+const KEY =
+  '(?:enter|return|esc|escape|tab|space|backspace|shift\\+tab|(?:ctrl|alt|shift|cmd)\\+\\S+|[↑↓←→]+)';
+/** One hint: a key or keys (`↑/↓`), then what it does in lower-case words. */
+const HINT = new RegExp(`^${KEY}(?:/${KEY})*\\s+[a-z][a-z ]*$`, 'i');
+
+/**
+ * Whether a row is only key hints, two or more segments separated by `·` or `|`, each a key and
+ * what it does ("enter select · esc back", "Esc to cancel · Tab to amend"). Strict: a sentence,
+ * one hint alone or any segment that does not start with a key keeps the row.
+ */
+export function isKeyHints(text: string): boolean {
+  const segments = cleanRow(text).split(/\s+[·|]\s+/);
+  return segments.length >= 2 && segments.every((segment) => HINT.test(segment.trim()));
+}
+
+/**
+ * The excerpt with the question right above its options when the reader left it out (Codex's
+ * `Implement this plan?` sits two blank rows over its list): the excerpt starts at option 1, and the
+ * nearest row above it on `screen`, past at most two blank rows, ends in `?` and has a blank or rule
+ * row above it. That row and the blank one over it go first. Numbers and fingerprint stay.
+ */
+export function withQuestionAbove(
+  excerpt: GenericDialogExcerpt,
+  screen: AnsiScreen,
+): GenericDialogExcerpt {
+  const [first] = excerpt.rows;
+  if (!first || screen.rows[first.index]?.text !== first.text) return excerpt;
+  const option = OPTION_ROW.exec(first.text);
+  if (!option || option[2] !== '1' || !excerpt.numbered.has(1)) return excerpt;
+  let above = first.index - 1;
+  while (above >= first.index - 3 && SEPARATOR.test(screen.rows[above]?.text ?? 'x')) above -= 1;
+  const question = screen.rows[above];
+  const over = screen.rows[above - 1];
+  if (!question || !over || SEPARATOR.test(question.text) || !SEPARATOR.test(over.text)) {
+    return excerpt;
+  }
+  if (!cleanRow(question.text).endsWith('?')) return excerpt;
+  return { ...excerpt, rows: [...screen.rows.slice(above - 1, first.index), ...excerpt.rows] };
 }
 
 /**

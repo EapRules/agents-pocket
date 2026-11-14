@@ -1,4 +1,4 @@
-import { decodeAnsiScreen, parseBlockedDialog } from '@openagentspocket/core';
+import { decodeAnsiScreen, genericCardExcerpt, parseBlockedDialog } from '@openagentspocket/core';
 import { type AtlasGenericVariant, GENERIC_GOLDENS, genericContent } from './atlasBlockedGeneric';
 
 declare const __dirname: string;
@@ -15,8 +15,9 @@ describe('the generic Blocked card atlas states', () => {
       const screen = decodeAnsiScreen(readFileSync(`${GOLDENS}/${golden}.ansi`, 'utf8'));
       const result = parseBlockedDialog(screen, program);
       if (result.kind !== 'unrecognized') throw new Error(`${golden} should stay generic`);
-      expect(result.excerpt.rows.map((row) => row.text.trimEnd())).toEqual(rows);
-      expect([...result.excerpt.numbered.values()]).toEqual(numbered);
+      const shown = genericCardExcerpt(result.excerpt, screen, program);
+      expect(shown.rows.map((row) => row.text.trimEnd())).toEqual(rows);
+      expect([...shown.numbered.values()]).toEqual(numbered);
       const content = genericContent(variant);
       if (content.kind !== 'generic') throw new Error('generic');
       expect(content.excerpt.rows.map((row) => row.text.trimEnd())).toEqual(rows);

@@ -2,6 +2,7 @@ import type { ChatProgram } from '../chat/model/types';
 import { programDefinition } from '../chat/programs/registry';
 import { terminalWaitOn } from '../chat/programs/terminal-waits';
 import { message } from '../errors/text';
+import { withQuestionAbove } from './excerpt-rows';
 import {
   attemptPlan,
   type ConfirmationRule,
@@ -57,7 +58,8 @@ export function blockedSupportFor(program: ChatProgram): BlockedProgramSupport |
 
 /**
  * The generic card's excerpt as the card shows it: a wait only the terminal answers (Codex's hook
- * review) keeps its rows, says what it waits for and loses its option buttons and keys.
+ * review) keeps its rows, says what it waits for and loses its option buttons and keys; any other
+ * gets the question right above its options when its reader left it out (`withQuestionAbove`).
  */
 export function genericCardExcerpt(
   excerpt: GenericDialogExcerpt,
@@ -65,7 +67,7 @@ export function genericCardExcerpt(
   program: ChatProgram,
 ): GenericDialogExcerpt {
   const wait = terminalWaitOn(program, screen.rows);
-  if (!wait) return excerpt;
+  if (!wait) return withQuestionAbove(excerpt, screen);
   return { ...excerpt, numbered: new Map(), reason: wait.explanation(), terminalOnly: true };
 }
 

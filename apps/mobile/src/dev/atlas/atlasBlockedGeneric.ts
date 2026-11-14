@@ -8,7 +8,7 @@ import {
 /**
  * Dialogs no parser names, as the generic card gets them: each excerpt's rows and numbered options
  * copied from a screen golden (`packages/core/goldens`), which `atlasBlockedGeneric.test.ts` reads
- * through the real parser to keep them the same.
+ * through the real parser and `genericCardExcerpt` to keep them the same.
  */
 export const GENERIC_GOLDENS = {
   /** Codex's MCP tool approval: Allow, Allow for this session, Always allow, Cancel. */
@@ -47,6 +47,10 @@ export const GENERIC_GOLDENS = {
     program: 'codex',
     reason: 'Agentico does not know this list.',
     rows: [
+      '',
+      '  Implement this plan?',
+      '',
+      '',
       '› 1. Yes, implement this plan          Switch to Default and start coding',
       '  2. Yes, clear context and implement  Start a fresh thread (current context: 4% used)',
       '  3. No, stay in Plan mode             Continue planning with the model',

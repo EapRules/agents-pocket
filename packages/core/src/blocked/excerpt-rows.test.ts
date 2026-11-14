@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { allCaptures, cutTop } from './card-outcome.testkit';
 import { CUT_VARIANTS, KNOWN_DEGRADED } from './degraded-dialogs.testkit';
-import { excerptReading } from './excerpt-rows';
+import { excerptReading, isKeyHints } from './excerpt-rows';
 import { genericCardExcerpt, parseBlockedDialog } from './programs';
 import type { AnsiScreen } from './screen';
 import type { GenericDialogExcerpt } from './types';
@@ -72,7 +72,12 @@ describe('excerptReading', () => {
     const { body } = excerptReading(excerpt);
     expect(body.some((line) => line.includes('Run the tool'))).toBe(false);
     expect(body.some((line) => line.includes('probe MCP server'))).toBe(true);
-    expect(body.at(-1)).toBe('enter to submit | esc to cancel');
+    expect(body.at(-1)).toBe('text: hi');
+  });
+
+  it('takes the plan prompt question its reader left above the list as the title', () => {
+    const { question } = excerptReading(excerptOf('codex-19-x3-implement-plan'));
+    expect(question).toBe('Implement this plan?');
   });
 
   it('keeps every row of an excerpt with no numbered answer, gutters and frames off', () => {
@@ -81,5 +86,32 @@ describe('excerptReading', () => {
     expect(question).toBeNull();
     expect(body.filter((line) => line !== '')).toHaveLength(4);
     expect(body.every((line) => !GLYPH.test(line))).toBe(true);
+  });
+});
+
+describe('isKeyHints', () => {
+  it('drops rows made only of key hints, from the captures', () => {
+    for (const row of [
+      '  enter select · esc back',
+      '  enter to submit | esc to cancel',
+      ' Esc to cancel · Tab to amend',
+      '  enter confirm · esc skip',
+    ]) {
+      expect(isKeyHints(row), row).toBe(true);
+    }
+  });
+
+  it('keeps sentences, single hints and rows with anything but a key leading a segment', () => {
+    for (const row of [
+      '  Press enter to confirm or esc to cancel',
+      'Enter to select · ↑/↓ to navigate · n to add notes · Esc to',
+      '  ↑/↓ navigate · y Enter:submit',
+      '  enter confirm  esc cancel',
+      'Esc to cancel',
+      ' Do you want to proceed?',
+      'Tab completes the path · the rest is typed',
+    ]) {
+      expect(isKeyHints(row), row).toBe(false);
+    }
   });
 });
