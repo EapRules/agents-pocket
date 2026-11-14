@@ -84,6 +84,46 @@ describe('splitAnswers', () => {
   });
 });
 
+// The generic card lays these captures out as a permission (GenericDialog `genericAnswers`).
+describe('the generic card reads a Codex permission it cannot name', () => {
+  const numbered = (name: string) => {
+    const fixture = screenFixtures('codex').find((candidate) => candidate.name === name);
+    const result = fixture && parseBlockedDialog(fixture.screen, 'codex');
+    if (result?.kind !== 'unrecognized') throw new Error(`${name} should stay generic`);
+    return [...result.excerpt.numbered.values()];
+  };
+
+  it.each([
+    [
+      'codex-15-x6-mcp-tool-list',
+      ['approve', 'approvePersistent', 'approvePersistent', 'decline'],
+      { deny: 'Cancel', approve: 'Allow' },
+    ],
+    [
+      'codex-19-x3-implement-plan',
+      ['approve', 'approveModeSwitch', 'decline'],
+      { deny: 'No, stay in Plan mode', approve: 'Yes, implement this plan' },
+    ],
+  ] as const)('%s', (name, roles, pair) => {
+    const labels = numbered(name);
+    expect(labels.map(genericAnswerRole)).toEqual(roles);
+    expect(splitAnswers(labels, genericAnswerRole).pair).toEqual(pair);
+  });
+
+  it('refuses a label whose reach it cannot tell', () => {
+    for (const label of [
+      'Allow edits',
+      'Allow tool: probe_echo',
+      'Approve',
+      'Cancel this tool call',
+      'Yes, implement and push',
+      'Continue',
+    ]) {
+      expect(genericAnswerRole(label), label).toBeNull();
+    }
+  });
+});
+
 // The agent lab's titles (scripts/agent-lab.py SIM_PROGRAM BLOCKED_TITLE) and the approve flow's
 // options (e2e/live/08) come from these captures.
 describe('the lab captures as the card lays them out', () => {

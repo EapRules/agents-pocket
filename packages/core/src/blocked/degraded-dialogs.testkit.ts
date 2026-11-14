@@ -22,8 +22,8 @@
  * | Capture | Card | Answers | Why |
  * |---|---|---|---|
  * | claude-42-c8-phone-question-previews | generic | keys | Claude question with previews: no reader yet. User sees raw rows, the reason and the keys |
- * | codex-15-x6-mcp-tool-list | generic | digits | Codex MCP tool approval (Allow / for this session / Always / Cancel): no kind. User sees raw rows and the reason, buttons 1-4 |
- * | codex-19-x3-implement-plan | generic | digits | Codex "Implement this plan?": no kind. User sees raw rows and the reason, buttons 1-3 |
+ * | codex-15-x6-mcp-tool-list | generic | digits | Codex MCP tool approval (Allow / for this session / Always / Cancel): no kind. User sees raw rows and the reason, the answers laid out as a permission |
+ * | codex-19-x3-implement-plan | generic | digits | Codex "Implement this plan?": no kind. User sees raw rows and the reason, the answers laid out as a permission |
  * | lab/codex/hooks-review | generic | none | Codex hook review: by design only the terminal answers it. User sees the rows and what it waits for |
  * | omp-31-plan-review | generic | keys | Oh My Pi "Plan Review" panel: no reader. User sees raw rows, the reason and the keys |
  * | omp-34-ask-multi-62 | generic | keys | Oh My Pi multi-select ask: only single-select is answered. User sees raw rows, the reason and the keys |
@@ -93,13 +93,13 @@ export const KNOWN_DEGRADED: readonly KnownDegraded[] = [
     id: 'codex-15-x6-mcp-tool-list',
     outcome: 'generic',
     answers: 'digits',
-    why: `Codex MCP tool approval (Allow / for this session / Always / Cancel): no kind. User sees ${RAW}, buttons 1-4`,
+    why: `Codex MCP tool approval (Allow / for this session / Always / Cancel): no kind. User sees ${RAW}, the answers laid out as a permission`,
   },
   {
     id: 'codex-19-x3-implement-plan',
     outcome: 'generic',
     answers: 'digits',
-    why: `Codex "Implement this plan?": no kind. User sees ${RAW}, buttons 1-3`,
+    why: `Codex "Implement this plan?": no kind. User sees ${RAW}, the answers laid out as a permission`,
   },
   {
     id: 'lab/codex/hooks-review',

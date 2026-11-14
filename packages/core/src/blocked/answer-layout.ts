@@ -3,7 +3,7 @@
 // keyed by the option's ordinal or number, and never changes with the layout.
 
 import { programDefinition } from '../chat/programs/registry';
-import { permissionRole, splitShortcut } from './row-scanner';
+import { approvalScope, foldLabel, permissionRole, splitShortcut } from './row-scanner';
 import type { BlockedDialog, BlockedDialogKind, DialogOptionRole } from './types';
 
 /** The dialogs that ask to allow one action: they get the side-by-side pair. */
@@ -105,16 +105,45 @@ export function splitAnswers<T>(
   };
 }
 
-/** The single-use approvals each program labels this way, compared without case. */
-const SINGLE_USE_LABELS = ['yes', 'yes, proceed', 'allow once'];
+/**
+ * Single-use approvals as a whole label, compared folded: each program's own, and Codex's MCP tool
+ * approval's plain `Allow` and its plan prompt's `Yes, implement this plan`.
+ */
+const SINGLE_USE_LABELS = [
+  'yes',
+  'yes, proceed',
+  'allow once',
+  'allow',
+  'yes, implement this plan',
+];
+
+/** Declines as a whole label: Codex's MCP `Cancel`, and the words other programs decline with. */
+const DECLINE_LABELS = ['cancel', 'deny', 'reject'];
+
+/** An approval that names its reach after `Allow` (`Allow for this session`, `Always allow`). */
+const ALLOW = /^(?:always )?allow\b/;
+
+/**
+ * Approvals that change how the conversation goes on rather than save a rule (Codex's plan prompt
+ * `Yes, clear context and implement`): below the pair, without the rule's warning.
+ */
+const CONVERSATION_SWITCHES = ['clear context'];
 
 /**
  * A generic option's role, from its label alone and strictly: approve only for a label that is a
  * known single-use answer as a whole, so a "Yes, and ..." the parsers never saw is never the lead.
+ * An `Allow ...` label counts only when it names a saved rule or a mode switch; any other approval
+ * only when it names a conversation switch. Everything else is null, and keeps the numbered list.
  */
 export function genericAnswerRole(label: string): DialogOptionRole | null {
   const bare = splitShortcut(label.trim()).label;
-  if (SINGLE_USE_LABELS.includes(bare.toLowerCase())) return 'approve';
+  const folded = foldLabel(bare);
+  if (SINGLE_USE_LABELS.includes(folded)) return 'approve';
+  if (DECLINE_LABELS.includes(folded)) return 'decline';
+  if (ALLOW.test(folded)) return approvalScope(folded);
   const role = permissionRole(bare, null);
-  return role === 'approve' ? null : role;
+  if (role !== 'approve') return role;
+  return CONVERSATION_SWITCHES.some((phrase) => folded.includes(phrase))
+    ? 'approveModeSwitch'
+    : null;
 }

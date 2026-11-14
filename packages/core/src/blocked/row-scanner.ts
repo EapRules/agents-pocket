@@ -248,13 +248,23 @@ const PERSISTENT_PHRASES = [
   'in the future',
 ];
 
-/** What a permission option does, from its label; null for a label outside the family. */
-export function permissionRole(label: string, shortcut: string | null): DialogOptionRole | null {
-  const folded = label.toLowerCase().replaceAll('’', "'");
-  if (folded === 'no' || folded.startsWith('no,') || folded.startsWith('no ')) return 'decline';
-  if (!(folded === 'yes' || folded.startsWith('yes,') || folded.startsWith('yes '))) return null;
+/** A label as the role readers compare it: lower case, typographic apostrophes plain. */
+export const foldLabel = (label: string): string => label.toLowerCase().replaceAll('’', "'");
+
+/** What an approving label (folded) does beyond this once: switch a mode, save a rule, or neither. */
+export function approvalScope(folded: string): 'approveModeSwitch' | 'approvePersistent' | null {
   if (MODE_SWITCH_PHRASES.some((phrase) => folded.includes(phrase))) return 'approveModeSwitch';
   if (PERSISTENT_PHRASES.some((phrase) => folded.includes(phrase))) return 'approvePersistent';
+  return null;
+}
+
+/** What a permission option does, from its label; null for a label outside the family. */
+export function permissionRole(label: string, shortcut: string | null): DialogOptionRole | null {
+  const folded = foldLabel(label);
+  if (folded === 'no' || folded.startsWith('no,') || folded.startsWith('no ')) return 'decline';
+  if (!(folded === 'yes' || folded.startsWith('yes,') || folded.startsWith('yes '))) return null;
+  const scope = approvalScope(folded);
+  if (scope) return scope;
   // Codex binds `a` and `p` only to options that store a rule.
   if (shortcut === 'a' || shortcut === 'p') return 'approvePersistent';
   return 'approve';
