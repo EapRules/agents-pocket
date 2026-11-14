@@ -1,0 +1,54 @@
+ Bash command
+ │ Run a long harmless command that ends in a push with nothing to send, to show the                                                                        ✕
+ │ tall permission prompt
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ │ python3 - <<'EOF'
+ │ # A long command on purpose: its permission dialog is taller than the terminal.
+ │ # Nothing here changes anything.
+ │ lines = [
+ │     "line 01", "line 02", "line 03", "line 04", "line 05",
+ │     "line 06", "line 07", "line 08", "line 09", "line 10",
+ │     "line 11", "line 12", "line 13", "line 14", "line 15",
+ │     "line 16", "line 17", "line 18", "line 19", "line 20",
+ │ ]
+ │ total = 0
+ │ for item in lines:
+ │     total += len(item)
+ │ checks = {
+ │     "a": 1,
+ │     "b": 2,
+ │     "c": 3,
+ │     "d": 4,
+ │     "e": 5,
+ │     "f": 6,
+ │     "g": 7,
+ │     "h": 8,
+ │     "i": 9,
+ │     "j": 10,
+ │     "k": 11,                                                                                                No changes this session
+ │     "l": 12,
+ │     "m": 13,
+ │     "n": 14,
+ │     "o": 15,
+ │     "p": 16,
+ │     "q": 17,
+ │     "r": 18,
+ │     "s": 19,
+ │     "t": 20,
+ │ }
+ │ for key in sorted(checks):
+ │     total += checks[key]
+ │ print("nothing changed", total)
+ │ EOF
+ │ git status -sb | head -1 && git push origin main 2>&1 | tail -1
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Contains brace with quote character (expansion obfuscation)
+ Ask rule Bash(git push *) overrides auto mode for this command.
+ /permissions to let auto mode decide
+
+ Do you want to proceed?
+ [0m[38;2;177;185;249m❯ [0m[38;2;153;153;153m1. [0m[38;2;177;185;249mYes[0m
+   [0m[38;2;153;153;153m2. [0mNo
+
+ Esc to cancel · Tab to amend
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Agents Pockets ─

@@ -44,8 +44,8 @@ const request = (summary: string): ChatPendingRequest => ({
   planFilePath: null,
 });
 
-async function card(summary: string) {
-  const pane = new Pane(CLIPPED);
+async function card(summary: string, screen: AnsiScreen = CLIPPED) {
+  const pane = new Pane(screen);
   const clock = new FakeClock();
   const store = new BlockedCardStore({ program: 'claude', io: pane, clock });
   store.setCalls({
@@ -93,5 +93,37 @@ describe('a clipped dialog the conversation names', () => {
     });
     const { content } = store.getState();
     expect(content.kind === 'generic' && content.shown).toBeNull();
+  });
+});
+
+/** Claude Code's Bash dialog for a command taller than the terminal, cut at its top. */
+const TALL = readFileSync(
+  fileURLToPath(new URL('./fixtures/claude-tall-bash.ansi', import.meta.url)),
+  'utf8',
+);
+const TALL_COMMAND = `cd /workspace/storefront && ${TALL.split('\n')
+  .slice(4, 43)
+  .map((line) =>
+    line
+      .replace(/\s+No changes this session$/, '')
+      .replace(/^ │ /, '')
+      .trimEnd(),
+  )
+  .join('\n')}`;
+
+describe('a tall dialog the conversation names', () => {
+  it('shows the request, and a press sends the same digit as the raw card', async () => {
+    const clean = await card(TALL_COMMAND, decodeAnsiScreen(TALL));
+    const raw = await card(`${TALL_COMMAND}\necho done`, decodeAnsiScreen(TALL));
+    const cleanContent = clean.store.getState().content;
+    const rawContent = raw.store.getState().content;
+    if (cleanContent.kind !== 'generic' || rawContent.kind !== 'generic')
+      throw new Error('generic');
+    expect(cleanContent.shown?.command).toBe(TALL_COMMAND);
+    expect(rawContent.shown).toBeNull();
+    await press(clean, 1);
+    await press(raw, 1);
+    expect(clean.pane.keys).toEqual([['1']]);
+    expect(clean.pane.keys).toEqual(raw.pane.keys);
   });
 });

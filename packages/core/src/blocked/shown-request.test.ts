@@ -66,8 +66,14 @@ describe('a clipped dialog shown from its request', () => {
     expect(requestShownOnScreen(clipped(), only(request({ summary: lines })))?.command).toBe(lines);
   });
 
-  it('also once the title and description scrolled off, without the description', () => {
+  it('also once the title and description scrolled off, the description above the cut', () => {
     const shown = requestShownOnScreen(clipped(TITLE_ROW + 2), only(request()));
+    expect(shown?.command).toBe(fullCommand());
+    expect(shown?.description).toBe('Stage and commit the review fixes');
+  });
+
+  it('leaves out a description the rows above the command could show but do not', () => {
+    const shown = requestShownOnScreen(clipped(), only(request({ detail: 'Something else' })));
     expect(shown?.command).toBe(fullCommand());
     expect(shown?.description).toBeNull();
   });
