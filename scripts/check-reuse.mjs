@@ -58,17 +58,37 @@ const COMPONENT_DIRS = [
   'packages/ui/src/components/',
   'packages/ui/src/primitives/',
   'packages/ui/src/overlay/',
+  'packages/ui/src/terminal/',
+  'packages/ui/src/keys/',
+  'packages/ui/src/composer/',
+  'packages/ui/src/markdown/',
+  'packages/ui/src/form/',
+  'packages/ui/src/diff/',
+  'packages/ui/src/scanner/',
 ];
 const isBarrel = (path) => /\/index\.tsx?$/.test(path) || /\/[a-z][A-Za-z]*\.ts$/.test(path);
-for (const path of sources.keys()) {
+/** Components with no caller yet, kept on purpose; each needs its reason. */
+const NO_CALLER_YET = new Map([
+  [
+    'packages/ui/src/diff/DiffView.tsx',
+    'built and exported for the review feature; no screen shows a diff yet (lead decides)',
+  ],
+]);
+/** The components a file exports (a file may hold several), or its own name when it has none. */
+const exportedNames = (path, text) => {
+  const names = [...text.matchAll(/^export (?:function|const) ([A-Z]\w*)/gm)].map((m) => m[1]);
+  return names.length > 0 ? names : [basename(path, '.tsx')];
+};
+for (const [path, own] of sources) {
   if (!path.endsWith('.tsx') || !COMPONENT_DIRS.some((dir) => path.startsWith(dir))) continue;
-  const name = basename(path, '.tsx');
-  const word = new RegExp(`\\b${name}\\b`);
+  if (NO_CALLER_YET.has(path)) continue;
+  const names = exportedNames(path, own);
+  const word = new RegExp(`\\b(${names.join('|')})\\b`);
   const used = [...sources].some(
     ([other, text]) =>
       other !== path && word.test(text) && (other.startsWith('apps/') || !isBarrel(other)),
   );
-  if (!used) failures.push(`${path}: no screen or component uses ${name}; delete it`);
+  if (!used) failures.push(`${path}: no screen or component uses ${names.join(', ')}; delete it`);
 }
 
 if (failures.length > 0) {

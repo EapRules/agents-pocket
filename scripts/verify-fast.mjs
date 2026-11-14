@@ -63,6 +63,7 @@ const checks = [
   run('theme literals', 'node', ['scripts/check-theme-literals.mjs']),
   run('raw pressable', 'node', ['scripts/check-raw-pressable.mjs']),
   run('reuse', 'node', ['scripts/check-reuse.mjs']),
+  run('ui duplicates', 'node', ['scripts/check-ui-duplicates.mjs']),
   run('spacing literals', 'node', ['scripts/check-spacing-literals.mjs']),
   run('radius literals', 'node', ['scripts/check-radius-literals.mjs']),
   run('intl rule', 'node', ['scripts/check-intl.mjs']),
