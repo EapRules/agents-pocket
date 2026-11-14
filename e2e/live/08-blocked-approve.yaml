@@ -38,7 +38,9 @@ appId: com.openagentspocket.app
 - assertNotVisible:
     id: blocked-subject-code
     text: "${APPROVE_COMMAND}.+"
-# The options in order: single-use approve, the persistent variant, deny, and nothing more.
+# The options, each by id and label: single-use approve, the persistent variant, deny, and
+# nothing more. The card draws deny and the single-use approve side by side and the persistent
+# variant below them; the ids stay the dialog's ordinals.
 - assertVisible:
     id: ${APPROVE_ID}
     text: ${APPROVE_LABEL}

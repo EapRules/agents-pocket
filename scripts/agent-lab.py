@@ -574,7 +574,10 @@ FIRST_PROMPT = "Reply with the single word pong."
 SIM_PROGRAM = {
     "opencode": {
         "SHOTS": "live-", "BLOCKED_PROMPT": "Run the shell command ls in this directory and tell "
-        "me what you see.", "BLOCKED_TITLE": "Permission required.*",
+        "me what you see.",
+        # The card's header reads "<title>, Collapse" to Maestro: who wants to do what
+        # (packages/core/src/blocked/answer-layout.ts, pinned by answer-layout.test.ts).
+        "BLOCKED_TITLE": "Shell wants to run:.*",
         "APPROVE_ID": "blocked-option-1", "APPROVE_LABEL": "Allow once",
         "DENY_ID": "blocked-option-3", "DENY_LABEL": "Reject",
         "MODE_A": "Build", "MODE_B": "Plan", "MODE_SHORTCUT": "Switch Agent",
@@ -588,7 +591,7 @@ SIM_PROGRAM = {
         "SHOTS": "live-codex-", "BLOCKED_PROMPT": "Run the shell command touch scratch.txt in this "
         "directory. The sandbox is read-only, so request approval to run it.",
         # The card's header reads "<title>, Collapse" to Maestro.
-        "BLOCKED_TITLE": "Would you like to run the following command\\?.*",
+        "BLOCKED_TITLE": "Codex wants to run:.*",
         "APPROVE_ID": "blocked-option-1", "APPROVE_LABEL": "Yes, proceed",
         "DENY_ID": "blocked-option-3", "DENY_LABEL": "No, and tell Codex what to do differently",
         "MODE_A": "Default Mode", "MODE_B": "Plan Mode", "MODE_SHORTCUT": "Plan Mode",
