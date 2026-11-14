@@ -24,6 +24,7 @@ import type {
 } from './plan-types';
 import { genericCardExcerpt, planDialogAction, planGenericOption } from './programs';
 import { matchedRequest, NO_REQUESTS, type RequestContext } from './request-match';
+import { requestShownOnScreen, withShownRequest } from './shown-request';
 import { type BlockedDialog, resultDialog, resultFingerprint } from './types';
 
 /**
@@ -92,6 +93,7 @@ export class BlockedCardStore extends CardBase {
       requests: calls.requests ?? [],
       subagentRunning: calls.subagentRunning ?? false,
     };
+    this.patch({ content: withShownRequest(this.state.content, this.requests) });
     const openQuestion = calls.openQuestion ?? false;
     if (openQuestion && !this.openQuestion) this.quietSince = this.now();
     this.openQuestion = openQuestion;
@@ -364,11 +366,8 @@ export class BlockedCardStore extends CardBase {
       return { kind: 'card', dialog: result.dialog };
     }
     if (result.kind === 'unrecognized') {
-      const { program } = this.options;
-      return {
-        kind: 'generic',
-        excerpt: genericCardExcerpt(result.excerpt, observation.screen, program),
-      };
+      const excerpt = genericCardExcerpt(result.excerpt, observation.screen, this.options.program);
+      return { kind: 'generic', excerpt, shown: requestShownOnScreen(excerpt, this.requests) };
     }
     return this.noDialogContent;
   }

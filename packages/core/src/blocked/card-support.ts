@@ -3,6 +3,7 @@ import { message, type Text } from '../errors/text';
 import { TransportFailure } from '../errors/transport-error';
 import type { DialogPlanError, PlanResult } from './plan-types';
 import type { AnsiScreen } from './screen';
+import type { ShownRequest } from './shown-request';
 import type { BlockedDialog, GenericDialogExcerpt } from './types';
 
 /**
@@ -44,8 +45,16 @@ export const DEFAULT_TIMING: CardTiming = {
 export type CardContent =
   | { readonly kind: 'none' }
   | { readonly kind: 'card'; readonly dialog: BlockedDialog }
-  /** Something dialog-like the parsers could not name or trust: rows verbatim, a button per number. */
-  | { readonly kind: 'generic'; readonly excerpt: GenericDialogExcerpt }
+  /**
+   * Something dialog-like the parsers could not name or trust: rows verbatim, a button per number.
+   * `shown` is the one waiting request the rows provably show (`requestShownOnScreen`), drawn in
+   * their place; the buttons still press the excerpt's numbers.
+   */
+  | {
+      readonly kind: 'generic';
+      readonly excerpt: GenericDialogExcerpt;
+      readonly shown?: ShownRequest | null;
+    }
   /** The Agent is Blocked but its screen shows no dialog the app recognizes. */
   | { readonly kind: 'unreadable' }
   /** The conversation shows a question while herdr reports idle, and no read shows it: no keys go. */

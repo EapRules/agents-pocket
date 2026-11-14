@@ -1,4 +1,13 @@
 export { decodeAnsiScreen } from './ansi-decoder';
+export {
+  type AnswerLayout,
+  type ApprovalHeadline,
+  type ApprovalVerb,
+  approvalHeadline,
+  genericAnswerRole,
+  isApprovalDialog,
+  splitAnswers,
+} from './answer-layout';
 export type { BlockedCardOptions } from './card-base';
 export { BlockedCardStore } from './card-store';
 export {
@@ -61,5 +70,6 @@ export {
 } from './programs';
 export type { AnsiScreen, ScreenRow, ScreenRun, ScreenStyle } from './screen';
 export { screenText } from './screen';
+export { requestShownOnScreen, type ShownRequest } from './shown-request';
 export { digitKey, fieldText, hasTypedText, StepBuilder } from './step-builder';
 export * from './types';
