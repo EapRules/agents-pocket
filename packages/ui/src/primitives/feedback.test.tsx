@@ -89,6 +89,15 @@ describe('Banner', () => {
     expect(onDismiss).toHaveBeenCalled();
   });
 
+  it('puts a stacked action under the message, still pressable', async () => {
+    const onAction = jest.fn();
+    await renderThemed(
+      <Banner message="A long sentence" actionLabel="Show" onAction={onAction} stackedAction />,
+    );
+    await fireEvent.press(screen.getByTestId('banner-action'));
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
   it('announces a danger banner as an alert', async () => {
     await renderThemed(<Banner tone="danger" title="Send failed" />);
     expect(screen.getByRole('alert')).toBeTruthy();

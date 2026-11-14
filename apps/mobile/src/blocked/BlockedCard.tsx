@@ -219,7 +219,7 @@ export function BlockedCard(props: BlockedCardProps) {
         ? content.shown
           ? headlineTitle({ actor: content.shown.toolName, verb: 'run' })
           : (excerptReading(content.excerpt).question ?? t('Needs you'))
-        : t('Keys');
+        : t('Needs you');
   return (
     <Card accent="warning" testID="blocked-card">
       <Tappable

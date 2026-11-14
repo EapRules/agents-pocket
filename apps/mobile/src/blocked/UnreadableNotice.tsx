@@ -3,7 +3,8 @@ import { Banner } from '@openagentspocket/ui';
 
 /**
  * "Agentico cannot read this, go to the terminal": the one way the Blocked card and a Chat
- * question say it, with the way there as the banner's action.
+ * question say it, with the way there as the banner's action under the message, which keeps the
+ * full width.
  */
 export function UnreadableNotice({
   message,
@@ -21,6 +22,7 @@ export function UnreadableNotice({
       message={message}
       actionLabel={t('Show Terminal')}
       onAction={onShowTerminal}
+      stackedAction
       testID={testID}
     />
   );

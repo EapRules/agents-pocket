@@ -68,6 +68,7 @@ const useStyles = makeStyles((t) => ({
   washText: { paddingRight: t.spacing.xs },
   actions: { flexDirection: 'row', alignItems: 'center' },
   washActions: { marginTop: -t.spacing.xs },
+  stackedAction: { alignSelf: 'flex-start' },
 }));
 
 interface BannerProps {
@@ -82,6 +83,8 @@ interface BannerProps {
   question?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Wash and row: the action under the message, so a long message keeps the full width. */
+  stackedAction?: boolean;
   /** Shows a close button; floating: a swipe up, or the accessibility action. */
   onDismiss?: () => void;
   dismissLabel?: string;
@@ -110,6 +113,7 @@ export function Banner(props: BannerProps) {
     question,
     actionLabel,
     onAction,
+    stackedAction = false,
     onDismiss,
     dismissLabel = 'Dismiss',
     testID = 'banner',
@@ -119,6 +123,16 @@ export function Banner(props: BannerProps) {
   const ink = theme.tone(tone);
   const wash = look === 'wash';
   const floating = look === 'floating';
+  const action =
+    actionLabel && onAction ? (
+      <Button
+        kind="text"
+        size={wash ? 'small' : 'mini'}
+        title={actionLabel}
+        onPress={onAction}
+        testID={`${testID}-action`}
+      />
+    ) : null;
   const content = (
     <>
       <View style={wash ? styles.washIcon : null}>
@@ -157,6 +171,7 @@ export function Banner(props: BannerProps) {
             {message}
           </Text>
         ) : null}
+        {stackedAction && action ? <View style={styles.stackedAction}>{action}</View> : null}
       </View>
     </>
   );
@@ -168,15 +183,7 @@ export function Banner(props: BannerProps) {
     >
       {content}
       <View style={[styles.actions, wash && styles.washActions]}>
-        {actionLabel && onAction ? (
-          <Button
-            kind="text"
-            size={wash ? 'small' : 'mini'}
-            title={actionLabel}
-            onPress={onAction}
-            testID={`${testID}-action`}
-          />
-        ) : null}
+        {stackedAction ? null : action}
         {onDismiss ? (
           <Button
             kind="text"
