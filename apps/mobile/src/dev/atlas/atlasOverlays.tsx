@@ -36,7 +36,7 @@ export const closeConfirmation: ConfirmOptions = {
   destructive: true,
 };
 
-/** The Agent's Terminal surface (header, canvas, toolbar) with its status card over the canvas. */
+/** The Agent's Terminal surface (header, canvas, toolbar) with its status over the canvas. */
 export function TerminalStatusAtlas({ status }: { status: AttachStatus }) {
   return (
     <>
@@ -53,6 +53,20 @@ export function TerminalStatusAtlas({ status }: { status: AttachStatus }) {
         actions={[{ title: t('Retry'), kind: 'secondary', onPress: noop }]}
       />
     </>
+  );
+}
+
+/** The Shell's terminal status with its two actions, over an empty canvas. */
+export function ShellStatusAtlas({ status }: { status: AttachStatus }) {
+  return (
+    <TerminalStatus
+      status={status}
+      stopped="connecting"
+      actions={[
+        { title: t('Reattach'), onPress: noop },
+        { title: t('Take Over'), kind: 'secondary', onPress: noop },
+      ]}
+    />
   );
 }
 

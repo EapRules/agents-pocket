@@ -1,6 +1,6 @@
 import type { AttachStatus } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { Button, type ButtonKind, EmptyState, makeStyles } from '@openagentspocket/ui';
+import { Button, type ButtonKind, Card, EmptyState, makeStyles } from '@openagentspocket/ui';
 import { StyleSheet, View } from 'react-native';
 import { renderMessage } from '@/lib/renderText';
 
@@ -13,7 +13,14 @@ export interface TerminalStatusAction {
 }
 
 const useStyles = makeStyles((th) => ({
-  layer: { backgroundColor: th.colors.canvas },
+  // The scrim both surfaces used (Shell: `th.backdrop`): the terminal's last screen stays visible.
+  layer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: th.spacing.lg,
+    backgroundColor: th.backdrop,
+  },
+  card: { width: '100%', maxWidth: 320, alignItems: 'center' },
 }));
 
 /**
@@ -24,41 +31,46 @@ const useStyles = makeStyles((th) => ({
 export function TerminalStatus({
   status,
   actions = [],
+  stopped = 'hidden',
 }: {
   status: AttachStatus;
   actions?: TerminalStatusAction[];
+  stopped?: 'hidden' | 'connecting';
 }) {
   const styles = useStyles();
-  if (status.kind === 'live' || status.kind === 'stopped') return null;
+  if (status.kind === 'live' || (status.kind === 'stopped' && stopped === 'hidden')) return null;
   const ended = status.kind === 'ended';
   return (
     <View style={[StyleSheet.absoluteFill, styles.layer]} testID="terminal-status">
-      <EmptyState
-        busy={!ended}
-        icon="warning"
-        title={
-          ended
-            ? t('Terminal Closed')
-            : status.kind === 'reconnecting'
-              ? t('Reconnecting…')
-              : t('Connecting…')
-        }
-        message={ended ? renderMessage(status.message) : undefined}
-        testID={ended ? 'terminal-ended' : 'terminal-connecting'}
-        actions={
-          ended
-            ? actions.map((action) => (
-                <Button
-                  key={action.title}
-                  kind={action.kind}
-                  title={action.title}
-                  onPress={action.onPress}
-                  testID={action.testID}
-                />
-              ))
-            : undefined
-        }
-      />
+      <Card level="overlay" style={styles.card}>
+        <EmptyState
+          layout="compact"
+          busy={!ended}
+          icon="warning"
+          title={
+            ended
+              ? t('Terminal Closed')
+              : status.kind === 'reconnecting'
+                ? t('Reconnecting…')
+                : t('Connecting…')
+          }
+          message={ended ? renderMessage(status.message) : undefined}
+          testID={ended ? 'terminal-ended' : 'terminal-connecting'}
+          actions={
+            ended
+              ? actions.map((action) => (
+                  <Button
+                    key={action.title}
+                    kind={action.kind}
+                    title={action.title}
+                    onPress={action.onPress}
+                    testID={action.testID}
+                  />
+                ))
+              : undefined
+          }
+        />
+      </Card>
     </View>
   );
 }

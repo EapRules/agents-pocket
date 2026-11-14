@@ -10,18 +10,29 @@ const actions = [
   { title: 'Other', onPress: onOther, testID: 'terminal-other' },
 ];
 
-async function show(status: AttachStatus) {
+async function show(status: AttachStatus, stopped?: 'hidden' | 'connecting') {
   await render(
     <ThemeProvider themeId="indigo">
-      <TerminalStatus status={status} actions={actions} />
+      <TerminalStatus status={status} actions={actions} stopped={stopped} />
     </ThemeProvider>,
   );
 }
 
 describe('a terminal status', () => {
-  it.each(['live', 'stopped'] as const)('draws nothing while %s', async (kind) => {
-    await show({ kind });
+  it('draws nothing while live', async () => {
+    await show({ kind: 'live' });
     expect(screen.queryByTestId('terminal-status')).toBeNull();
+  });
+
+  it('draws nothing when stopped for a surface that hides it (the Agent)', async () => {
+    await show({ kind: 'stopped' });
+    expect(screen.queryByTestId('terminal-status')).toBeNull();
+  });
+
+  it('shows the connecting state when stopped for a surface that asks for it (the Shell)', async () => {
+    await show({ kind: 'stopped' }, 'connecting');
+    expect(screen.getByTestId('terminal-connecting')).toBeTruthy();
+    expect(screen.queryByTestId('terminal-retry')).toBeNull();
   });
 
   it.each(['waitingForSize', 'connecting', 'reconnecting'] as const)(
@@ -35,7 +46,7 @@ describe('a terminal status', () => {
   );
 
   it('offers each of its surface actions once ended, each calling its own handler', async () => {
-    await show({ kind: 'ended', message: 'gone' } as unknown as AttachStatus);
+    await show({ kind: 'ended', message: 'gone' });
     expect(screen.getByTestId('terminal-ended')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('terminal-retry'));
     expect(onRetry).toHaveBeenCalledTimes(1);

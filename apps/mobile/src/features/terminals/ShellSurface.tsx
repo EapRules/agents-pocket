@@ -32,6 +32,7 @@ export function ShellSurface({ entry }: { entry: PoolEntry }) {
       </TerminalGestures>
       <TerminalStatus
         status={terminal.snapshot.status}
+        stopped="connecting"
         actions={[
           { title: t('Reattach'), onPress: () => store.retryTerminal() },
           { title: t('Take Over'), kind: 'secondary', onPress: () => store.takeOverTerminal() },

@@ -647,6 +647,16 @@
     "note": "Connecting state over an empty terminal canvas"
   },
   {
+    "id": "agent-detail.terminal-status-ended",
+    "rn": "TerminalStatus",
+    "note": "Agent terminal ended: reason and Retry over the canvas"
+  },
+  {
+    "id": "agent-detail.shell-terminal-closed",
+    "rn": "TerminalStatus",
+    "note": "Shell terminal closed: reason, Reattach and Take Over over the canvas"
+  },
+  {
     "id": "agent-detail.attach-links",
     "rn": "AgentDetailScreen",
     "note": "KNOWN GAP: no RN state for this yet, renders the nearest Agent detail screen"

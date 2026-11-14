@@ -11,7 +11,12 @@ import { deviceStorage } from '@/settings/deviceStorage';
 import { AtlasBlocked, type AtlasBlockedVariant } from './atlasBlocked';
 import { type AtlasBackground, AtlasChat } from './atlasChat';
 import { noop, titled } from './atlasHelpers';
-import { AlertOver, closePanePopover, TerminalStatusAtlas } from './atlasOverlays';
+import {
+  AlertOver,
+  closePanePopover,
+  ShellStatusAtlas,
+  TerminalStatusAtlas,
+} from './atlasOverlays';
 import type { AtlasEntry } from './entries';
 
 /** The Agent detail in a fixed state: Agent pane, surface, and what is pressed after it settles. */
@@ -224,6 +229,22 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
       <AtlasChat>
         <Stack.Screen options={{ headerShown: false }} />
         <TerminalStatusAtlas status={{ kind: 'connecting' }} />
+      </AtlasChat>
+    ),
+  },
+  'agent-detail.terminal-status-ended': {
+    render: () => (
+      <AtlasChat>
+        <Stack.Screen options={{ headerShown: false }} />
+        <TerminalStatusAtlas status={{ kind: 'ended', message: t('The session ended.') }} />
+      </AtlasChat>
+    ),
+  },
+  'agent-detail.shell-terminal-closed': {
+    render: () => (
+      <AtlasChat>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ShellStatusAtlas status={{ kind: 'ended', message: t('The session ended.') }} />
       </AtlasChat>
     ),
   },
