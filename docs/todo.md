@@ -128,6 +128,10 @@ so no program-specific branches.
   in the 1.0.1 draft (it still names build 4) and submitting it, then the first real update to beta (the R2
   upload has never run against the real account). Not checked on a device: rollback after a crash at launch,
   Early Updates reaching the server as `channel=beta`, Android.
+- [ ] **Encryption declared in the app** (owner said yes, 2026-11-14): `ITSAppUsesNonExemptEncryption = NO`, so
+  App Store Connect stops asking per build. Ready on the branch `encryption-declaration`. It changes the runtime
+  fingerprint, and an update can only be published from a tree whose runtime matches a released build, so it
+  merges into main with the commit that cuts the next store build, not before.
 
 ## 5. Needs the owner
 
