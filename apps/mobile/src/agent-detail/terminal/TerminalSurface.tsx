@@ -6,6 +6,7 @@ import {
   KeyboardDock,
   type KeyModifiers,
   type KeySpec,
+  ReviewPasteSheet,
   TerminalView,
   useAttachedTerminal,
   useContextMenu,
@@ -15,11 +16,11 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 import { useSettings } from '@/settings/SettingsProvider';
+import { reviewPasteLabels } from '@/terminal/selectionLabels';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
 import { useDockSlot } from '../detailUi';
 import type { AgentTerminalSession } from './AgentTerminalSession';
 import { CONTROL_KEYS, FULL_KEYBOARD, type KeyRows, keyLabel } from './keyTables';
-import { PasteReviewSheet } from './PasteReviewSheet';
 import { StatusOverlay } from './StatusOverlay';
 import { TerminalToolbar } from './TerminalToolbar';
 import { useAgentTerminalSession } from './useAgentTerminalSession';
@@ -157,8 +158,10 @@ function LiveTerminal({
       {dock ? <KeyboardDock rows={dock.rows} onKey={dockKey(dock)} testID="keys-dock" /> : null}
       <ActionMenu items={items} {...context.menuProps} />
       {textActions.sheets}
-      <PasteReviewSheet
-        review={input.pendingPaste}
+      <ReviewPasteSheet
+        preview={input.pendingPaste?.preview ?? null}
+        labels={reviewPasteLabels(input.pendingPaste ?? { lineCount: 0, characterCount: 0 })}
+        canConfirm
         onConfirm={() => session.input.confirmPaste()}
         onCancel={() => session.input.cancelPaste()}
       />

@@ -103,7 +103,7 @@ describe('terminal keys', () => {
     await mountLive();
     await fireEvent.press(screen.getByTestId('toolbar-more'));
     await fireEvent.press(await screen.findByLabelText('Paste'));
-    const confirm = await screen.findByTestId('paste-confirm');
+    const confirm = await screen.findByTestId('review-paste-confirm');
     expect(screenText()).not.toContain('two');
     await fireEvent.press(confirm);
     await waitFor(() => expect(screenText()).toContain('two'));

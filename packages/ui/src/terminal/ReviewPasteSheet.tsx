@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { ButtonRow } from '../components/ButtonRow';
 import { Sheet } from '../overlay/Sheet';
 import { Button } from '../primitives/Button';
 import { Card } from '../primitives/Card';
@@ -7,8 +8,7 @@ import { makeStyles } from '../theme/theme';
 
 const useStyles = makeStyles((t) => ({
   preview: { padding: t.spacing.sm },
-  actions: { flexDirection: 'row', gap: t.spacing.xs },
-  action: { flex: 1 },
+  actions: { padding: t.spacing.md },
 }));
 
 export interface ReviewPasteLabels {
@@ -44,26 +44,25 @@ export function ReviewPasteSheet({
       visible={preview !== null}
       onClose={onCancel}
       title={labels.title}
+      detent="fit"
       closeLabel={labels.close}
       testID="review-paste-sheet"
       footer={
         <View style={styles.actions}>
-          <View style={styles.action}>
+          <ButtonRow>
             <Button
               kind="secondary"
               title={labels.cancel}
               onPress={onCancel}
               testID="review-paste-cancel"
             />
-          </View>
-          <View style={styles.action}>
             <Button
               title={labels.paste}
               onPress={onConfirm}
               disabled={!canConfirm}
               testID="review-paste-confirm"
             />
-          </View>
+          </ButtonRow>
         </View>
       }
     >
