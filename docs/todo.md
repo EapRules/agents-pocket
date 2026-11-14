@@ -135,10 +135,16 @@ so no program-specific branches.
   titles, composer, send and Stop reasons travel as `Text` and translate; the app says "Agents Pocket".
   Guards: `degraded-dialogs.test.ts` (every capture that falls to the generic card is listed with its
   reason, plus cut variants), and tests that fail on the old names or a missing language.
-- [ ] **Still to normalize:** a check script against hand-made button lists and local components that
-  shadow a shared one; the terminal's connection status drawn two ways (`StatusOverlay`, `ShellSurface`);
-  the grouped rows card reimplemented in about nine places (`Section grouped`); generic-card reasons that
-  say "answer it in the terminal" beside the keys.
+- [x] **The rest of the normalization** (2026-11-14): one `TerminalStatus` for the Agent's and the Shell's
+  terminals (a card over the scrim, each surface's actions as data); `Section` with `inset` is the one
+  grouped rows card (changes, usage, setup guide, peers, palettes, terminals); `scripts/check-ui-duplicates.mjs`
+  in verify-fast rejects hand-made button groups, a local component named like a shared one and hand-made
+  disclosure chevrons, and `check-reuse.mjs` now covers every ui folder; the generic card's reasons say
+  what the card offers. Three screen goldens (`omp-34`, `opencode-25`, `opencode-42`) carry the new reason
+  text by hand: regenerating them from Swift would bring the old sentence back.
+- [ ] **For the owner to decide:** `packages/ui/src/diff/DiffView.tsx` has no screen calling it (connect it
+  or delete it); a paste into the Shell terminal is not reviewed, unlike the Agent's terminal
+  (`PlainTerminalInput`; no Review Paste sheet there).
 - [ ] **Waiting for the next store build** (branch `encryption-declaration`): the encryption declaration
   and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
