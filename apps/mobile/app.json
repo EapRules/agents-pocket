@@ -20,7 +20,7 @@
       },
       "infoPlist": {
         "NSSupportsLiveActivities": true,
-        "NSLocalNetworkUsageDescription": "OpenAgentsPocket connects over SSH to your Host when it is on your local network."
+        "NSLocalNetworkUsageDescription": "Agents Pocket connects over SSH to your Host when it is on your local network."
       }
     },
     "android": {
@@ -49,27 +49,27 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Unlock OpenAgentsPocket with Face ID."
+          "faceIDPermission": "Unlock Agents Pocket with Face ID."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "OpenAgentsPocket opens your photo library so you can attach a photo to a message for your Agent."
+          "photosPermission": "Agents Pocket opens your photo library so you can attach a photo to a message for your Agent."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "OpenAgentsPocket uses the camera to scan the Pairing Code shown on your computer, so you can add that machine without typing anything.",
+          "cameraPermission": "Agents Pocket uses the camera to scan the Pairing Code shown on your computer, so you can add that machine without typing anything.",
           "recordAudioAndroid": false
         }
       ],
       [
         "expo-speech-recognition",
         {
-          "microphonePermission": "OpenAgentsPocket uses the microphone to dictate into your Agent's draft.",
-          "speechRecognitionPermission": "OpenAgentsPocket turns what you dictate into text for your Agent's draft."
+          "microphonePermission": "Agents Pocket uses the microphone to dictate into your Agent's draft.",
+          "speechRecognitionPermission": "Agents Pocket turns what you dictate into text for your Agent's draft."
         }
       ],
       "expo-secure-store",
