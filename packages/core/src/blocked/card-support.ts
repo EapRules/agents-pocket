@@ -99,6 +99,13 @@ export function questionWait(openQuestion: boolean, content: CardContent | null)
   }
 }
 
+/**
+ * Whether the generic card offers the key pad: its rows hold no numbered answer to press, and the
+ * wait is not one only the terminal answers.
+ */
+export const genericOffersKeys = (excerpt: GenericDialogExcerpt): boolean =>
+  excerpt.numbered.size === 0 && excerpt.terminalOnly !== true;
+
 export const INITIAL_CARD_STATE: BlockedCardState = {
   content: { kind: 'none' },
   progress: 'ready',

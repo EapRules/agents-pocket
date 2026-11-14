@@ -9,7 +9,8 @@
  * Outcomes (`card-outcome.testkit.ts`): `generic` is the "Needs you" card with the dialog's rows
  * verbatim and the reason, `shown` the generic card presenting the waiting request's command,
  * `unreadable` the "Keys" card (↑ ↓ Enter Escape, no row of the dialog). Answers: `digits` are
- * buttons that press the option's number, `none` leaves only Show terminal.
+ * buttons that press the option's number, `keys` the same key pad under the rows (no row is a
+ * numbered answer), `none` leaves only Show terminal (a wait only the terminal answers).
  *
  * No capture holds a dialog taller than the terminal but `fixtures/claude-tall-bash`, so
  * `CUT_VARIANTS` derives them: each program's approval captures with the top of the screen cut
@@ -20,16 +21,16 @@
  *
  * | Capture | Card | Answers | Why |
  * |---|---|---|---|
- * | claude-42-c8-phone-question-previews | generic | none | Claude question with previews: no reader yet. User sees raw rows and the reason, no answer buttons |
+ * | claude-42-c8-phone-question-previews | generic | keys | Claude question with previews: no reader yet. User sees raw rows, the reason and the keys |
  * | codex-15-x6-mcp-tool-list | generic | digits | Codex MCP tool approval (Allow / for this session / Always / Cancel): no kind. User sees raw rows and the reason, buttons 1-4 |
  * | codex-19-x3-implement-plan | generic | digits | Codex "Implement this plan?": no kind. User sees raw rows and the reason, buttons 1-3 |
  * | lab/codex/hooks-review | generic | none | Codex hook review: by design only the terminal answers it. User sees the rows and what it waits for |
- * | omp-31-plan-review | generic | none | Oh My Pi "Plan Review" panel: no reader. User sees raw rows and the reason |
- * | omp-34-ask-multi-62 | generic | none | Oh My Pi multi-select ask: only single-select is answered. User sees raw rows and the reason |
- * | grok-23-rewind-confirm | generic | none | Grok rewind confirmation: no reader. User sees raw rows and the reason |
- * | grok-39-fork-question-40 | generic | none | Grok /fork at 40 columns hides two answers, so the card does not guess. User sees raw rows and the reason |
- * | opencode-25-reject-feedback-180 | generic | none | OpenCode reject note: by design typed in the terminal. User sees raw rows and the reason |
- * | opencode-42-reject-feedback-62 | generic | none | OpenCode reject note at 62 columns: as above. User sees raw rows and the reason |
+ * | omp-31-plan-review | generic | keys | Oh My Pi "Plan Review" panel: no reader. User sees raw rows, the reason and the keys |
+ * | omp-34-ask-multi-62 | generic | keys | Oh My Pi multi-select ask: only single-select is answered. User sees raw rows, the reason and the keys |
+ * | grok-23-rewind-confirm | generic | keys | Grok rewind confirmation: no reader. User sees raw rows, the reason and the keys |
+ * | grok-39-fork-question-40 | generic | keys | Grok /fork at 40 columns hides two answers, so the card does not guess. User sees raw rows, the reason and the keys |
+ * | opencode-25-reject-feedback-180 | generic | keys | OpenCode reject note: by design typed in the terminal. User sees raw rows, the reason and the keys |
+ * | opencode-42-reject-feedback-62 | generic | keys | OpenCode reject note at 62 columns: as above. User sees raw rows, the reason and the keys |
  * | fixtures/claude-tall-bash | generic | digits | Claude Bash taller than the terminal: raw without a request; with the one waiting command it is `shown` (shown-request-tall.test.ts) |
  *
  * Approval dialogs cut at the top:
@@ -47,24 +48,24 @@
  * | codex-02-x2-patch | title | generic | digits |
  * | codex-02-x2-patch | options | generic | digits |
  * | opencode-10-permission-180 | top | named | - |
- * | opencode-10-permission-180 | title | generic | none |
- * | opencode-10-permission-180 | options | generic | none |
+ * | opencode-10-permission-180 | title | generic | keys |
+ * | opencode-10-permission-180 | options | generic | keys |
  * | opencode-27-permission-shell-180 | top | named | - |
- * | opencode-27-permission-shell-180 | title | generic | none |
- * | opencode-27-permission-shell-180 | options | generic | none |
+ * | opencode-27-permission-shell-180 | title | generic | keys |
+ * | opencode-27-permission-shell-180 | options | generic | keys |
  * | opencode-37-permission-long-62 | top | named | - |
- * | opencode-37-permission-long-62 | title | generic | none |
- * | opencode-37-permission-long-62 | options | generic | none |
+ * | opencode-37-permission-long-62 | title | generic | keys |
+ * | opencode-37-permission-long-62 | options | generic | keys |
  * | grok-12-permission-command | top | named | - |
  * | grok-12-permission-command | title | named | - |
  * | grok-12-permission-command | options | named | - |
  * | grok-14-permission-edit | top | named | - |
  * | grok-14-permission-edit | title | named | - |
  * | grok-14-permission-edit | options | named | - |
- * | omp-24-approval-a-dialog | title | generic | none |
- * | omp-24-approval-a-dialog | options | generic | none |
- * | omp-36-approval-edit-18-12 | title | generic | none |
- * | omp-36-approval-edit-18-12 | options | generic | none |
+ * | omp-24-approval-a-dialog | title | generic | keys |
+ * | omp-24-approval-a-dialog | options | generic | keys |
+ * | omp-36-approval-edit-18-12 | title | generic | keys |
+ * | omp-36-approval-edit-18-12 | options | generic | keys |
  * </degraded-table>
  */
 import type { CardOutcome, GenericAnswers } from './card-outcome.testkit';
@@ -79,13 +80,14 @@ export interface KnownDegraded {
 }
 
 const RAW = 'raw rows and the reason';
+const KEYS = 'raw rows, the reason and the keys';
 
 export const KNOWN_DEGRADED: readonly KnownDegraded[] = [
   {
     id: 'claude-42-c8-phone-question-previews',
     outcome: 'generic',
-    answers: 'none',
-    why: `Claude question with previews: no reader yet. User sees ${RAW}, no answer buttons`,
+    answers: 'keys',
+    why: `Claude question with previews: no reader yet. User sees ${KEYS}`,
   },
   {
     id: 'codex-15-x6-mcp-tool-list',
@@ -108,38 +110,38 @@ export const KNOWN_DEGRADED: readonly KnownDegraded[] = [
   {
     id: 'omp-31-plan-review',
     outcome: 'generic',
-    answers: 'none',
-    why: `Oh My Pi "Plan Review" panel: no reader. User sees ${RAW}`,
+    answers: 'keys',
+    why: `Oh My Pi "Plan Review" panel: no reader. User sees ${KEYS}`,
   },
   {
     id: 'omp-34-ask-multi-62',
     outcome: 'generic',
-    answers: 'none',
-    why: `Oh My Pi multi-select ask: only single-select is answered. User sees ${RAW}`,
+    answers: 'keys',
+    why: `Oh My Pi multi-select ask: only single-select is answered. User sees ${KEYS}`,
   },
   {
     id: 'grok-23-rewind-confirm',
     outcome: 'generic',
-    answers: 'none',
-    why: `Grok rewind confirmation: no reader. User sees ${RAW}`,
+    answers: 'keys',
+    why: `Grok rewind confirmation: no reader. User sees ${KEYS}`,
   },
   {
     id: 'grok-39-fork-question-40',
     outcome: 'generic',
-    answers: 'none',
-    why: `Grok /fork at 40 columns hides two answers, so the card does not guess. User sees ${RAW}`,
+    answers: 'keys',
+    why: `Grok /fork at 40 columns hides two answers, so the card does not guess. User sees ${KEYS}`,
   },
   {
     id: 'opencode-25-reject-feedback-180',
     outcome: 'generic',
-    answers: 'none',
-    why: `OpenCode reject note: by design typed in the terminal. User sees ${RAW}`,
+    answers: 'keys',
+    why: `OpenCode reject note: by design typed in the terminal. User sees ${KEYS}`,
   },
   {
     id: 'opencode-42-reject-feedback-62',
     outcome: 'generic',
-    answers: 'none',
-    why: `OpenCode reject note at 62 columns: as above. User sees ${RAW}`,
+    answers: 'keys',
+    why: `OpenCode reject note at 62 columns: as above. User sees ${KEYS}`,
   },
   {
     id: 'fixtures/claude-tall-bash',
@@ -204,18 +206,18 @@ export const CUT_VARIANTS: readonly CutVariant[] = [
   ]),
   ...variant('opencode-10-permission-180', null, [
     ['top', 38, 'named', null],
-    ['title', 39, 'generic', 'none'],
-    ['options', 44, 'generic', 'none'],
+    ['title', 39, 'generic', 'keys'],
+    ['options', 44, 'generic', 'keys'],
   ]),
   ...variant('opencode-27-permission-shell-180', 'git status', [
     ['top', 39, 'named', null],
-    ['title', 40, 'generic', 'none'],
-    ['options', 44, 'generic', 'none'],
+    ['title', 40, 'generic', 'keys'],
+    ['options', 44, 'generic', 'keys'],
   ]),
   ...variant('opencode-37-permission-long-62', null, [
     ['top', 26, 'named', null],
-    ['title', 27, 'generic', 'none'],
-    ['options', 36, 'generic', 'none'],
+    ['title', 27, 'generic', 'keys'],
+    ['options', 36, 'generic', 'keys'],
   ]),
   ...variant('grok-12-permission-command', 'chmod 644 README.md', [
     ['top', 34, 'named', null],
@@ -228,12 +230,12 @@ export const CUT_VARIANTS: readonly CutVariant[] = [
     ['options', 39, 'named', null],
   ]),
   ...variant('omp-24-approval-a-dialog', 'echo approved-2', [
-    ['title', 34, 'generic', 'none'],
-    ['options', 36, 'generic', 'none'],
+    ['title', 34, 'generic', 'keys'],
+    ['options', 36, 'generic', 'keys'],
   ]),
   ...variant('omp-36-approval-edit-18-12', null, [
-    ['title', 31, 'generic', 'none'],
-    ['options', 32, 'generic', 'none'],
+    ['title', 31, 'generic', 'keys'],
+    ['options', 32, 'generic', 'keys'],
   ]),
 ];
 

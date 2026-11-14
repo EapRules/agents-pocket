@@ -7,13 +7,10 @@ import {
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import {
-  agentPadKeys,
   Button,
   Card,
   DisclosureChevron,
   Icon,
-  KeyPad,
-  type KeyPadPage,
   makeStyles,
   Tappable,
   Text,
@@ -21,6 +18,7 @@ import {
 import { useState } from 'react';
 import { View } from 'react-native';
 import { type Answer, Answers } from './Answers';
+import { CardKeys } from './CardKeys';
 import {
   cardTitle,
   headlineTitle,
@@ -73,17 +71,6 @@ const unreadableMessage = () =>
   t(
     "The Agent is waiting on something Agentico can't read. Answer with these keys or in the terminal.",
   );
-
-/** The keys the card offers when it cannot read the screen: the shared pad's, in this order. */
-const CARD_KEYS: readonly KeyPadPage[] = [
-  {
-    id: 'card',
-    title: '',
-    keys: ['up', 'down', 'enter', 'esc'].flatMap((id) =>
-      agentPadKeys.filter((key) => key.id === id),
-    ),
-  },
-];
 
 /** A multi-select question's answers: toggles here, keys only once the selection goes. */
 function Selection({
@@ -271,7 +258,9 @@ export function BlockedCard(props: BlockedCardProps) {
               excerpt={content.excerpt}
               shown={content.shown ?? null}
               disabled={state.progress !== 'ready'}
+              keysDisabled={state.progress === 'acting'}
               onPress={props.onPress}
+              onKeys={props.onKeys}
             />
           ) : null}
           {content.kind === 'unreadable' ? (
@@ -285,15 +274,7 @@ export function BlockedCard(props: BlockedCardProps) {
               ) : (
                 <Text variant="body">{unreadableMessage()}</Text>
               )}
-              <KeyPad
-                compact
-                pages={CARD_KEYS}
-                page="card"
-                onPageChange={() => {}}
-                onKey={(key) => props.onKeys([key.id])}
-                disabled={state.progress === 'acting'}
-                testID="blocked-keypad"
-              />
+              <CardKeys disabled={state.progress === 'acting'} onKeys={props.onKeys} />
             </>
           ) : null}
           {state.notice ? (

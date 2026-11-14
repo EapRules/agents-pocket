@@ -207,6 +207,11 @@ export interface GenericDialogExcerpt {
   readonly reason: Text;
   readonly fingerprint: DialogFingerprint;
   readonly displayLines: readonly string[] | null;
+  /**
+   * A wait only the terminal answers by design (`genericCardExcerpt`): the card offers neither
+   * option buttons nor keys. Absent otherwise.
+   */
+  readonly terminalOnly?: boolean;
 }
 
 export type DialogParseResult =

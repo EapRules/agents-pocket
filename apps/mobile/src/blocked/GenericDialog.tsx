@@ -2,11 +2,13 @@ import {
   type AnswerLayout,
   type GenericDialogExcerpt,
   genericAnswerRole,
+  genericOffersKeys,
   type ShownRequest,
   splitAnswers,
 } from '@openagentspocket/core';
 import { BoundedScroll, Card, makeStyles, Text } from '@openagentspocket/ui';
 import { type Answer, Answers } from './Answers';
+import { CardKeys } from './CardKeys';
 import { roleKind } from './dialogModel';
 import { Subject } from './Subject';
 import { cardText } from './text';
@@ -46,21 +48,30 @@ export function genericAnswers(
 /**
  * A dialog no parser names. When the one waiting request provably is what it asks (`shown`), the
  * request's command; otherwise the rows verbatim and why they did not parse. The answers are the
- * same component either way (`genericAnswers`, drawn by `Answers`).
+ * same component either way (`genericAnswers`, drawn by `Answers`); rows with no numbered answer
+ * get the card's key pad instead (`genericOffersKeys`).
  */
 export function GenericDialog({
   excerpt,
   shown,
   disabled,
+  keysDisabled,
   onPress,
+  onKeys,
 }: {
   excerpt: GenericDialogExcerpt;
   shown: ShownRequest | null;
   disabled: boolean;
+  keysDisabled: boolean;
   onPress: (number: number) => void;
+  onKeys: (keys: string[]) => void;
 }) {
   const styles = useStyles();
-  const answers = <Answers layout={genericAnswers(excerpt, onPress)} disabled={disabled} />;
+  const answers = genericOffersKeys(excerpt) ? (
+    <CardKeys disabled={keysDisabled} onKeys={onKeys} />
+  ) : (
+    <Answers layout={genericAnswers(excerpt, onPress)} disabled={disabled} />
+  );
   if (shown) {
     return (
       <>

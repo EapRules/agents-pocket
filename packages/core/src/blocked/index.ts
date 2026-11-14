@@ -18,6 +18,7 @@ export {
   type CardProgress,
   type CardTiming,
   DEFAULT_TIMING,
+  genericOffersKeys,
   planErrorText,
   type QuestionWait,
   questionWait,

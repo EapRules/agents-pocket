@@ -184,6 +184,21 @@ describe('BlockedCard', () => {
     expect(onShowTerminal).toHaveBeenCalledTimes(1);
   });
 
+  it('offers the key pad under rows that hold no numbered answer, none for a terminal-only wait', async () => {
+    const excerpt = {
+      rows: [],
+      numbered: new Map<number, string>(),
+      reason: message('The top of the dialog is off screen.'),
+      fingerprint: { value: 'x', requestLines: null, ruleLines: null },
+      displayLines: null,
+    };
+    const props = await renderCard({ content: { kind: 'generic', excerpt } });
+    await fireEvent.press(screen.getByTestId('keypad-key-enter'));
+    expect(props.onKeys).toHaveBeenCalledWith(['enter']);
+    await renderCard({ content: { kind: 'generic', excerpt: { ...excerpt, terminalOnly: true } } });
+    expect(screen.queryByTestId('blocked-keypad')).toBeNull();
+  });
+
   it('folds to a bar and hides its choices', async () => {
     await renderCard({ content: { kind: 'card', dialog: bashDialog() }, isCollapsed: true });
     expect(screen.queryByTestId('blocked-option-1')).toBeNull();

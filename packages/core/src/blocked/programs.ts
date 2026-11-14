@@ -57,7 +57,7 @@ export function blockedSupportFor(program: ChatProgram): BlockedProgramSupport |
 
 /**
  * The generic card's excerpt as the card shows it: a wait only the terminal answers (Codex's hook
- * review) keeps its rows, says what it waits for and loses its option buttons.
+ * review) keeps its rows, says what it waits for and loses its option buttons and keys.
  */
 export function genericCardExcerpt(
   excerpt: GenericDialogExcerpt,
@@ -65,7 +65,8 @@ export function genericCardExcerpt(
   program: ChatProgram,
 ): GenericDialogExcerpt {
   const wait = terminalWaitOn(program, screen.rows);
-  return wait ? { ...excerpt, numbered: new Map(), reason: wait.explanation() } : excerpt;
+  if (!wait) return excerpt;
+  return { ...excerpt, numbered: new Map(), reason: wait.explanation(), terminalOnly: true };
 }
 
 /** The parser for an Agent's program; programs without one show no dialog (Pi has none). */

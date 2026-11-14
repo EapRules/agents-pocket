@@ -7,6 +7,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { ChatProgram } from '../chat/model/types';
 import { decodeAnsiScreen } from './ansi-decoder';
+import { genericOffersKeys } from './card-support';
 import { blockedSupportFor, genericCardExcerpt, parseBlockedDialog } from './programs';
 import type { RequestContext } from './request-match';
 import { type AnsiScreen, makeRow, makeScreen, type ScreenRow } from './screen';
@@ -83,8 +84,11 @@ export function cutTop(screen: AnsiScreen, keepFrom: number): AnsiScreen {
  */
 export type CardOutcome = 'named' | 'shown' | 'generic' | 'unreadable' | 'none';
 
-/** The generic card's buttons: digits it presses (`planGenericOption`), or none at all. */
-export type GenericAnswers = 'digits' | 'none';
+/**
+ * The generic card's answers: buttons with digits it presses (`planGenericOption`), the key pad
+ * when no row is a numbered answer (`genericOffersKeys`), or none at all.
+ */
+export type GenericAnswers = 'digits' | 'keys' | 'none';
 
 export interface CardReading {
   readonly outcome: CardOutcome;
@@ -105,7 +109,7 @@ export function readCard(
   }
   const excerpt = genericCardExcerpt(result.excerpt, screen, program);
   const presses = excerpt.numbered.size > 0 && blockedSupportFor(program)?.genericOptions;
-  const answers: GenericAnswers = presses ? 'digits' : 'none';
+  const answers: GenericAnswers = presses ? 'digits' : genericOffersKeys(excerpt) ? 'keys' : 'none';
   const shown = requestShownOnScreen(excerpt, context);
   return { outcome: shown ? 'shown' : 'generic', answers };
 }
