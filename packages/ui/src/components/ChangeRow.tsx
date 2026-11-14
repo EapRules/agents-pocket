@@ -3,6 +3,7 @@ import { type GestureResponderEvent, View } from 'react-native';
 import { Badge } from '../primitives/Badge';
 import { Card } from '../primitives/Card';
 import { Icon } from '../primitives/Icon';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { airy } from '../theme/metrics';
@@ -199,11 +200,7 @@ export function ChangeRow({
       </View>
       {file.added !== undefined ? <Totals added={file.added} removed={file.removed ?? 0} /> : null}
       {file.expanded !== undefined ? (
-        <Icon
-          name={file.expanded ? 'chevronDown' : 'chevronRight'}
-          size={11}
-          color="textTertiary"
-        />
+        <DisclosureChevron expanded={file.expanded} color="textTertiary" />
       ) : null}
       <Text variant="subheadline" semibold monospaced style={[styles.kind, { color: kindColor }]}>
         {file.kind}

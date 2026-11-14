@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import type { Status } from '../theme/status';
 import { makeStyles } from '../theme/theme';
+import type { ColorKey } from '../theme/tokens.generated';
 import { Badge } from './Badge';
 import { Icon } from './Icon';
 import { StatusDot } from './StatusDot';
@@ -34,10 +35,19 @@ interface SectionHeaderProps {
 }
 
 /** The fold chevron of a collapsible header: points right, turns down when open. */
-export function DisclosureChevron({ expanded }: { expanded: boolean }) {
+export function DisclosureChevron({
+  expanded,
+  size = 12,
+  color = 'textSecondary',
+}: {
+  expanded: boolean;
+  /** Chat rows use the default; list rows are quieter (`textTertiary`). */
+  size?: number;
+  color?: ColorKey;
+}) {
   return (
     <View style={{ transform: [{ rotate: expanded ? '90deg' : '0deg' }] }} testID="disclosure">
-      <Icon name="chevronRight" size={12} color="textSecondary" />
+      <Icon name="chevronRight" size={size} color={color} />
     </View>
   );
 }

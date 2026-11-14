@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { Button } from '../primitives/Button';
 import { Icon, type IconName } from '../primitives/Icon';
 import { Meter } from '../primitives/Meter';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { rounded } from '../theme/corners';
@@ -183,9 +184,7 @@ export function BackgroundWorkRow({ item, open, onToggle }: BackgroundWorkRowPro
           </View>
         ) : null}
       </View>
-      {expandable ? (
-        <Icon name={open ? 'chevronDown' : 'chevronRight'} size={14} color="textTertiary" />
-      ) : null}
+      {expandable ? <DisclosureChevron expanded={open} color="textTertiary" /> : null}
     </View>
   );
   return (

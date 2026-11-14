@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Icon } from '../primitives/Icon';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { makeStyles } from '../theme/theme';
@@ -96,7 +97,7 @@ export function ChatDivider({
       <Text variant="footnote" tone="secondary">
         {label}
       </Text>
-      <Icon name={collapsed ? 'chevronRight' : 'chevronDown'} size={11} color="textSecondary" />
+      <DisclosureChevron expanded={!collapsed} />
     </Tappable>
   );
 }

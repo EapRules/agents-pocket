@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { Icon } from '../primitives/Icon';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { makeStyles } from '../theme/theme';
@@ -49,7 +50,7 @@ export function ChatThoughtRow({
         <Text variant="subheadline" tone="secondary">
           {label}
         </Text>
-        <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={11} />
+        <DisclosureChevron expanded={expanded} />
       </Tappable>
       {expanded && text ? (
         <View style={styles.body}>

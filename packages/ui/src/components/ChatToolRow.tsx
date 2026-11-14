@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Card } from '../primitives/Card';
 import { Icon, type IconName } from '../primitives/Icon';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Spinner } from '../primitives/Spinner';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -203,7 +204,7 @@ function ToolLine({
         ) : marked ? (
           <StatusMark status={tool.status} />
         ) : null}
-        {onToggle ? <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={11} /> : null}
+        {onToggle ? <DisclosureChevron expanded={expanded} /> : null}
       </Tappable>
       {expanded && (tool.output || detail) ? (
         <View style={styles.lineBody}>

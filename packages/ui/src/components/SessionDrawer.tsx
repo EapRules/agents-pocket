@@ -4,6 +4,7 @@ import { ActionMenu, type ActionMenuItem } from '../overlay/ActionMenu';
 import { useContextMenu } from '../overlay/useContextMenu';
 import { Icon } from '../primitives/Icon';
 import { ProgramMark } from '../primitives/ProgramMark';
+import { DisclosureChevron } from '../primitives/SectionHeader';
 import { StatusDot } from '../primitives/StatusDot';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -337,7 +338,7 @@ export function SessionDrawer({
                   accessibilityLabel={ws.title}
                   testID={`${testID}-fold-${ws.id}`}
                 >
-                  <Icon name={open ? 'chevronDown' : 'chevronRight'} size={14} />
+                  <DisclosureChevron expanded={open} color="textTertiary" />
                   <Text variant="headline" style={styles.groupTitle} numberOfLines={1}>
                     {ws.title}
                   </Text>
