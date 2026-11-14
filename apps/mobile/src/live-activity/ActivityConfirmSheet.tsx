@@ -1,14 +1,14 @@
 import type { ApprovalDecision, ApprovalOutcome } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { Button, makeStyles, Sheet, Text } from '@openagentspocket/ui';
+import { Button, ButtonRow, EmptyState, makeStyles, Sheet, Text } from '@openagentspocket/ui';
 import { View } from 'react-native';
 import { approvalFeedback } from '@/notifications/approvalFeedback';
+import { Subject } from '../blocked/Subject';
 import type { ActivityLinkReview } from './runtime';
 
 const useStyles = makeStyles((th) => ({
   body: { gap: th.spacing.sm, padding: th.spacing.md },
-  actions: { flexDirection: 'row', gap: th.spacing.sm, padding: th.spacing.md },
-  action: { flex: 1 },
+  actions: { padding: th.spacing.md },
 }));
 
 /** Why there is no prompt to answer: a gone prompt reads the same however it went. */
@@ -24,7 +24,12 @@ function ConfirmBody({ review }: { review: ActivityLinkReview | null }) {
   if (!review) {
     return (
       <View style={styles.body}>
-        <Text tone="secondary">{t('Checking…')}</Text>
+        <EmptyState
+          busy
+          layout="compact"
+          title={t('Checking…')}
+          testID="activity-confirm-checking"
+        />
       </View>
     );
   }
@@ -42,9 +47,7 @@ function ConfirmBody({ review }: { review: ActivityLinkReview | null }) {
       <Text variant="footnote" tone="secondary">
         {host}
       </Text>
-      <Text variant="mono" testID="activity-confirm-prompt">
-        {ask.prompt}
-      </Text>
+      <Subject code={ask.prompt} description={null} codeTestID="activity-confirm-prompt" />
       {approve !== null ? <Text>{t('Approve: %@', approve)}</Text> : null}
       {deny !== null ? <Text>{t('Deny: %@', deny)}</Text> : null}
       {note ? (
@@ -77,7 +80,7 @@ export function ActivityConfirmSheet({ visible, review, onDecide, onClose }: Pro
       testID="activity-confirm"
       footer={
         <View style={styles.actions}>
-          <View style={styles.action}>
+          <ButtonRow>
             <Button
               title={t('Cancel')}
               kind="secondary"
@@ -85,9 +88,7 @@ export function ActivityConfirmSheet({ visible, review, onDecide, onClose }: Pro
               onPress={onClose}
               testID="activity-confirm-cancel"
             />
-          </View>
-          {ask?.deny != null ? (
-            <View style={styles.action}>
+            {ask?.deny != null ? (
               <Button
                 title={t('Deny')}
                 kind="destructive"
@@ -95,18 +96,16 @@ export function ActivityConfirmSheet({ visible, review, onDecide, onClose }: Pro
                 onPress={() => onDecide('deny')}
                 testID="activity-confirm-deny"
               />
-            </View>
-          ) : null}
-          {ask?.approve != null ? (
-            <View style={styles.action}>
+            ) : null}
+            {ask?.approve != null ? (
               <Button
                 title={t('Approve')}
                 size="dense"
                 onPress={() => onDecide('approve')}
                 testID="activity-confirm-approve"
               />
-            </View>
-          ) : null}
+            ) : null}
+          </ButtonRow>
         </View>
       }
     >

@@ -13,9 +13,12 @@ const useStyles = makeStyles((th) => ({
 export function Subject({
   code,
   description,
+  codeTestID = 'blocked-subject-code',
 }: {
   code: string | null;
   description: string | null;
+  /** For a surface whose tests and flows know the code by its own id. */
+  codeTestID?: string;
 }) {
   const styles = useStyles();
   if (!code && !description) return null;
@@ -24,7 +27,7 @@ export function Subject({
       <View style={styles.stack}>
         {code ? (
           <Card level="control" style={styles.code}>
-            <Text variant="mono" testID="blocked-subject-code">
+            <Text variant="mono" testID={codeTestID}>
               {code}
             </Text>
           </Card>
