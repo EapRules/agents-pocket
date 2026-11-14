@@ -1,10 +1,10 @@
 // Putting a verified bundle in the bucket, in the order that keeps every reader safe: assets, then
-// the signed body and its signature, then the channel pointer. Until the pointer is written nothing
+// the signed body and its signature, then the pointer. Until the pointer is written nothing
 // serves the update; after it, everything it names is already there (README "Storage layout").
 //
 // Nothing is overwritten but the pointer. An object that already exists is skipped when its bytes
-// are the ones the bundle has (assets are content-addressed; the same update goes to beta, then to
-// production) and refused otherwise. Everything written is read back and its SHA-256 compared
+// are the ones the bundle has (assets are content-addressed, so a later update finds most of them
+// already there; a retry finds everything) and refused otherwise. Everything written is read back and its SHA-256 compared
 // before the pointer moves, so a failed read-back leaves the pointer where it was.
 //
 // The stores (memory, local wrangler, real R2) are in stores.js.
@@ -21,7 +21,7 @@ const decode = (bytes) => new TextDecoder().decode(bytes);
  *
  * @param {ReturnType<import('./bundle.js').readBundle>} bundle
  */
-export function planUpload(bundle, { channel }) {
+export function planUpload(bundle) {
   const { entry } = bundle;
   const signature = new TextEncoder().encode(bundle.signature);
   const assets = bundle.assets.map((asset) => {
@@ -47,7 +47,7 @@ export function planUpload(bundle, { channel }) {
     asset: false,
   }));
   const pointer = {
-    key: storageKeys.pointer(entry.platform, entry.runtimeVersion, channel),
+    key: storageKeys.pointer(entry.platform, entry.runtimeVersion),
     bytes: encodeJson({ kind: entry.kind, id: entry.id }),
     contentType: 'application/json',
   };
@@ -79,25 +79,24 @@ async function inPool(items, size, task) {
   await Promise.all(Array.from({ length: Math.min(size, items.length) }, worker));
 }
 
-const NOT_MOVED = 'the channel pointer was not moved';
+const NOT_MOVED = 'the pointer was not moved';
 
 /**
  * @param {ReturnType<import('./bundle.js').readBundle>} bundle
- * @param {{channel: string,
- *   store: import('./stores.js').Store,
+ * @param {{store: import('./stores.js').Store,
  *   expectedPointer?: {kind: string, id: string} | null,
  *   readAsset?: (sha256: string) => Promise<{bytes: Uint8Array, contentType?: string} | null>,
  *   afterPointer?: () => Promise<string[]>,
  *   onProgress?: (line: string) => void}} options
- *   expectedPointer: what the public log says the channel serves now; when given, a bucket that
+ *   expectedPointer: what the public log says the server serves now; when given, a bucket that
  *     disagrees is refused before anything is written. readAsset: read assets back over HTTP from
  *     the deployed Worker instead of the store. afterPointer: checks once the pointer moved; any
  *     problem puts the previous pointer back (or removes it when there was none).
  */
 export async function uploadBundle(bundle, options) {
-  const { channel, store, readAsset, afterPointer, onProgress = () => {} } = options;
+  const { store, readAsset, afterPointer, onProgress = () => {} } = options;
   store.ready();
-  const plan = planUpload(bundle, { channel });
+  const plan = planUpload(bundle);
   const current = await store.get(plan.pointer.key);
   if (options.expectedPointer !== undefined) {
     const now = current ? parsePointer(decode(current)) : null;
@@ -153,7 +152,7 @@ export async function uploadBundle(bundle, options) {
   onProgress(`moved ${plan.pointer.key} to ${plan.entry.kind} ${plan.entry.id}`);
   const problems = afterPointer ? await afterPointer() : [];
   if (problems.length) {
-    // Back to what the channel served before: the previous pointer, or none at all.
+    // Back to what was served before: the previous pointer, or none at all.
     if (current) await store.put(plan.pointer.key, { bytes: current }, plan.pointer.contentType);
     else await store.remove(plan.pointer.key);
     throw new Error(

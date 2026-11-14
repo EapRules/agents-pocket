@@ -1,7 +1,7 @@
 // Where an upload goes. A store is { name, ready(), get(key), put(key, source, contentType), remove(key) }:
 // - get resolves to the object's bytes, or null when the key does not exist; anything else throws;
 // - put writes `source` ({path} or {bytes}) with that content type;
-// - remove deletes a key; the upload uses it only to take back a channel pointer it just wrote.
+// - remove deletes a key; the upload uses it only to take back a pointer it just wrote.
 // Three exist:
 // - memoryStore: the in-memory bucket, for tests;
 // - wranglerLocalStore: the local R2 simulation `wrangler dev` reads (`--local`, no account);

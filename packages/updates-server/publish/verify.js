@@ -6,7 +6,7 @@
 // server exactly as the client does and checks what it serves.
 import { readFileSync } from 'node:fs';
 
-import { CHANNEL_PARAM, isUpdateId, parseMultipart, partName, sfvString } from '../src/protocol.js';
+import { isUpdateId, parseMultipart, partName, sfvString } from '../src/protocol.js';
 import { readBundle } from './bundle.js';
 import { previousEntries } from './log.js';
 import { sha256Base64Url, sha256Hex } from './manifest.js';
@@ -95,14 +95,18 @@ async function manifestProblems(m, { runtimeVersion, getAsset }) {
 
 const assetIdOf = (url) => /\/assets\/([0-9a-f]{64})$/.exec(String(url))?.[1];
 
-/** Verify a bundle folder; `log` is the public log, `channel` the one it is about to go to. */
-export async function verifyBundle(dir, { certificate, keyId, builds, log, channel }) {
+/**
+ * Verify a bundle folder against the public log (`log`): it must not be published yet and must be
+ * newer than every update published for its platform and runtime version (previousEntries, which
+ * leaves out the retired channel's lines).
+ */
+export async function verifyBundle(dir, { certificate, keyId, builds, log }) {
   const bundle = readBundle(dir);
   const { entry } = bundle;
-  const previous = previousEntries(log, { ...entry, channel });
+  const previous = previousEntries(log, entry);
   const problems = [];
-  if (channel !== undefined && previous.some((e) => e.id === entry.id))
-    problems.push(`${entry.kind} ${entry.id} is already published to ${channel}`);
+  if (previous.some((e) => e.id === entry.id))
+    problems.push(`${entry.kind} ${entry.id} is already published`);
   const known = new Set(bundle.assets.map((a) => a.sha256));
   const result = await verifyUpdate({
     ...bundle,
@@ -133,8 +137,11 @@ export async function verifyBundle(dir, { certificate, keyId, builds, log, chann
   return { problems, entry };
 }
 
-/** The headers expo-updates sends on an update check (SDK 58 FileDownloader), minus the per-install ones. */
-export function clientHeaders({ platform, runtimeVersion, channel, keyId = 'main' }) {
+/**
+ * The headers expo-updates sends on an update check (SDK 58 FileDownloader), minus the per-install
+ * ones. No Expo-Extra-Params: the server ignores it (one channel).
+ */
+export function clientHeaders({ platform, runtimeVersion, keyId = 'main' }) {
   return {
     accept: 'multipart/mixed,application/expo+json,application/json',
     'expo-platform': platform,
@@ -144,19 +151,18 @@ export function clientHeaders({ platform, runtimeVersion, channel, keyId = 'main
     'expo-json-error': 'true',
     'expo-runtime-version': runtimeVersion,
     'expo-expect-signature': `sig, keyid=${sfvString(keyId)}, alg="rsa-v1_5-sha256"`,
-    ...(channel ? { 'expo-extra-params': `${CHANNEL_PARAM}=${sfvString(channel)}` } : {}),
   };
 }
 
 /**
  * Ask a server for an update as the app does and verify what comes back. The served update must
- * be the newest one the public log records for that channel, byte for byte (`requireLogged`).
+ * be one the public log records for that platform and runtime version, byte for byte
+ * (`requireLogged`), and newer than every other one it records.
  */
 export async function verifyRemote({
   manifestUrl,
   platform,
   runtimeVersion,
-  channel,
   certificate,
   keyId,
   builds,
@@ -165,7 +171,7 @@ export async function verifyRemote({
   fetchImpl = fetch,
 }) {
   const res = await fetchImpl(manifestUrl, {
-    headers: clientHeaders({ platform, runtimeVersion, channel, keyId }),
+    headers: clientHeaders({ platform, runtimeVersion, keyId }),
   });
   if (res.status === 204) return { problems: [], served: null };
   if (res.status !== 200) return { problems: [`the server answered ${res.status}`], served: null };
@@ -182,9 +188,9 @@ export async function verifyRemote({
   const part = parts.find((p) => ['manifest', 'directive'].includes(partName(p.headers)));
   if (!part) return { problems: [...problems, 'no manifest or directive part'], served: null };
   const kind = partName(part.headers);
-  const channelEntries = previousEntries(log, { platform, runtimeVersion, channel });
+  const published = previousEntries(log, { platform, runtimeVersion });
   const bodySha256 = sha256Hex(part.body);
-  const logged = channelEntries.find((e) => e.bodySha256 === bodySha256);
+  const logged = published.find((e) => e.bodySha256 === bodySha256);
   const result = await verifyUpdate({
     kind,
     bytes: part.body,
@@ -194,7 +200,7 @@ export async function verifyRemote({
     platform,
     runtimeVersion,
     builds,
-    previous: channelEntries.filter((e) => e !== logged),
+    previous: published.filter((e) => e !== logged),
     getAsset: async (asset) => {
       const r = await fetchImpl(asset.url);
       if (!r.ok) return null;
@@ -205,7 +211,6 @@ export async function verifyRemote({
     },
   });
   problems.push(...result.problems);
-  if (requireLogged && !logged)
-    problems.push('the served update is not in the public log for this channel');
+  if (requireLogged && !logged) problems.push('the served update is not in the public log');
   return { problems, served: { kind, bodySha256, logged: Boolean(logged) } };
 }

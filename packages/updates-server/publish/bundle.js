@@ -4,7 +4,7 @@
 //   <dir>/signature                         the expo-signature value for them
 //   <dir>/assets/<sha256 hex>               every asset, content-addressed
 //   <dir>/assets.json                       [{ "sha256", "contentType" }]
-//   <dir>/log-entry.json                    the public log entry; the upload adds channel and time
+//   <dir>/log-entry.json                    the public log entry; the upload adds its time
 //
 // Nothing in it is secret: no key, only what the server will serve.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';

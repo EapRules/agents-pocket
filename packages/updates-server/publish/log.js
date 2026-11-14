@@ -1,5 +1,5 @@
 // The public log of published updates: docs/releases/updates.jsonl, one JSON object per line,
-// appended by the upload step and committed by the owner.
+// appended by the upload step and committed by the owner. Lines are only ever appended.
 //
 // Why a file in the repository and not one the Worker serves: the server is the party the log must
 // hold to account, and a file it serves is a file it can rewrite. Git history on the public repo is
@@ -15,6 +15,7 @@ export const LOG_FILE = join('docs', 'releases', 'updates.jsonl');
  * @typedef {{kind: 'manifest' | 'directive', id: string, platform: string, runtimeVersion: string,
  *   createdAt: string, commit: string, bodySha256: string, signature: string,
  *   channel?: string, uploadedAt?: string}} LogEntry
+ *   channel: only on lines written before the one channel (see isRetiredChannelEntry).
  */
 
 /** @returns {LogEntry[]} */
@@ -32,45 +33,44 @@ export function readLog(file) {
     });
 }
 
+/**
+ * Whether a log entry records an upload to the retired `beta` channel (there were two channels
+ * until 2026-11-14; now there is one). Such a line stays in the log, which is never rewritten, but
+ * it is not what the server serves and not a previous update of the one channel: its pointer sits
+ * at a path the Worker no longer reads. An entry with `channel: "production"`, or with no `channel`
+ * (every entry since), is an update of the one channel.
+ */
+export function isRetiredChannelEntry(entry) {
+  return entry.channel === 'beta';
+}
+
 export function appendLog(file, entry) {
-  if (!entry.channel || !entry.uploadedAt)
-    throw new Error('a log entry needs channel and uploadedAt');
+  if (!entry.uploadedAt) throw new Error('a log entry needs uploadedAt');
+  if ('channel' in entry) throw new Error('a new log entry carries no channel: there is one');
   appendFileSync(file, `${JSON.stringify(entry)}\n`);
 }
 
 /**
- * What a new update must be newer than: the entries for the same platform and runtime version, on
- * the given channel, or on any channel when none is given.
+ * What a new update must be newer than: the entries of the one channel for the same platform and
+ * runtime version (retired-channel lines excluded, see isRetiredChannelEntry).
  */
-export function previousEntries(entries, { platform, runtimeVersion, channel }) {
+export function previousEntries(entries, { platform, runtimeVersion }) {
   return entries.filter(
     (e) =>
-      e.platform === platform &&
-      e.runtimeVersion === runtimeVersion &&
-      (channel === undefined || e.channel === channel),
+      e.platform === platform && e.runtimeVersion === runtimeVersion && !isRetiredChannelEntry(e),
   );
 }
 
-/** What the log says a channel serves now: its last entry for that platform and runtime, if any. */
-export function servedNow(entries, { platform, runtimeVersion, channel }) {
-  return previousEntries(entries, { platform, runtimeVersion, channel }).at(-1) ?? null;
-}
-
-/**
- * The rule is beta first: a production upload of an update the log never recorded on beta is
- * refused unless the owner says so (`--skip-beta`, for an emergency rollback directive).
- */
-export function betaFirstProblem(entries, entry, channel, { skipBeta = false } = {}) {
-  if (channel !== 'production' || skipBeta) return null;
-  if (entries.some((e) => e.id === entry.id && e.channel === 'beta')) return null;
-  return `${entry.kind} ${entry.id} was never on beta (docs/releases/updates.jsonl): upload it to beta first, or pass --skip-beta`;
+/** What the log says the server serves now: the last entry for that platform and runtime, if any. */
+export function servedNow(entries, { platform, runtimeVersion }) {
+  return previousEntries(entries, { platform, runtimeVersion }).at(-1) ?? null;
 }
 
 /** The git commands that publish the log line; the upload never commits or pushes itself. */
-export function logCommitCommands(entry, channel) {
+export function logCommitCommands(entry) {
   return [
     `git add ${LOG_FILE}`,
-    `git commit -m "Updates: ${entry.kind} ${entry.id} on ${channel}"`,
+    `git commit -m "Updates: ${entry.kind} ${entry.id} published"`,
     'git push origin main',
   ];
 }

@@ -183,23 +183,25 @@ suite('refusals', () => {
       platform: 'ios',
       runtimeVersion: RUNTIME,
       createdAt: '2026-11-14T12:00:00.000Z',
-      channel: 'beta',
     };
     await assert.rejects(publish({ log: [newer] }), /not newer than manifest/);
     assert.equal(existsSync(out), false);
     await publish();
-    assert.match((await verify({ log: [newer], channel: 'beta' })).problems.join(), /not newer/);
-    assert.deepEqual((await verify({ log: [newer], channel: 'production' })).problems, []);
+    assert.match((await verify({ log: [newer] })).problems.join(), /not newer/);
+    const production = { ...newer, channel: 'production' };
+    assert.match((await verify({ log: [production] })).problems.join(), /not newer/);
+    // A line of the retired beta channel is not a previous update of the one channel.
+    assert.deepEqual((await verify({ log: [{ ...newer, channel: 'beta' }] })).problems, []);
   });
 
-  test('the same update twice on one channel is refused', async () => {
+  test('the same update twice is refused, unless the log has it only on the retired beta', async () => {
     const { entry } = await publish();
-    const log = [{ ...entry, channel: 'beta', uploadedAt: '2026-11-14T10:05:00.000Z' }];
-    assert.match(
-      (await verify({ log, channel: 'beta' })).problems.join(),
-      /already published to beta/,
-    );
-    assert.deepEqual((await verify({ log, channel: 'production' })).problems, []);
+    const uploaded = { ...entry, uploadedAt: '2026-11-14T10:05:00.000Z' };
+    assert.match((await verify({ log: [uploaded] })).problems.join(), /already published/);
+    const production = [{ ...uploaded, channel: 'production' }];
+    assert.match((await verify({ log: production })).problems.join(), /already published/);
+    const beta = [{ ...uploaded, channel: 'beta' }];
+    assert.deepEqual((await verify({ log: beta })).problems, []);
   });
 
   test('Android is not published to yet', async () => {

@@ -26,10 +26,10 @@ The update check every app launch makes. The request headers that matter:
 | `accept` | Must admit `multipart/mixed` (the only structure served); otherwise `406`. A missing header admits it. |
 | `expo-platform` | `ios` or `android`; anything else is `400`. |
 | `expo-runtime-version` | The binary's runtime version (a fingerprint hash); malformed is `400`. |
-| `expo-extra-params` | SFV dictionary; its `channel` key is `beta` or `production` (absent: `production`). Another value, or a malformed header, is `400`. The app sets it with `Updates.setExtraParamAsync('channel', ...)`. |
+| `expo-extra-params` | Ignored. There is one channel: every official build gets the same update. An older app still sends `channel="beta"`; it, any other value and a malformed header all get exactly what a request without it gets. |
 | `expo-current-update-id` | When it equals the published update's id, the answer is `204`. |
 
-Response, when something is published for (platform, runtime version, channel):
+Response, when something is published for (platform, runtime version):
 
 ```
 200
@@ -75,16 +75,21 @@ One R2 bucket, binding `UPDATES`:
 | `assets/<sha256 hex>` | asset bytes; `content-type` in the object's HTTP metadata | upload, first |
 | `updates/<id>/body` | the exact signed bytes of a manifest or directive (`<id>` is the manifest `id`; a directive gets its own UUID) | upload |
 | `updates/<id>/signature` | the full `expo-signature` value for those bytes | upload |
-| `channels/<platform>/<runtime version>/<channel>` | `{"kind":"manifest"\|"directive","id":"<id>"}`: what that channel serves now | upload, **last** |
+| `channels/<platform>/<runtime version>/production` | `{"kind":"manifest"\|"directive","id":"<id>"}`: what is served now | upload, **last** |
 
 Selection is one read of the pointer: the publish script refuses an update whose `createdAt` is not
-newer than the last one it published to that channel (`docs/releases/updates.jsonl`), so the
+newer than the last one it published (`docs/releases/updates.jsonl`), so the
 pointer always names the newest, as the protocol's "most recent update" requires. Writing the
 pointer last means a half-finished upload is never served. Nothing is ever deleted or rewritten
 except the pointer, so a device that started downloading an update can always finish.
 
-The same bundle can be uploaded to `beta` and later to `production` (only the pointer differs); the
-channel is not inside the signed bytes.
+The pointer's last segment is fixed at `production` for compatibility with the objects already in
+the bucket: until 2026-11-14 there were two channels, `beta` and `production`. A pointer the
+retired `beta` channel left at `channels/<platform>/<runtime version>/beta` is read by nothing and
+is not deleted. Its line in the public log (`"channel":"beta"`) stays too, since the log is never
+rewritten; the publish tooling reads such a line as a record of the retired channel, not as an
+update of the one channel (`isRetiredChannelEntry` in `publish/log.js`). New lines carry no
+`channel`.
 
 ## What the Worker sees, and discards
 
@@ -94,8 +99,8 @@ Every update check carries (expo-updates SDK 58, iOS and Android): the IP addres
 **`eas-client-id`** (a random per-install UUID), **`expo-fatal-error`** (the text of the last fatal
 JS error, up to 1,024 characters), `expo-expect-signature`, and `expo-extra-params` if set.
 
-The Worker reads platform, runtime version, protocol version, accept, the channel and the current
-update id to pick the answer, and drops the request when it has answered. It stores nothing, logs
+The Worker reads platform, runtime version, protocol version, accept and the current update id to
+pick the answer (never `expo-extra-params`), and drops the request when it has answered. It stores nothing, logs
 nothing (no `console` call anywhere; a test fails if one appears), keeps no counters, and never
 reads `eas-client-id` or `expo-fatal-error`. `wrangler.toml` turns Workers Logs off
 (`[observability] enabled = false`); Logpush and Analytics Engine are not configured and must not
@@ -111,10 +116,10 @@ npx wrangler dev            # http://127.0.0.1:8787, local R2 in .wrangler/state
 Put a bundle in the local bucket from the repository root (docs/guides/updates.md, "Test locally"):
 
 ```sh
-node scripts/publish-update.mjs --upload build/updates/<id> --channel beta --target local \
+node scripts/publish-update.mjs --upload build/updates/<id> --target local \
   --local-test --cert <test cert> --builds <test builds.json>
 curl -si http://127.0.0.1:8787/manifest -H 'expo-protocol-version: 1' -H 'expo-platform: ios' \
-  -H 'expo-runtime-version: <runtime>' -H 'expo-extra-params: channel="beta"'
+  -H 'expo-runtime-version: <runtime>'
 ```
 
 `wrangler dev` prints one line per request on your terminal; that is the local dev server, not

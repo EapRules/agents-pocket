@@ -9,6 +9,7 @@ import { parseMultipart, partName, storageKeys } from '../src/protocol.js';
 import { createUpdatesServer } from '../src/worker.js';
 
 const RUNTIME = '33b4fd11e404248c9e547c24307f3114b342e1b3';
+// The retired beta channel left a pointer in the real bucket; nothing may serve it.
 const ID_BETA = '0f6c5b0e-1111-4c5e-9d55-2b1f3e0a0001';
 const ID_PROD = '0f6c5b0e-2222-4c5e-9d55-2b1f3e0a0002';
 const ID_DIRECTIVE = '0f6c5b0e-3333-4c5e-9d55-2b1f3e0a0003';
@@ -26,17 +27,30 @@ let bucket;
 let env;
 const server = createUpdatesServer();
 
-async function publish(platform, channel, kind, id, body, signature) {
+async function store(id, body, signature) {
   await bucket.put(storageKeys.body(id), body);
   await bucket.put(storageKeys.signature(id), `${signature}\n`);
-  await bucket.put(storageKeys.pointer(platform, RUNTIME, channel), JSON.stringify({ kind, id }));
+}
+
+async function publish(platform, kind, id, body, signature) {
+  await store(id, body, signature);
+  await bucket.put(storageKeys.pointer(platform, RUNTIME), JSON.stringify({ kind, id }));
+}
+
+// What the real bucket holds from before the one channel: an update and its pointer at `.../beta`.
+async function leaveRetiredBetaPointer() {
+  await store(ID_BETA, MANIFEST_BETA, SIG_BETA);
+  await bucket.put(
+    `channels/ios/${RUNTIME}/beta`,
+    JSON.stringify({ kind: 'manifest', id: ID_BETA }),
+  );
 }
 
 beforeEach(async () => {
   bucket = createMemoryBucket();
   env = { UPDATES: bucket };
-  await publish('ios', 'production', 'manifest', ID_PROD, MANIFEST_PROD, SIG_PROD);
-  await publish('ios', 'beta', 'manifest', ID_BETA, MANIFEST_BETA, SIG_BETA);
+  await publish('ios', 'manifest', ID_PROD, MANIFEST_PROD, SIG_PROD);
+  await leaveRetiredBetaPointer();
   await bucket.put(storageKeys.asset(ASSET), new Uint8Array([1, 2, 3, 4]), {
     httpMetadata: { contentType: 'image/png' },
   });
@@ -93,19 +107,47 @@ suite('manifest response', () => {
     assert.deepEqual(part.body, new TextEncoder().encode(MANIFEST_PROD));
   });
 
-  test('picks by channel from Expo-Extra-Params, production when absent', async () => {
-    const beta = await parts(
-      await get('/manifest', clientHeaders({ 'expo-extra-params': 'channel="beta"' })),
-    );
-    assert.equal(new TextDecoder().decode(beta[0].body), MANIFEST_BETA);
-    assert.equal(beta[0].headers['expo-signature'], SIG_BETA);
-    const other = await parts(
-      await get(
-        '/manifest',
-        clientHeaders({ 'expo-extra-params': 'other="x", channel="production"' }),
-      ),
-    );
-    assert.equal(new TextDecoder().decode(other[0].body), MANIFEST_PROD);
+  test('the pointer sits at the path the bucket already uses', () => {
+    assert.equal(storageKeys.pointer('ios', RUNTIME), `channels/ios/${RUNTIME}/production`);
+  });
+
+  test('ignores Expo-Extra-Params: an old app asking for beta, or a malformed value, gets the same', async () => {
+    const answer = async (headers) => {
+      const res = await get('/manifest', headers);
+      const [part] = await parts(res);
+      return { status: res.status, signature: part.headers['expo-signature'], body: part.body };
+    };
+    const expected = await answer(clientHeaders());
+    assert.equal(expected.signature, SIG_PROD);
+    for (const value of [
+      'channel="beta"',
+      'channel="production"',
+      'channel="staging"',
+      'other="x", channel="beta"',
+      'channel=',
+      '"not a dictionary',
+    ])
+      assert.deepEqual(
+        await answer(clientHeaders({ 'expo-extra-params': value })),
+        expected,
+        value,
+      );
+    const current = clientHeaders({
+      'expo-current-update-id': ID_PROD,
+      'expo-extra-params': 'channel="beta"',
+    });
+    assert.equal((await get('/manifest', current)).status, 204);
+  });
+
+  test('never serves the pointer the retired beta channel left behind', async () => {
+    bucket = createMemoryBucket();
+    env = { UPDATES: bucket };
+    await leaveRetiredBetaPointer();
+    for (const extra of [undefined, 'channel="beta"'])
+      assert.equal(
+        (await get('/manifest', clientHeaders({ 'expo-extra-params': extra }))).status,
+        204,
+      );
   });
 
   test('picks by platform and runtime version', async () => {
@@ -132,7 +174,7 @@ suite('manifest response', () => {
   });
 
   test('serves a stored directive as a directive part, signature included', async () => {
-    await publish('ios', 'production', 'directive', ID_DIRECTIVE, DIRECTIVE, SIG_DIRECTIVE);
+    await publish('ios', 'directive', ID_DIRECTIVE, DIRECTIVE, SIG_DIRECTIVE);
     const [part] = await parts(
       await get('/manifest', clientHeaders({ 'expo-current-update-id': ID_PROD })),
     );
@@ -151,8 +193,6 @@ suite('manifest response', () => {
       [{ 'expo-platform': undefined }, 400],
       [{ 'expo-runtime-version': undefined }, 400],
       [{ 'expo-runtime-version': '../channels/ios' }, 400],
-      [{ 'expo-extra-params': 'channel="staging"' }, 400],
-      [{ 'expo-extra-params': 'channel=' }, 400],
     ];
     for (const [overrides, status] of cases) {
       const res = await get('/manifest', clientHeaders(overrides));
@@ -167,7 +207,7 @@ suite('manifest response', () => {
 
   test('a half-published update (pointer without body) is a 500, never a partial answer', async () => {
     await bucket.put(
-      storageKeys.pointer('ios', RUNTIME, 'production'),
+      storageKeys.pointer('ios', RUNTIME),
       JSON.stringify({ kind: 'manifest', id: ID_DIRECTIVE }),
     );
     assert.equal((await get('/manifest')).status, 500);
@@ -240,7 +280,7 @@ suite('privacy', () => {
     await get('/manifest', clientHeaders({ 'expo-runtime-version': '9' }));
     await get(`/assets/${ASSET}`, {});
     await get('/nope', {}, 'DELETE');
-    await bucket.put(storageKeys.pointer('ios', RUNTIME, 'production'), 'not json');
+    await bucket.put(storageKeys.pointer('ios', RUNTIME), 'not json');
     await get('/manifest');
   });
 

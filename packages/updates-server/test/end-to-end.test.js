@@ -44,13 +44,12 @@ function serverFetch(bucket) {
   return (url, init) => server.fetch(new Request(url, init), { UPDATES: bucket });
 }
 
-const logEntry = (bundleDir, channel) => ({
+const logEntry = (bundleDir) => ({
   ...readBundle(bundleDir).entry,
-  channel,
   uploadedAt: '2026-11-14T12:00:00.000Z',
 });
 
-test('an uploaded update is served and passes the client checks; other channels get nothing', async () => {
+test('an uploaded update is served to every app and passes the client checks', async () => {
   const bucket = createMemoryBucket();
   const outDir = join(dir, 'update');
   await createUpdateBundle({
@@ -70,45 +69,48 @@ test('an uploaded update is served and passes the client checks; other channels 
       return store.put(key, ...rest);
     },
   };
-  await uploadBundle(readBundle(outDir), { channel: 'beta', store: recording });
-  assert.match(keys.at(-1), /^channels\/ios\/[0-9a-f]+\/beta$/, 'the pointer is written last');
+  await uploadBundle(readBundle(outDir), { store: recording });
+  assert.match(
+    keys.at(-1),
+    /^channels\/ios\/[0-9a-f]+\/production$/,
+    'the pointer is written last',
+  );
 
-  const ask = (channel, log) =>
+  const ask = (log) =>
     verifyRemote({
       manifestUrl: `${BASE}/manifest`,
       platform: 'ios',
       runtimeVersion: RUNTIME,
-      channel,
       certificate,
       builds: BUILDS,
       log,
       fetchImpl: serverFetch(bucket),
     });
 
-  const beta = await ask('beta', [logEntry(outDir, 'beta')]);
-  assert.deepEqual(beta.problems, []);
-  assert.deepEqual([beta.served.kind, beta.served.logged], ['manifest', true]);
+  const served = await ask([logEntry(outDir)]);
+  assert.deepEqual(served.problems, []);
+  assert.deepEqual([served.served.kind, served.served.logged], ['manifest', true]);
 
-  const unlogged = await ask('beta', []);
+  const unlogged = await ask([]);
   assert.match(unlogged.problems.join(), /not in the public log/);
 
-  const production = await ask('production', []);
-  assert.deepEqual(production, { problems: [], served: null });
+  // Logged only on the retired beta channel is not logged for the one channel.
+  const retired = await ask([{ ...logEntry(outDir), channel: 'beta' }]);
+  assert.match(retired.problems.join(), /not in the public log/);
 });
 
 test('a rollback directive goes through the same path', async () => {
   const bucket = createMemoryBucket();
   const outDir = join(dir, 'rollback');
   await createRollbackBundle({ ...common, outDir, now: new Date('2026-11-14T11:00:00.000Z') });
-  await uploadBundle(readBundle(outDir), { channel: 'production', store: memoryStore(bucket) });
+  await uploadBundle(readBundle(outDir), { store: memoryStore(bucket) });
   const result = await verifyRemote({
     manifestUrl: `${BASE}/manifest`,
     platform: 'ios',
     runtimeVersion: RUNTIME,
-    channel: 'production',
     certificate,
     builds: BUILDS,
-    log: [logEntry(outDir, 'production')],
+    log: [logEntry(outDir)],
     fetchImpl: serverFetch(bucket),
   });
   assert.deepEqual(result.problems, []);

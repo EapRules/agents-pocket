@@ -1,5 +1,5 @@
 // The real-bucket upload against a fake wrangler (publish/fake-wrangler.js): the commands it runs,
-// their order, what it refuses, and that a failure never moves the channel pointer. No network.
+// their order, what it refuses, and that a failure never moves the pointer. No network.
 
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { after, before, beforeEach, test } from 'node:test';
 
 import { readBundle } from '../publish/bundle.js';
-import { createRollbackBundle, createUpdateBundle } from '../publish/create.js';
+import { createUpdateBundle } from '../publish/create.js';
 import { fakeWrangler } from '../publish/fake-wrangler.js';
 import { readLog } from '../publish/log.js';
 import { readExport } from '../publish/manifest.js';
@@ -69,9 +69,10 @@ async function makeUpdate(over = {}) {
   return outDir;
 }
 
+// A log line for the bundle; `channel` only for the shape of lines written before the one channel.
 const logged = (bundleDir, channel) => ({
   ...readBundle(bundleDir).entry,
-  channel,
+  ...(channel ? { channel } : {}),
   uploadedAt: '2026-11-14T12:00:00.000Z',
 });
 
@@ -80,7 +81,6 @@ function upload(bundleDir, wrangler, over = {}) {
   let made = 0;
   const run = runUpload({
     dir: bundleDir,
-    channel: 'beta',
     target: 'r2',
     makeStore: () => {
       made += 1;
@@ -105,7 +105,7 @@ test('writes assets, then body and signature, reads them back, and moves the poi
   await run;
 
   const writes = wrangler.writes();
-  const pointer = storageKeys.pointer('ios', RUNTIME, 'beta');
+  const pointer = storageKeys.pointer('ios', RUNTIME);
   assert.deepEqual(
     writes.slice(0, assets.length).sort(),
     assets.map((a) => `put assets/${a.sha256}`).sort(),
@@ -133,7 +133,8 @@ test('writes assets, then body and signature, reads them back, and moves the poi
   assert.equal(wrangler.objects.get(`updates/${entry.id}/body`).contentType, 'application/json');
 
   const log = readLog(logFile);
-  assert.deepEqual([log.length, log[0].id, log[0].channel], [1, entry.id, 'beta']);
+  assert.deepEqual([log.length, log[0].id, 'channel' in log[0]], [1, entry.id, false]);
+  assert.ok(lines.some((l) => l.includes(`Updates: manifest ${entry.id} published`)));
   assert.ok(lines.some((l) => l.includes('git add docs/releases/updates.jsonl')));
   assert.ok(lines.some((l) => l.includes('git push origin main')));
 });
@@ -194,7 +195,7 @@ test('a bundle that fails verification is refused before any store exists', asyn
 test('a failed read-back leaves the pointer where it was', async () => {
   const bundleDir = await makeUpdate();
   const { entry } = readBundle(bundleDir);
-  const pointer = storageKeys.pointer('ios', RUNTIME, 'beta');
+  const pointer = storageKeys.pointer('ios', RUNTIME);
   const wrangler = fakeWrangler({ corrupt: (key) => key === storageKeys.signature(entry.id) });
   await assert.rejects(
     upload(bundleDir, wrangler).run,
@@ -212,37 +213,45 @@ test('a wrangler error that is not "missing" (auth, network) stops before anythi
   assert.deepEqual(wrangler.writes(), []);
 });
 
-test('production needs the update on beta first, or an explicit --skip-beta', async () => {
+test('a bundle the log records only on the retired beta channel uploads as the first update', async () => {
+  // docs/releases/updates.jsonl today: one line, this kind, with "channel":"beta".
   const bundleDir = await makeUpdate();
-  const first = fakeWrangler();
-  const refused = upload(bundleDir, first, { channel: 'production' });
-  await assert.rejects(refused.run, /never on beta.*--skip-beta/);
-  assert.deepEqual([refused.made(), first.calls.length], [0, 0]);
-
-  const afterBeta = fakeWrangler();
-  await upload(bundleDir, afterBeta, { channel: 'production', log: [logged(bundleDir, 'beta')] })
-    .run;
-  assert.ok(
-    afterBeta.writes().includes(`put ${storageKeys.pointer('ios', RUNTIME, 'production')}`),
+  const { entry } = readBundle(bundleDir);
+  const log = [logged(bundleDir, 'beta')];
+  const plan = upload(bundleDir, fakeWrangler(), { log, dryRun: true });
+  await plan.run;
+  assert.match(
+    plan.lines.join('\n'),
+    new RegExp(`channels/ios/${RUNTIME}/production: nothing published -> manifest ${entry.id}`),
   );
 
-  n += 1;
-  logFile = join(dir, `updates-${n}.jsonl`);
-  const rollbackDir = join(dir, `rollback-${n}`);
-  await createRollbackBundle({
-    ...common(),
-    outDir: rollbackDir,
-    now: new Date('2026-11-14T11:00:00.000Z'),
+  const wrangler = fakeWrangler();
+  // The bucket also holds the retired channel's pointer; the log-vs-bucket check ignores it.
+  wrangler.objects.set(`channels/ios/${RUNTIME}/beta`, {
+    bytes: new TextEncoder().encode(JSON.stringify({ kind: 'manifest', id: entry.id })),
   });
-  const skipped = fakeWrangler();
-  await upload(rollbackDir, skipped, { channel: 'production', skipBeta: true }).run;
-  assert.equal(readLog(logFile)[0].channel, 'production');
+  await upload(bundleDir, wrangler, { log }).run;
+  assert.ok(wrangler.writes().includes(`put ${storageKeys.pointer('ios', RUNTIME)}`));
+  assert.ok(!wrangler.writes().some((w) => w.endsWith('/beta')), 'the beta pointer is left alone');
+  const [line] = readLog(logFile);
+  assert.equal(line.id, entry.id);
+  assert.equal('channel' in line, false, 'new entries carry no channel');
+});
+
+test('an update the log records without a channel, or on production, is already published', async () => {
+  const bundleDir = await makeUpdate();
+  for (const log of [[logged(bundleDir)], [logged(bundleDir, 'production')]]) {
+    const wrangler = fakeWrangler();
+    const attempt = upload(bundleDir, wrangler, { log });
+    await assert.rejects(attempt.run, /already published/);
+    assert.deepEqual([attempt.made(), wrangler.calls.length], [0, 0]);
+  }
 });
 
 test('a bucket the public log disagrees with is refused before anything is written', async () => {
   const bundleDir = await makeUpdate();
   const wrangler = fakeWrangler();
-  const pointer = storageKeys.pointer('ios', RUNTIME, 'beta');
+  const pointer = storageKeys.pointer('ios', RUNTIME);
   const unlogged = '{"kind":"manifest","id":"00000000-0000-4000-8000-000000000000"}';
   wrangler.objects.set(pointer, { bytes: new TextEncoder().encode(unlogged) });
   await assert.rejects(upload(bundleDir, wrangler).run, /public log says nothing/);
@@ -263,7 +272,7 @@ test('a dry run prints every object and the pointer change, and touches nothing'
   assert.match(out, new RegExp(`updates/${entry.id}/signature`));
   assert.match(
     out,
-    new RegExp(`channels/ios/${RUNTIME}/beta: nothing published -> manifest ${entry.id}`),
+    new RegExp(`channels/ios/${RUNTIME}/production: nothing published -> manifest ${entry.id}`),
   );
 });
 
@@ -293,7 +302,6 @@ test('with --base-url the deployed Worker is checked; the update is served and l
   const lines = [];
   await runUpload({
     dir: bundleDir,
-    channel: 'beta',
     target: 'r2',
     makeStore: () => memoryStore(bucket),
     log: [],
@@ -310,13 +318,12 @@ test('with --base-url the deployed Worker is checked; the update is served and l
 
 test('a failed check after the pointer moved puts the previous pointer back', async () => {
   const bucket = createMemoryBucket();
-  const pointer = storageKeys.pointer('ios', RUNTIME, 'beta');
+  const pointer = storageKeys.pointer('ios', RUNTIME);
   const previous = '{"kind":"manifest","id":"00000000-0000-4000-8000-000000000000"}';
   await bucket.put(pointer, previous);
   const bundleDir = await makeUpdate();
   await assert.rejects(
     uploadBundle(readBundle(bundleDir), {
-      channel: 'beta',
       store: memoryStore(bucket),
       afterPointer: async () => ['the server answered 500'],
     }),
@@ -328,7 +335,6 @@ test('a failed check after the pointer moved puts the previous pointer back', as
   await assert.rejects(
     runUpload({
       dir: bundleDir,
-      channel: 'beta',
       target: 'r2',
       makeStore: () => memoryStore(fresh),
       log: [],

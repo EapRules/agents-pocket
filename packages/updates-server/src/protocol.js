@@ -7,11 +7,6 @@
 export const PROTOCOL_VERSION = '1';
 export const SFV_VERSION = '0';
 export const PLATFORMS = ['ios', 'android'];
-export const CHANNELS = ['beta', 'production'];
-export const DEFAULT_CHANNEL = 'production';
-// The protocol has no channel; the app sends one through Updates.setExtraParamAsync, which reaches
-// the server as this key of the Expo-Extra-Params SFV dictionary (expo-updates FileDownloader).
-export const CHANNEL_PARAM = 'channel';
 export const SIGNATURE_ALG = 'rsa-v1_5-sha256';
 export const DEFAULT_KEY_ID = 'main';
 
@@ -26,7 +21,6 @@ export const ASSET_ID_PATTERN = /^[0-9a-f]{64}$/;
 
 export const isRuntimeVersion = (value) => typeof value === 'string' && RUNTIME_PATTERN.test(value);
 export const isUpdateId = (value) => typeof value === 'string' && UUID_PATTERN.test(value);
-export const isChannel = (value) => CHANNELS.includes(value);
 export const isPlatform = (value) => PLATFORMS.includes(value);
 
 // --- Storage layout (README "Storage layout") ----------------------------------------------------
@@ -38,9 +32,13 @@ export const storageKeys = {
   body: (id) => `updates/${id}/body`,
   /** The complete expo-signature value for those bytes, as the publish script produced it. */
   signature: (id) => `updates/${id}/signature`,
-  /** What a (platform, runtime version, channel) is served now: `{ "kind", "id" }`. Written last. */
-  pointer: (platform, runtimeVersion, channel) =>
-    `channels/${platform}/${runtimeVersion}/${channel}`,
+  /**
+   * What a (platform, runtime version) is served now: `{ "kind", "id" }`. Written last. There is one
+   * channel; the path keeps the `channels/` prefix and the fixed last segment `production` for
+   * compatibility with the objects already in the bucket (a pointer the retired `beta` channel left
+   * at `.../beta` is read by nothing).
+   */
+  pointer: (platform, runtimeVersion) => `channels/${platform}/${runtimeVersion}/production`,
 };
 
 export const POINTER_KINDS = ['manifest', 'directive'];

@@ -1,11 +1,12 @@
 // Agentico update server (ADR 0028): serves pre-signed Expo Updates from an R2 bucket.
 //
 // Two routes. GET /manifest answers the Expo Updates protocol v1 request: it picks what is published
-// for (expo-platform, expo-runtime-version, channel), where the channel is the `channel` key of the
-// Expo-Extra-Params header (absent: production), and returns the STORED body (manifest or
-// directive) with the STORED expo-signature, byte for byte, in a multipart/mixed response; with
-// nothing published it answers 204, the protocol's no-op. GET /assets/<sha256> serves immutable,
-// content-addressed asset bytes.
+// for (expo-platform, expo-runtime-version) and returns the STORED body (manifest or directive) with
+// the STORED expo-signature, byte for byte, in a multipart/mixed response; with nothing published
+// it answers 204, the protocol's no-op. There is one channel: every official build gets the same
+// update, and the Expo-Extra-Params header (an older app still sends `channel="beta"`) is never
+// read, so no value of it, malformed or not, changes the answer. GET /assets/<sha256> serves
+// immutable, content-addressed asset bytes.
 //
 // The Worker holds no secret and never signs: the publish script signs on the owner's machine
 // (scripts/publish-update.mjs). It keeps nothing about a request and writes nothing to any log; the
@@ -14,16 +15,12 @@
 import {
   ASSET_CACHE_CONTROL,
   ASSET_ID_PATTERN,
-  CHANNEL_PARAM,
-  DEFAULT_CHANNEL,
-  isChannel,
   isPlatform,
   isRuntimeVersion,
   MANIFEST_CACHE_CONTROL,
   multipartBody,
   PROTOCOL_VERSION,
   parsePointer,
-  parseSfvDictionary,
   SFV_VERSION,
   storageKeys,
 } from './protocol.js';
@@ -55,16 +52,6 @@ export function acceptsMultipart(accept) {
   });
 }
 
-/** The channel a request asks for, or null when Expo-Extra-Params is malformed or names another. */
-export function requestedChannel(extraParams) {
-  if (extraParams === null) return DEFAULT_CHANNEL;
-  const params = parseSfvDictionary(extraParams);
-  if (!params) return null;
-  const channel = params[CHANNEL_PARAM];
-  if (channel === undefined) return DEFAULT_CHANNEL;
-  return isChannel(channel) ? channel : null;
-}
-
 async function handleManifest(request, bucket) {
   const headers = request.headers;
   // Only protocol 1 is served; the spec answers an incompatible request with 406.
@@ -75,11 +62,9 @@ async function handleManifest(request, bucket) {
   if (!isPlatform(platform)) return error(400, 'bad_platform');
   const runtimeVersion = headers.get('expo-runtime-version');
   if (!isRuntimeVersion(runtimeVersion)) return error(400, 'bad_runtime_version');
-  const channel = requestedChannel(headers.get('expo-extra-params'));
-  if (!channel) return error(400, 'bad_channel');
 
   const noUpdate = () => new Response(null, { status: 204, headers: PROTOCOL_HEADERS });
-  const pointerObject = await bucket.get(storageKeys.pointer(platform, runtimeVersion, channel));
+  const pointerObject = await bucket.get(storageKeys.pointer(platform, runtimeVersion));
   if (!pointerObject) return noUpdate();
   const pointer = parsePointer(await pointerObject.text());
   if (!pointer) return error(500, 'bad_pointer');
