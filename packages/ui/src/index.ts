@@ -119,6 +119,7 @@ export { EdgeFade } from './primitives/EdgeFade';
 export { EmptyState, type EmptyStateLayout, ErrorState } from './primitives/EmptyState';
 export { GLASS_OPACITY, GlassCapsule } from './primitives/GlassCapsule';
 export { Icon, type IconName, iconNames } from './primitives/Icon';
+export { LineCounts } from './primitives/LineCounts';
 export { ListRow, type ListRowProps } from './primitives/ListRow';
 export { METER_DANGER, METER_WARNING, Meter, meterColor } from './primitives/Meter';
 export { ProgramMark } from './primitives/ProgramMark';

@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { type DiffLabels, defaultDiffLabels } from '../diff/diffLabels';
+import { LineCounts } from '../primitives/LineCounts';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { rounded } from '../theme/corners';
@@ -37,7 +38,6 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
   },
   title: { flex: 1 },
-  counts: { flexDirection: 'row', gap: t.spacing.xs },
 }));
 
 export interface DiffFile {
@@ -157,10 +157,13 @@ export function DiffRow({
         <Text variant="subheadline" style={styles.title} numberOfLines={1}>
           {file.title}
         </Text>
-        <View style={styles.counts}>
-          <Text variant="subheadline" semibold tone="success">{`+${file.added}`}</Text>
-          <Text variant="subheadline" semibold tone="danger">{`-${file.removed}`}</Text>
-        </View>
+        <LineCounts
+          added={file.added}
+          removed={file.removed}
+          size="subheadline"
+          semibold
+          showZero
+        />
       </View>
       {hunks.map((hunk) => (
         <View key={hunk.header}>

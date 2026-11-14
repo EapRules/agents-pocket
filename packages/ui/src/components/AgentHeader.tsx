@@ -5,6 +5,7 @@ import { Button } from '../primitives/Button';
 import { Chip } from '../primitives/Chip';
 import { GlassCapsule } from '../primitives/GlassCapsule';
 import { Icon } from '../primitives/Icon';
+import { LineCounts } from '../primitives/LineCounts';
 import { StatusDot } from '../primitives/StatusDot';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -125,14 +126,13 @@ function CheckoutLine({
             </>
           ) : null}
           {diff ? (
-            <>
-              <Text variant="caption" monospaced semibold tone="success" tabularNums>
-                {`+${diff.added}`}
-              </Text>
-              <Text variant="caption" monospaced semibold tone="danger" tabularNums>
-                {`−${diff.removed}`}
-              </Text>
-            </>
+            <LineCounts
+              added={diff.added}
+              removed={diff.removed}
+              size="caption"
+              semibold
+              showZero
+            />
           ) : null}
         </Tappable>
       ) : null}

@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { Badge, StatusPill } from '../primitives/Badge';
 import { Icon } from '../primitives/Icon';
+import { LineCounts } from '../primitives/LineCounts';
 import { ProgramMark } from '../primitives/ProgramMark';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { StatusOrb } from '../primitives/StatusOrb';
@@ -51,7 +52,6 @@ const useStyles = makeStyles((t) => ({
   },
   prompt: { flex: 1, flexShrink: 1 },
   pillGap: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.xxs },
-  diff: { flexDirection: 'row', gap: t.spacing.xxs },
   ownTotals: { alignItems: 'flex-end' },
   contextPill: {
     flexDirection: 'row',
@@ -90,14 +90,7 @@ export function AgentCardBody({
   // The totals end the last row: the path line, else the Host line, else a line of their own.
   const diffOn = hasPath ? 'path' : hasMeta ? 'meta' : 'own';
   const totals = diff ? (
-    <View style={styles.diff} testID="agent-card-diff">
-      {diff.added > 0 ? (
-        <Text variant="footnote" monospaced tabularNums tone="success">{`+${diff.added}`}</Text>
-      ) : null}
-      {diff.removed > 0 ? (
-        <Text variant="footnote" monospaced tabularNums tone="danger">{`−${diff.removed}`}</Text>
-      ) : null}
-    </View>
+    <LineCounts added={diff.added} removed={diff.removed} testID="agent-card-diff" />
   ) : null;
   return (
     <View style={styles.root}>

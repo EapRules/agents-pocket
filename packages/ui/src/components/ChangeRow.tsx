@@ -3,6 +3,7 @@ import { type GestureResponderEvent, View } from 'react-native';
 import { Badge } from '../primitives/Badge';
 import { Card } from '../primitives/Card';
 import { Icon } from '../primitives/Icon';
+import { LineCounts } from '../primitives/LineCounts';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -17,7 +18,6 @@ const useStyles = makeStyles((t) => ({
   dir: { flexShrink: 1, minWidth: 0 },
   fileName: { flexShrink: 0, maxWidth: '100%' },
   fixed: { flexShrink: 0 },
-  totals: { flexDirection: 'row', gap: t.spacing.xxs },
   indent: { paddingLeft: t.spacing.xxs },
   file: {
     flexDirection: 'row',
@@ -85,16 +85,6 @@ export type ChangeRowProps = (
   testID?: string;
 };
 
-function Totals({ added, removed }: { added: number; removed: number }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.totals}>
-      <Text variant="footnote" monospaced semibold tone="success" tabularNums>{`+${added}`}</Text>
-      <Text variant="footnote" monospaced semibold tone="danger" tabularNums>{`−${removed}`}</Text>
-    </View>
-  );
-}
-
 /** One change entry: the repo summary card, or a file row (put file rows inside a ChangeSection). */
 export function ChangeRow({
   summary,
@@ -127,7 +117,7 @@ export function ChangeRow({
           </Text>
           {summary.worktree ? <Badge kind="control" label={labels.worktree} /> : null}
           <View style={styles.grow} />
-          <Totals added={summary.added} removed={summary.removed} />
+          <LineCounts added={summary.added} removed={summary.removed} semibold showZero />
         </View>
         {summary.branch ? (
           <View style={styles.line}>
@@ -198,7 +188,9 @@ export function ChangeRow({
           </Text>
         ) : null}
       </View>
-      {file.added !== undefined ? <Totals added={file.added} removed={file.removed ?? 0} /> : null}
+      {file.added !== undefined ? (
+        <LineCounts added={file.added} removed={file.removed ?? 0} semibold showZero />
+      ) : null}
       {file.expanded !== undefined ? (
         <DisclosureChevron expanded={file.expanded} color="textTertiary" />
       ) : null}

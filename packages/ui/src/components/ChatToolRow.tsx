@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Card } from '../primitives/Card';
 import { Icon, type IconName } from '../primitives/Icon';
+import { LineCounts } from '../primitives/LineCounts';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Spinner } from '../primitives/Spinner';
 import { Tappable } from '../primitives/Tappable';
@@ -155,16 +156,6 @@ type ToolProps = Omit<ChatToolRowProps, 'subagents' | 'openLabel' | 'testID' | '
   marked?: boolean;
   lineTestID?: string;
 };
-
-function LineCounts({ added, removed }: { added?: number | null; removed?: number | null }) {
-  if (!added && !removed) return null;
-  return (
-    <>
-      {added ? <Text variant="footnote" tone="success">{`+${added}`}</Text> : null}
-      {removed ? <Text variant="footnote" tone="danger">{`-${removed}`}</Text> : null}
-    </>
-  );
-}
 
 /** The quiet line: kind glyph, summary, line counts, a spinner while it runs, and a chevron. */
 function ToolLine({

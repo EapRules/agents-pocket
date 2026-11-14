@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Icon } from '../primitives/Icon';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
