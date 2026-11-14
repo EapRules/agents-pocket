@@ -43,7 +43,7 @@ export function SettingsScreen({ page: pageId = 'root' }: { page?: string }) {
             title={section.title?.(ctx)}
             footer={section.footer?.(ctx)}
             grouped={!section.loose}
-            iconInset={rendered.some((row) => row.icon)}
+            inset={rendered.some((row) => row.icon) ? 'icon' : undefined}
             testID={`settings-section-${section.id}`}
           >
             {rendered.map((row) => (

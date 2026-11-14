@@ -3,10 +3,11 @@ import { View } from 'react-native';
 import { SearchField } from '../form/SearchField';
 import { Sheet } from '../overlay/Sheet';
 import { Button } from '../primitives/Button';
-import { Card } from '../primitives/Card';
 import { Chip } from '../primitives/Chip';
 import { EmptyState } from '../primitives/EmptyState';
 import { Icon } from '../primitives/Icon';
+import { Section } from '../primitives/Section';
+import { SectionHeader } from '../primitives/SectionHeader';
 import { Segmented } from '../primitives/Segmented';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -65,7 +66,6 @@ export const defaultOverlayPeerPickerLabels: OverlayPeerPickerLabels = {
 const useStyles = makeStyles((t) => ({
   root: { gap: t.spacing.sm, paddingBottom: t.spacing.md },
   footnote: { paddingHorizontal: t.spacing.xs },
-  header: { paddingHorizontal: t.spacing.xs, paddingTop: t.spacing.xs },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -74,12 +74,6 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.md,
     minHeight: t.metrics.rowMinHeight,
   },
-  separator: {
-    height: t.metrics.hairlineWidth,
-    backgroundColor: t.hairline,
-    marginLeft: t.spacing.md,
-  },
-  empty: { padding: t.spacing.md },
 }));
 
 interface OverlayPeerPickerBodyProps {
@@ -147,52 +141,46 @@ export function OverlayPeerPickerBody({
           </Text>
         </>
       ) : null}
-      <Text
-        variant="footnote"
-        tone="secondary"
-        semibold
-        style={styles.header}
-        accessibilityRole="header"
-      >
-        {text.header}
-      </Text>
-      <Card padded={false}>
-        {shown.length === 0 ? (
-          <Text tone="secondary" style={styles.empty}>
-            {query ? text.noMatches : text.noPeers}
-          </Text>
-        ) : (
-          shown.map((peer, index) => (
-            <View key={peer.id}>
-              {index > 0 ? <View style={styles.separator} /> : null}
-              <Tappable
-                disabled={peer.offline}
-                onPress={() => onPick(peer, mode)}
-                accessibilityRole="button"
-                accessibilityLabel={peer.name}
-                accessibilityState={{
-                  disabled: peer.offline === true,
-                  selected: peer.chosen === true,
-                }}
-                style={styles.row}
-                testID={`peer-${peer.id}`}
-              >
-                <View style={{ flex: 1 }}>
-                  <OverlayPeerViews
-                    name={peer.name}
-                    online={peer.offline ? false : true}
-                    offline={peer.offline}
-                    address={address(peer)}
-                    reachability={peer.reachability}
-                  />
-                </View>
-                {peer.isHost ? <Chip label={text.hostTag} /> : null}
-                {peer.chosen ? <Icon name="check" size={17} color="accent" /> : null}
-              </Tappable>
-            </View>
-          ))
-        )}
-      </Card>
+      {shown.length === 0 ? (
+        <>
+          <SectionHeader title={text.header} />
+          <EmptyState
+            layout="compact"
+            title={query ? text.noMatches : text.noPeers}
+            testID="peer-empty"
+          />
+        </>
+      ) : (
+        <Section title={text.header}>
+          {shown.map((peer) => (
+            <Tappable
+              key={peer.id}
+              disabled={peer.offline}
+              onPress={() => onPick(peer, mode)}
+              accessibilityRole="button"
+              accessibilityLabel={peer.name}
+              accessibilityState={{
+                disabled: peer.offline === true,
+                selected: peer.chosen === true,
+              }}
+              style={styles.row}
+              testID={`peer-${peer.id}`}
+            >
+              <View style={{ flex: 1 }}>
+                <OverlayPeerViews
+                  name={peer.name}
+                  online={peer.offline ? false : true}
+                  offline={peer.offline}
+                  address={address(peer)}
+                  reachability={peer.reachability}
+                />
+              </View>
+              {peer.isHost ? <Chip label={text.hostTag} /> : null}
+              {peer.chosen ? <Icon name="check" size={17} color="accent" /> : null}
+            </Tappable>
+          ))}
+        </Section>
+      )}
       <SearchField
         label={text.searchPlaceholder}
         value={query}

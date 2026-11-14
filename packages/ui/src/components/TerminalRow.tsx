@@ -1,9 +1,10 @@
-import { Children, Fragment, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ActionMenu, type ActionMenuItem } from '../overlay/ActionMenu';
 import { useRowMenu } from '../overlay/useRowMenu';
 import { Card } from '../primitives/Card';
 import { Icon } from '../primitives/Icon';
+import { Section } from '../primitives/Section';
 import { type SwipeAction, SwipeRow } from '../primitives/SwipeRow';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -23,11 +24,6 @@ const useStyles = makeStyles((t) => ({
   pressed: { backgroundColor: t.colors.surfaceRaised },
   tile: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1, gap: airy.line },
-  separator: {
-    height: t.metrics.hairlineWidth,
-    backgroundColor: t.hairline,
-    marginLeft: t.spacing.md + 44 + t.spacing.sm,
-  },
   newRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,35 +118,25 @@ export function TerminalGroup({
   testID = 'terminal-group',
 }: TerminalGroupProps) {
   const styles = useStyles();
-  const rows = Children.toArray(children);
   return (
     <View style={styles.slot}>
-      <Card padded={false} testID={testID}>
-        {rows.map((row, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: the rows are static children
-          <Fragment key={index}>
-            {index > 0 ? <View style={styles.separator} /> : null}
-            {row}
-          </Fragment>
-        ))}
+      <Section inset="tile" testID={testID}>
+        {children}
         {onNewTerminal ? (
-          <>
-            {rows.length > 0 ? <View style={styles.separator} /> : null}
-            <Tappable
-              onPress={onNewTerminal}
-              accessibilityRole="button"
-              accessibilityLabel={labels.newTerminal}
-              style={({ pressed }) => [styles.newRow, pressed && styles.pressed]}
-              testID={`${testID}-new`}
-            >
-              <View style={styles.plus}>
-                <Icon name="add" size={20} color="textSecondary" />
-              </View>
-              <Text tone="secondary">{labels.newTerminal}</Text>
-            </Tappable>
-          </>
+          <Tappable
+            onPress={onNewTerminal}
+            accessibilityRole="button"
+            accessibilityLabel={labels.newTerminal}
+            style={({ pressed }) => [styles.newRow, pressed && styles.pressed]}
+            testID={`${testID}-new`}
+          >
+            <View style={styles.plus}>
+              <Icon name="add" size={20} color="textSecondary" />
+            </View>
+            <Text tone="secondary">{labels.newTerminal}</Text>
+          </Tappable>
         ) : null}
-      </Card>
+      </Section>
     </View>
   );
 }

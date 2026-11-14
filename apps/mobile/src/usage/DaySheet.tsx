@@ -10,14 +10,13 @@ import {
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import {
-  Card,
   ListRow,
   makeStyles,
   programTint,
+  Section,
+  SectionHeader,
   Sheet,
-  Text,
   UsageBreakdownRow,
-  UsageHostGroup,
   UsageTotals,
   useTheme,
 } from '@openagentspocket/ui';
@@ -28,9 +27,7 @@ import { localeTag, metricText, type UsageMetric } from './usageText';
 
 const useStyles = makeStyles((th) => ({
   section: { gap: th.spacing.xs },
-  heading: { paddingHorizontal: th.spacing.xs },
   programs: { gap: th.spacing.md, paddingHorizontal: th.spacing.xs },
-  separator: { height: th.metrics.hairlineWidth, backgroundColor: th.hairline },
 }));
 
 const LINKS = ['models', 'directories'] as const satisfies readonly BreakdownKind[];
@@ -99,38 +96,31 @@ export function DaySheet({
               onClose,
             }}
           />
+          <Section title={t('By Host')} testID="usage-host-group">
+            {scope.included.map((host) => {
+              const day = sumSummaries(
+                host.report.programs.flatMap((p) =>
+                  p.tokenUsage.daily.filter((d) => d.date === date),
+                ),
+              );
+              return (
+                <UsageBreakdownRow
+                  key={host.id}
+                  grouped
+                  variant="host"
+                  title={host.name}
+                  subtitle={[formatDay(date, locale), host.report.timeZone]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  cost={metricText(day, metric)}
+                  tokens={t('%@ tokens', formatTokens(day.tokens.total, locale))}
+                  testID={`day-host-${host.id}`}
+                />
+              );
+            })}
+          </Section>
           <View style={styles.section}>
-            <Text variant="footnote" semibold tone="secondary" style={styles.heading}>
-              {t('By Host')}
-            </Text>
-            <UsageHostGroup>
-              {scope.included.map((host) => {
-                const day = sumSummaries(
-                  host.report.programs.flatMap((p) =>
-                    p.tokenUsage.daily.filter((d) => d.date === date),
-                  ),
-                );
-                return (
-                  <UsageBreakdownRow
-                    key={host.id}
-                    grouped
-                    variant="host"
-                    title={host.name}
-                    subtitle={[formatDay(date, locale), host.report.timeZone]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    cost={metricText(day, metric)}
-                    tokens={t('%@ tokens', formatTokens(day.tokens.total, locale))}
-                    testID={`day-host-${host.id}`}
-                  />
-                );
-              })}
-            </UsageHostGroup>
-          </View>
-          <View style={styles.section}>
-            <Text variant="footnote" semibold tone="secondary" style={styles.heading}>
-              {t('By program')}
-            </Text>
+            <SectionHeader title={t('By program')} />
             <View style={styles.programs}>
               {scope.programs.flatMap((program) => {
                 const day = program.daily.find((d) => d.date === date);
@@ -153,20 +143,18 @@ export function DaySheet({
               })}
             </View>
           </View>
-          <Card padded={false} testID="usage-day-links">
-            {LINKS.map((kind, index) => (
-              <View key={kind}>
-                {index > 0 ? <View style={styles.separator} /> : null}
-                <ListRow
-                  title={breakdownTitle(kind)}
-                  titleTone="accent"
-                  chevron
-                  onPress={() => onBreakdown(kind)}
-                  testID={`usage-day-link-${kind}`}
-                />
-              </View>
+          <Section testID="usage-day-links">
+            {LINKS.map((kind) => (
+              <ListRow
+                key={kind}
+                title={breakdownTitle(kind)}
+                titleTone="accent"
+                chevron
+                onPress={() => onBreakdown(kind)}
+                testID={`usage-day-link-${kind}`}
+              />
             ))}
-          </Card>
+          </Section>
         </>
       ) : null}
     </Sheet>

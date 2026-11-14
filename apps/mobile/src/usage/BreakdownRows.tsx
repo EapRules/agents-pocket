@@ -9,7 +9,16 @@ import {
   type UsageScope,
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { airy, Card, ListRow, makeStyles, programTint, Text, useTheme } from '@openagentspocket/ui';
+import {
+  airy,
+  EmptyState,
+  ListRow,
+  makeStyles,
+  programTint,
+  Section,
+  Text,
+  useTheme,
+} from '@openagentspocket/ui';
 import { View } from 'react-native';
 import { localeTag, metricText, metricValue, type UsageMetric } from './usageText';
 
@@ -23,12 +32,6 @@ const DAYS = 30;
 const useStyles = makeStyles((th) => ({
   dot: { width: 8, height: 8, borderRadius: th.radius.capsule },
   amounts: { alignItems: 'flex-end', gap: airy.line, flexShrink: 0 },
-  separator: {
-    height: th.metrics.hairlineWidth,
-    backgroundColor: th.hairline,
-    marginLeft: airy.dot + th.spacing.xs,
-  },
-  empty: { minHeight: 56, justifyContent: 'center', paddingHorizontal: th.spacing.md },
 }));
 
 interface Entry {
@@ -125,16 +128,17 @@ export function BreakdownRows({ scope, kind, metric, limit, onDay, onShowAll }: 
   const whole = all.reduce((sum, e) => sum + metricValue(e.summary, metric), 0);
   const rows = limit ? all.slice(0, limit) : all;
   const more = limit !== undefined && all.length > limit && onShowAll !== undefined;
+  if (rows.length === 0)
+    return (
+      <EmptyState
+        layout="compact"
+        title={t('Nothing recorded in the last 30 days.')}
+        testID={`usage-breakdown-${kind}`}
+      />
+    );
   return (
-    <Card padded={false} testID={`usage-breakdown-${kind}`}>
-      {rows.length === 0 ? (
-        <View style={styles.empty}>
-          <Text variant="subheadline" tone="secondary">
-            {t('Nothing recorded in the last 30 days.')}
-          </Text>
-        </View>
-      ) : null}
-      {rows.map((entry, index) => {
+    <Section inset="dot" testID={`usage-breakdown-${kind}`}>
+      {rows.map((entry) => {
         const share = formatShare(metricValue(entry.summary, metric), whole, locale);
         const second =
           metric === 'cost'
@@ -145,63 +149,58 @@ export function BreakdownRows({ scope, kind, metric, limit, onDay, onShowAll }: 
         const figure = metricText(entry.summary, metric);
         const detail = `${share} · ${second}`;
         return (
-          <View key={entry.key}>
-            {index > 0 ? <View style={styles.separator} /> : null}
-            <ListRow
-              title={entry.title}
-              titleSemibold
-              titleEllipsize="middle"
-              subtitle={entry.host ? `${entry.host} · ${entry.subtitle}` : entry.subtitle}
-              subtitleMono
-              subtitleLines={1}
-              leading={
-                <View
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: entry.program
-                        ? programTint(programIdentity(entry.program).brand, theme)
-                        : 'transparent',
-                    },
-                  ]}
-                />
-              }
-              trailing={
-                <View style={styles.amounts} testID={`${ROW_PREFIX[kind]}-amount-${entry.key}`}>
-                  <Text variant="subheadline" semibold tabularNums>
-                    {figure}
+          <ListRow
+            key={entry.key}
+            title={entry.title}
+            titleSemibold
+            titleEllipsize="middle"
+            subtitle={entry.host ? `${entry.host} · ${entry.subtitle}` : entry.subtitle}
+            subtitleMono
+            subtitleLines={1}
+            leading={
+              <View
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: entry.program
+                      ? programTint(programIdentity(entry.program).brand, theme)
+                      : 'transparent',
+                  },
+                ]}
+              />
+            }
+            trailing={
+              <View style={styles.amounts} testID={`${ROW_PREFIX[kind]}-amount-${entry.key}`}>
+                <Text variant="subheadline" semibold tabularNums>
+                  {figure}
+                </Text>
+                <Text variant="caption" tone="secondary" tabularNums>
+                  {detail}
+                </Text>
+                {entry.priced ? null : (
+                  <Text variant="caption" tone="secondary">
+                    {t('Includes unpriced tokens')}
                   </Text>
-                  <Text variant="caption" tone="secondary" tabularNums>
-                    {detail}
-                  </Text>
-                  {entry.priced ? null : (
-                    <Text variant="caption" tone="secondary">
-                      {t('Includes unpriced tokens')}
-                    </Text>
-                  )}
-                </View>
-              }
-              onPress={press}
-              accessibilityLabel={[entry.title, entry.subtitle, figure, detail]
-                .filter(Boolean)
-                .join(', ')}
-              testID={`${ROW_PREFIX[kind]}-${entry.date ?? entry.title}`}
-            />
-          </View>
+                )}
+              </View>
+            }
+            onPress={press}
+            accessibilityLabel={[entry.title, entry.subtitle, figure, detail]
+              .filter(Boolean)
+              .join(', ')}
+            testID={`${ROW_PREFIX[kind]}-${entry.date ?? entry.title}`}
+          />
         );
       })}
       {more ? (
-        <View>
-          <View style={styles.separator} />
-          <ListRow
-            title={showAllTitle(kind, all.length)}
-            titleTone="accent"
-            chevron
-            onPress={onShowAll}
-            testID="usage-breakdown-show-all"
-          />
-        </View>
+        <ListRow
+          title={showAllTitle(kind, all.length)}
+          titleTone="accent"
+          chevron
+          onPress={onShowAll}
+          testID="usage-breakdown-show-all"
+        />
       ) : null}
-    </Card>
+    </Section>
   );
 }

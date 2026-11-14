@@ -6,70 +6,57 @@ import type { GuideStep } from './setupGuideSteps';
 interface SetupStepProps {
   number: number;
   step: GuideStep;
-  /** A hairline above, between steps. */
-  divider: boolean;
 }
 
 /** One numbered step of the Setup Guide: a badge, a title, a sentence, then links or commands. */
-export function SetupStep({ number, step, divider }: SetupStepProps) {
+export function SetupStep({ number, step }: SetupStepProps) {
   const theme = useTheme();
   return (
-    <>
-      {divider ? (
-        <View
-          style={{
-            height: theme.metrics.hairlineWidth,
-            marginLeft: theme.spacing.md,
-            backgroundColor: theme.hairline,
-          }}
-        />
-      ) : null}
+    <View
+      style={{
+        flexDirection: 'row',
+        gap: theme.spacing.sm,
+        padding: theme.spacing.md,
+      }}
+      accessible
+      accessibilityLabel={`${number}. ${step.title}. ${step.detail}`}
+      testID={`guide-step-${number}`}
+    >
       <View
         style={{
-          flexDirection: 'row',
-          gap: theme.spacing.sm,
-          padding: theme.spacing.md,
+          width: 26,
+          height: 26,
+          borderRadius: theme.radius.capsule,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.wash(theme.colors.accent),
         }}
-        accessible
-        accessibilityLabel={`${number}. ${step.title}. ${step.detail}`}
-        testID={`guide-step-${number}`}
       >
-        <View
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: theme.radius.capsule,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: theme.wash(theme.colors.accent),
-          }}
-        >
-          <Text variant="subheadline" semibold tone="accent">
-            {String(number)}
+        <Text variant="subheadline" semibold tone="accent">
+          {String(number)}
+        </Text>
+      </View>
+      <View style={{ flex: 1, gap: theme.spacing.xs }}>
+        <View style={{ gap: airy.line }}>
+          <Text variant="headline">{step.title}</Text>
+          <Text variant="subheadline" tone="secondary">
+            {step.detail}
           </Text>
         </View>
-        <View style={{ flex: 1, gap: theme.spacing.xs }}>
-          <View style={{ gap: airy.line }}>
-            <Text variant="headline">{step.title}</Text>
-            <Text variant="subheadline" tone="secondary">
-              {step.detail}
+        {step.link ? (
+          <Tappable
+            accessibilityRole="link"
+            onPress={() => void Linking.openURL(step.link?.url ?? '')}
+          >
+            <Text variant="subheadline" tone="accent">
+              {step.link.label}
             </Text>
-          </View>
-          {step.link ? (
-            <Tappable
-              accessibilityRole="link"
-              onPress={() => void Linking.openURL(step.link?.url ?? '')}
-            >
-              <Text variant="subheadline" tone="accent">
-                {step.link.label}
-              </Text>
-            </Tappable>
-          ) : null}
-          {step.commands ? (
-            <CommandBlock lines={step.commands} copyLabel={t('Copy')} copiedLabel={t('Copied')} />
-          ) : null}
-        </View>
+          </Tappable>
+        ) : null}
+        {step.commands ? (
+          <CommandBlock lines={step.commands} copyLabel={t('Copy')} copiedLabel={t('Copied')} />
+        ) : null}
       </View>
-    </>
+    </View>
   );
 }

@@ -1,5 +1,5 @@
 import { t } from '@openagentspocket/i18n';
-import { Card, Text } from '@openagentspocket/ui';
+import { Section, Text } from '@openagentspocket/ui';
 import { AppScreen } from '@/navigation/AppScreen';
 import { SetupStep } from './SetupStep';
 import { guideSteps } from './setupGuideSteps';
@@ -24,11 +24,11 @@ export function SetupGuideScreen({ onBack }: SetupGuideScreenProps) {
       <Text variant="footnote" tone="secondary">
         {t('Agentico connects over SSH to a machine that runs herdr.')}
       </Text>
-      <Card padded={false}>
+      <Section>
         {steps.map((step, index) => (
-          <SetupStep key={step.title} number={index + 1} step={step} divider={index > 0} />
+          <SetupStep key={step.title} number={index + 1} step={step} />
         ))}
-      </Card>
+      </Section>
     </AppScreen>
   );
 }

@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { LimitWindowRow } from '../../components/LimitWindowRow';
 import { ProviderUsageCard, ProviderUsageFooter } from '../../components/ProviderUsageCard';
-import { UsageBreakdownRow, UsageHostGroup } from '../../components/UsageBreakdownRow';
+import { UsageBreakdownRow } from '../../components/UsageBreakdownRow';
 import { UsageChart } from '../../components/UsageChart';
 import type { HeatDay } from '../../components/UsageHeatMap';
 import { UsageHeatMap } from '../../components/UsageHeatMap';
 import { UsageLimitChip } from '../../components/UsageLimitChip';
 import { UsageTotals } from '../../components/UsageTotals';
+import { Section } from '../../primitives/Section';
 import { programTint } from '../../theme/programTint';
 import { makeStyles, useTheme } from '../../theme/theme';
 import type { CatalogEntry } from './types';
@@ -175,7 +176,7 @@ function Breakdown({ host }: { host?: boolean }) {
   return (
     <View style={useStyles().pad}>
       {host ? (
-        <UsageHostGroup>
+        <Section testID="usage-host-group">
           <UsageBreakdownRow
             grouped
             variant="host"
@@ -192,7 +193,7 @@ function Breakdown({ host }: { host?: boolean }) {
             cost="US$ 0,50"
             tokens="499K tokens"
           />
-        </UsageHostGroup>
+        </Section>
       ) : (
         <>
           <UsageBreakdownRow

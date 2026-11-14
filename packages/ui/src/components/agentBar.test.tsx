@@ -361,6 +361,6 @@ describe('ChangeRow', () => {
     await fireEvent.press(screen.getByTestId('sum'));
     expect(onFile).toHaveBeenCalled();
     expect(onSummary).toHaveBeenCalled();
-    expect(screen.getByText('CHANGES')).toBeTruthy();
+    expect(screen.getByText('Changes')).toBeTruthy();
   });
 });

@@ -14,7 +14,6 @@ export {
 export {
   UsageBreakdownRow,
   type UsageBreakdownRowProps,
-  UsageHostGroup,
   type UsageSplit,
 } from './UsageBreakdownRow';
 export { type ChartSeries, UsageChart, type UsageChartProps } from './UsageChart';

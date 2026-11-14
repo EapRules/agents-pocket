@@ -1,9 +1,10 @@
-import { Children, Fragment, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { type GestureResponderEvent, View } from 'react-native';
 import { Badge } from '../primitives/Badge';
 import { Card } from '../primitives/Card';
 import { Icon } from '../primitives/Icon';
 import { LineCounts } from '../primitives/LineCounts';
+import { Section } from '../primitives/Section';
 import { DisclosureChevron } from '../primitives/SectionHeader';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
@@ -32,18 +33,6 @@ const useStyles = makeStyles((t) => ({
   title: { flexShrink: 1, minWidth: 0 },
   age: { flexShrink: 0 },
   kind: { width: 14, textAlign: 'center' },
-  rule: {
-    height: t.metrics.hairlineWidth,
-    backgroundColor: t.colors.separator,
-    marginLeft: t.spacing.xs,
-  },
-  head: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: t.spacing.md,
-    paddingTop: t.spacing.md,
-    paddingBottom: t.spacing.xxs,
-  },
 }));
 
 /** M modified, A added, D deleted, R renamed, ? untracked, U conflicted. */
@@ -201,7 +190,7 @@ export function ChangeRow({
   );
 }
 
-/** "CHANGES 2": the uppercase caption with the count at the right, over one card of file rows with hairlines. */
+/** "Changes 2": a section title with its count, over one card of file rows with hairlines. */
 export function ChangeSection({
   title,
   count,
@@ -211,27 +200,9 @@ export function ChangeSection({
   count: number;
   children: ReactNode;
 }) {
-  const styles = useStyles();
-  const rows = Children.toArray(children);
   return (
-    <View>
-      <View style={styles.head}>
-        <Text variant="caption" tone="secondary" semibold>
-          {title.toUpperCase()}
-        </Text>
-        <Text variant="caption" tone="secondary" tabularNums>
-          {String(count)}
-        </Text>
-      </View>
-      <Card padded={false} testID="change-section">
-        {rows.map((row, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional children
-          <Fragment key={index}>
-            {index > 0 ? <View style={styles.rule} /> : null}
-            {row}
-          </Fragment>
-        ))}
-      </Card>
-    </View>
+    <Section title={title} count={count} testID="change-section">
+      {children}
+    </Section>
   );
 }

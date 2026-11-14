@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Card } from '../primitives/Card';
 import { Icon } from '../primitives/Icon';
+import { Section } from '../primitives/Section';
 import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { rounded } from '../theme/corners';
@@ -36,11 +36,6 @@ const useStyles = makeStyles((t) => ({
     minHeight: t.metrics.rowMinHeight,
   },
   pressed: { backgroundColor: t.colors.surfaceRaised },
-  separator: {
-    height: t.metrics.hairlineWidth,
-    backgroundColor: t.hairline,
-    marginLeft: t.spacing.md + SWATCH_WIDTH + t.spacing.sm,
-  },
   swatch: {
     width: SWATCH_WIDTH,
     height: SWATCH_HEIGHT,
@@ -101,36 +96,34 @@ export function TerminalThemePicker({
       <Text variant="footnote" tone="secondary" style={styles.footnote}>
         {footnote}
       </Text>
-      <Card padded={false}>
-        {themes.map((option, index) => {
+      <Section inset="swatch">
+        {themes.map((option) => {
           const selected = option.id === selectedId;
           return (
-            <View key={option.id}>
-              {index > 0 ? <View style={styles.separator} /> : null}
-              <Tappable
-                onPress={() => onSelect(option.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`${option.name}, ${option.subtitle}`}
-                accessibilityValue={selected ? { text: selectedLabel } : undefined}
-                accessibilityState={{ selected }}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                testID={`terminal-theme-${option.id}`}
-              >
-                <TerminalThemeSwatch swatch={option.swatch} />
-                <View style={styles.text}>
-                  <Text variant="headline">{option.name}</Text>
-                  <Text variant="caption" tone="secondary">
-                    {option.subtitle}
-                  </Text>
-                </View>
-                {selected ? (
-                  <Icon name="check" size={17} color="accent" testID="theme-check" />
-                ) : null}
-              </Tappable>
-            </View>
+            <Tappable
+              key={option.id}
+              onPress={() => onSelect(option.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${option.name}, ${option.subtitle}`}
+              accessibilityValue={selected ? { text: selectedLabel } : undefined}
+              accessibilityState={{ selected }}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              testID={`terminal-theme-${option.id}`}
+            >
+              <TerminalThemeSwatch swatch={option.swatch} />
+              <View style={styles.text}>
+                <Text variant="headline">{option.name}</Text>
+                <Text variant="caption" tone="secondary">
+                  {option.subtitle}
+                </Text>
+              </View>
+              {selected ? (
+                <Icon name="check" size={17} color="accent" testID="theme-check" />
+              ) : null}
+            </Tappable>
           );
         })}
-      </Card>
+      </Section>
     </View>
   );
 }

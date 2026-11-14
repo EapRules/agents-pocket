@@ -14,9 +14,9 @@ import {
   ListRow,
   makeStyles,
   programTint,
+  Section,
   SectionHeader,
   UsageBreakdownRow,
-  UsageHostGroup,
   useTheme,
 } from '@openagentspocket/ui';
 import { View } from 'react-native';
@@ -46,26 +46,23 @@ export function UsageHostsSection({ scope, metric }: Omit<Props, 'range'>) {
   const whole = scope.included.reduce((sum, h) => sum + metricValue(h.last30Days, metric), 0);
   if (scope.included.length < 2) return null;
   return (
-    <View style={styles.root} testID="usage-hosts">
-      <SectionHeader title={t('Hosts')} />
-      <UsageHostGroup>
-        {scope.included.map((host) => {
-          const [cost, tokens] = withTokens(host.last30Days, metric);
-          return (
-            <UsageBreakdownRow
-              key={host.id}
-              grouped
-              variant="host"
-              title={host.name}
-              subtitle={`${formatShare(metricValue(host.last30Days, metric), whole, locale)} · ${t('Last 30 days')}`}
-              cost={cost}
-              tokens={tokens}
-              testID={`host-${host.id}`}
-            />
-          );
-        })}
-      </UsageHostGroup>
-    </View>
+    <Section title={t('Hosts')} testID="usage-hosts">
+      {scope.included.map((host) => {
+        const [cost, tokens] = withTokens(host.last30Days, metric);
+        return (
+          <UsageBreakdownRow
+            key={host.id}
+            grouped
+            variant="host"
+            title={host.name}
+            subtitle={`${formatShare(metricValue(host.last30Days, metric), whole, locale)} · ${t('Last 30 days')}`}
+            cost={cost}
+            tokens={tokens}
+            testID={`host-${host.id}`}
+          />
+        );
+      })}
+    </Section>
   );
 }
 

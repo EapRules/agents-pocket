@@ -89,6 +89,27 @@ describe('Section', () => {
     expect(screen.getByText('Pair a Host to add it.')).toBeTruthy();
   });
 
+  it('starts the hairlines past the leading element the inset names', async () => {
+    const pair = (inset?: 'dot' | 'tile') => (
+      <Section inset={inset}>
+        <ListRow title="A" />
+        <ListRow title="B" />
+      </Section>
+    );
+    await renderThemed(
+      <>
+        {pair()}
+        {pair('dot')}
+        {pair('tile')}
+      </>,
+    );
+    const [plain, dot, tile] = screen
+      .getAllByTestId('row-separator', { includeHiddenElements: true })
+      .map((separator) => StyleSheet.flatten(separator.props.style).marginLeft);
+    expect(dot).toBeGreaterThan(plain);
+    expect(tile).toBeGreaterThan(dot);
+  });
+
   it('lays children out loose when not grouped', async () => {
     await renderThemed(
       <Section title="Cards" grouped={false}>
