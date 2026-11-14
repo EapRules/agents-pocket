@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import '../chat/programs';
 import type { ChatPendingRequest } from '../chat/model/types';
 import { decodeAnsiScreen } from './ansi-decoder';
+import { allCaptures, cutTop } from './card-outcome.testkit';
 import { parseClaudeDialog } from './claude-parser';
+import { parseCodexDialog } from './codex-parser';
 import { genericCardExcerpt, planGenericOption } from './programs';
 import { NO_REQUESTS, type RequestContext } from './request-match';
 import { requestShownOnScreen, sameAcrossWraps } from './shown-request';
@@ -184,5 +186,31 @@ describe('sameAcrossWraps', () => {
     expect(sameAcrossWraps('git status x', ['git status'])).toBe(false);
     expect(sameAcrossWraps('gitstatus', ['git status'])).toBe(false);
     expect(sameAcrossWraps('cd x\nls', ['cd x ls'])).toBe(false);
+  });
+});
+
+// Codex feeds the conversation's waiting command as Claude does (its projector's pending
+// requests), and draws the command behind a `$ ` prompt.
+describe('a Codex approval cut at its title, shown from its request', () => {
+  const capture = allCaptures().find((candidate) => candidate.id === 'codex-01-x1-exec');
+  if (!capture) throw new Error('no codex-01-x1-exec');
+  const screen = cutTop(capture.screen, 27);
+  const result = parseCodexDialog(screen);
+  if (result.kind !== 'unrecognized') throw new Error(`expected generic, got ${result.kind}`);
+  const excerpt = genericCardExcerpt(result.excerpt, screen, 'codex');
+  const codex = (summary: string) =>
+    only(request({ toolName: 'exec_command', summary, detail: null, callID: 'call_1' }));
+
+  it('shows the one waiting command behind the prompt', () => {
+    expect(requestShownOnScreen(excerpt, codex('touch x1.txt'))).toEqual({
+      toolName: 'exec_command',
+      command: 'touch x1.txt',
+      description: null,
+    });
+  });
+
+  it('stays raw for another command or a part of it', () => {
+    expect(requestShownOnScreen(excerpt, codex('touch x2.txt'))).toBeNull();
+    expect(requestShownOnScreen(excerpt, codex('x1.txt'))).toBeNull();
   });
 });

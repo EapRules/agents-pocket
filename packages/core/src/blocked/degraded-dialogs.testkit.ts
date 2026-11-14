@@ -43,7 +43,7 @@
  * | claude-22-c7-edit | top | generic | digits |
  * | claude-22-c7-edit | title | generic | digits |
  * | claude-22-c7-edit | options | generic | digits |
- * | codex-01-x1-exec | title | generic | digits |
+ * | codex-01-x1-exec | title | shown | digits |
  * | codex-01-x1-exec | options | generic | digits |
  * | codex-02-x2-patch | title | generic | digits |
  * | codex-02-x2-patch | options | generic | digits |
@@ -197,7 +197,7 @@ export const CUT_VARIANTS: readonly CutVariant[] = [
     ['options', 35, 'generic', 'digits'],
   ]),
   ...variant('codex-01-x1-exec', 'touch x1.txt', [
-    ['title', 27, 'generic', 'digits'],
+    ['title', 27, 'shown', 'digits'],
     ['options', 35, 'generic', 'digits'],
   ]),
   ...variant('codex-02-x2-patch', null, [

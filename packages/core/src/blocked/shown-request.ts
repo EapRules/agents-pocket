@@ -3,8 +3,8 @@
 // that command as its own block of rows above permission answers, the generic card can present
 // the request's tool, command and description instead of the raw rows. The block reads as the
 // command whole, or whole but for a leading `cd <path> && ` the program hides (Claude Code shows a
-// command run in its project without it), or, when the top of the screen cut the block, as the
-// command's last rows. Presentation only: the card still presses the screen's numbered options,
+// command run in its project without it), behind the `$ ` prompt Codex and OpenCode draw before a
+// command, or, when the top of the screen cut the block, as the command's last rows. Presentation only: the card still presses the screen's numbered options,
 // read again before each press.
 
 import { genericAnswerRole } from './answer-layout';
@@ -43,6 +43,15 @@ export const MIN_CUT_ROWS = 3;
 /** A leading `cd` to one path, the prefix Claude Code leaves out of a command run there. */
 const HIDDEN_CD = /^cd (?:'[^'\n]*'|"[^"\n]*"|[^\s'"`$&|;<>()\\]+) && (?=\S)/;
 
+/** The shell prompt a program draws before the command it asks to run (Codex `$ touch x1.txt`). */
+const PROMPT = /^\$ (?=\S)/;
+
+/** `block` without the prompt on its first row, or the block itself when it has none. */
+const withoutPrompt = (block: readonly string[]): readonly string[] => {
+  const [first, ...rest] = block;
+  return first !== undefined && PROMPT.test(first) ? [first.replace(PROMPT, ''), ...rest] : block;
+};
+
 /**
  * The one pending request the excerpt shows, or null unless every check holds: no subagent runs
  * (its requests are not this conversation's), exactly one request waits and it is a command, the
@@ -73,11 +82,11 @@ export function requestShownOnScreen(
 
 /**
  * Which block shows `command`, and the command the card presents for it. Any block may read as the
- * command whole, or whole without a leading `cd <one path> && ` (nothing else is skipped). Only the
- * first block, and only when the top of the screen cut it (`cutAtTop`: it starts at the excerpt's
- * first row), may read as a tail: from the start of a command line or a wrap point (after a space
- * the wrap took; a word cut in two stays raw) through the command's last character, in at least
- * `MIN_CUT_ROWS` rows.
+ * command whole, or whole without a leading `cd <one path> && `, behind a `$ ` prompt or not
+ * (nothing else is skipped). Only the first block, and only when the top of the screen cut it
+ * (`cutAtTop`: it starts at the excerpt's first row), may read as a tail: from the start of a
+ * command line or a wrap point (after a space the wrap took; a word cut in two stays raw) through
+ * the command's last character, in at least `MIN_CUT_ROWS` rows.
  */
 function commandOnScreen(
   command: string,
@@ -85,9 +94,11 @@ function commandOnScreen(
   cutAtTop: boolean,
 ): { readonly block: number; readonly command: string } | null {
   const bare = command.replace(HIDDEN_CD, '');
-  for (const [index, block] of blocks.entries()) {
-    if (sameAcrossWraps(command, block)) return { block: index, command };
-    if (bare !== command && sameAcrossWraps(bare, block)) return { block: index, command: bare };
+  for (const [index, rows] of blocks.entries()) {
+    for (const block of new Set([rows, withoutPrompt(rows)])) {
+      if (sameAcrossWraps(command, block)) return { block: index, command };
+      if (bare !== command && sameAcrossWraps(bare, block)) return { block: index, command: bare };
+    }
   }
   const [first] = blocks;
   if (!cutAtTop || !first || first.length < MIN_CUT_ROWS) return null;
