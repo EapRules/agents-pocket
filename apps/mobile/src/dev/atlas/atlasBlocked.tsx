@@ -17,7 +17,14 @@ import { BlockedCardOverride } from '@/blocked/BlockedCardSlot';
 import { TALL_CONTENT } from './atlasBlockedTall';
 
 /** The Blocked card states the atlas draws over a Blocked Agent's chat. */
-export type AtlasBlockedVariant = 'bash' | 'clipped' | 'tall' | 'raw' | 'persistent' | 'question';
+export type AtlasBlockedVariant =
+  | 'bash'
+  | 'clipped'
+  | 'tall'
+  | 'raw'
+  | 'unreadable'
+  | 'persistent'
+  | 'question';
 
 const FINGERPRINT = { value: 'atlas', requestLines: null, ruleLines: null };
 
@@ -143,6 +150,8 @@ const CONTENT: Record<AtlasBlockedVariant, CardContent> = {
   },
   tall: TALL_CONTENT,
   raw: { kind: 'generic', excerpt, shown: null },
+  // No parser saw a dialog while herdr says Blocked: the key pad card.
+  unreadable: { kind: 'unreadable' },
 };
 
 const stateOf = (variant: AtlasBlockedVariant): BlockedCardState => ({

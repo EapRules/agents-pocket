@@ -562,6 +562,11 @@
     "note": "Blocked card: a dialog the parser could not name and no request matches, raw excerpt"
   },
   {
+    "id": "rn.blocked-card-unreadable",
+    "rn": "AgentDetailScreen",
+    "note": "Blocked card: herdr says Blocked and no parser sees a dialog, the key pad card"
+  },
+  {
     "id": "rn.blocked-card-persistent",
     "rn": "AgentDetailScreen",
     "note": "Blocked card: Codex command approval, three options with a persistent one below the pair"
