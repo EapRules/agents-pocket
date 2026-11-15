@@ -16,5 +16,14 @@
     "commit": "5f147d1c61bb095923e1f4032b3697881981a878",
     "sourceFingerprint": "04897d69bff6ccb88c26a1c4cebe3989ce10605f",
     "archivedAt": "2026-11-14T16:11:04.434Z"
+  },
+  {
+    "platform": "ios",
+    "version": "1.0.2",
+    "build": "6",
+    "runtimeVersion": "7ab83883df6451a37c80571929c4212d61ab7541",
+    "commit": "ee88758384337b7364c1eccf335d111585166beb",
+    "archivedAt": "2026-11-15T16:10:57.281Z",
+    "sourceFingerprint": "37e97585731c0540f5ae563a8bf31bbb259ec8e7"
   }
 ]
