@@ -3,9 +3,9 @@ import { appGroup } from 'agentico-app-group';
 import { liveActivityController } from 'agentico-live-activity';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppScreen } from '@/navigation/AppScreen';
-import { type DemoStep, runDemoStep } from './liveActivityDemo';
+import { DEMO_STEPS, type DemoStep, runDemoStep } from './liveActivityDemo';
 
-/** Dev-only: drives the real ActivityKit module with demo Agents. `?step=start|update|end` runs one on open. */
+/** Dev-only: drives the real ActivityKit module with demo Agents. `?step=<a DEMO_STEPS name>` runs one on open. */
 export function LiveActivityDemoScreen({ autoStep }: { autoStep: DemoStep | null }) {
   const [log, setLog] = useState<{ id: number; text: string }[]>([]);
   const ran = useRef(false);
@@ -30,9 +30,9 @@ export function LiveActivityDemoScreen({ autoStep }: { autoStep: DemoStep | null
   return (
     <AppScreen header={{ variant: 'native' }}>
       <Text variant="title">Live Activity demo</Text>
-      <Button title="Start" onPress={() => run('start')} />
-      <Button title="Update" onPress={() => run('update')} />
-      <Button title="End" onPress={() => run('end')} />
+      {DEMO_STEPS.map((step) => (
+        <Button key={step} title={step} onPress={() => run(step)} />
+      ))}
       <Card>
         {log.map((line) => (
           <Text key={line.id} variant="mono" testID="live-activity-log">
