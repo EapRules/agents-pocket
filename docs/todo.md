@@ -163,9 +163,9 @@ so no program-specific branches.
   the widgets, Live Activity and notification fallback saying "Agents Pocket", and the Expo SDK 58 patch
   versions. Built, every `pnpm sim:verify` flow passed on it, uploaded to App Store Connect, recorded in
   `docs/releases/builds.json`, tag `ios-1.0.2-6`. Version 1.0.1 (5) was released by Apple the same day.
-- [ ] **For the owner, before 1.0.2 goes to review:** on a real iPhone from TestFlight, the paste check
-  listed above, a web link opening in the sheet, and the widgets and Live Activity with the longer name
-  (they compile; no flow shows them). Then select build 6 in the 1.0.2 draft and submit.
+- [x] **1.0.2 (6) submitted for review by the owner** (2026-11-15, "Waiting for Review").
+- [ ] **On a real iPhone, from TestFlight or the store:** the paste check listed above, a web link opening
+  in the sheet, and the widgets and Live Activity with the longer name (they compile; no flow shows them).
 - [x] **Over-the-air JS updates** (ADR 0028). Done: the update server, the publish script with the real R2
   upload, the app side behind the official-build flag, the signing certificate in the repo (the key is with
   the owner), the privacy policy and the store wording, a local end-to-end on a Release simulator build,
