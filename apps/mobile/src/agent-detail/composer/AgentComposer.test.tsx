@@ -148,9 +148,9 @@ describe('AgentComposerBar', () => {
     await renderDetail('p2');
     await waitFor(() => expect(screen.getByTestId('composer-add')).toBeTruthy());
     await fireEvent.press(screen.getByTestId('composer-add'));
-    await waitFor(() => expect(screen.getByTestId('action-menu-add-image')).toBeTruthy());
-    expect(screen.getByTestId('action-menu-add-file')).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('action-menu-add-image'));
+    await waitFor(() => expect(screen.getByTestId('composer-add-add-image')).toBeTruthy());
+    expect(screen.getByTestId('composer-add-add-file')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('composer-add-add-image'));
     await waitFor(() => expect(pickPhoto).toHaveBeenCalledTimes(1));
   });
 
@@ -162,7 +162,7 @@ describe('AgentComposerBar', () => {
     await fireEvent(screen.getByTestId('composer-input'), 'focus');
     await waitFor(() => expect(screen.getByTestId('composer-more')).toBeTruthy());
     await fireEvent.press(screen.getByTestId('composer-more'));
-    await waitFor(() => expect(screen.getByTestId('action-menu-show-terminal')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('composer-more-show-terminal')).toBeTruthy());
     for (const key of [
       'back',
       'changes',
@@ -172,7 +172,7 @@ describe('AgentComposerBar', () => {
       'rename-agent',
       'close',
     ]) {
-      expect(screen.getByTestId(`action-menu-${key}`)).toBeTruthy();
+      expect(screen.getByTestId(`composer-more-${key}`)).toBeTruthy();
     }
   });
 

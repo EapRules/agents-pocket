@@ -20,13 +20,14 @@ appId: com.openagentspocket.app
 - tapOn:
     id: composer-more
     retryTapIfNoChange: false
+# "..." is a panel over the Composer: its first row shows, the rest scroll inside it, the keyboard
+# stays up.
 - extendedWaitUntil:
-    visible: "Close Agent"
+    visible: "Back to Console"
     timeout: 4000
 - takeScreenshot: design/atlas/sim/10-agent-menu
-# The program's shortcuts open from their own circle, after more.
-- tapOn:
-    point: "50%,30%"
+# The program's shortcuts open from their own circle, after more; one panel is open at a time, so
+# this replaces the "..." panel.
 - tapOn:
     id: composer-shortcuts
     retryTapIfNoChange: false

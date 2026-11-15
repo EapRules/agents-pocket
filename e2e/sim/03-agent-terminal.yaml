@@ -26,7 +26,8 @@ appId: com.openagentspocket.app
 - tapOn:
     id: composer-more
     retryTapIfNoChange: false
+# "..." is a panel over the Composer now (rows scroll inside it): the first row is on screen.
 - extendedWaitUntil:
-    visible: "Close Agent"
+    visible: "Back to Console"
     timeout: 4000
 - runFlow: _guard.yaml

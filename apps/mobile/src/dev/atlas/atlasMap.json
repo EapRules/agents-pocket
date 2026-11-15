@@ -322,6 +322,11 @@
     "note": "RN-only state: Claude Code /context sent from Chat, its recorded markdown as a command notice"
   },
   {
+    "id": "rn.composer-shortcuts-panel",
+    "rn": "ComposerCard (ComposerPanel)",
+    "note": "RN-only state: the Agent's shortcuts as a panel over the Composer (Swift opens a menu); the + and ... panels are agent-detail.composer-add-menu and -more-menu"
+  },
+  {
     "id": "rn.composer-long-draft",
     "rn": "ComposerCard (stacked input)",
     "note": "RN-only state: a four-line draft, the field grows with it"

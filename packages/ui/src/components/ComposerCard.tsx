@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { composerAction } from '../composer/Composer';
-import { ActionMenuButton, type ActionMenuItem, isDeadMenuTrigger } from '../overlay/ActionMenu';
+import { type ActionMenuItem, isDeadMenuTrigger } from '../overlay/ActionMenu';
 import { useAnchor } from '../overlay/anchors';
 import { Button } from '../primitives/Button';
 import { Icon, type IconName } from '../primitives/Icon';
@@ -11,7 +11,9 @@ import { rounded } from '../theme/corners';
 import { makeStyles, useTheme } from '../theme/theme';
 import { typography } from '../theme/typography';
 import { type AgentBarLabels, defaultAgentBarLabels } from './agentBarLabels';
+import { ComposerPanel } from './ComposerPanel';
 import { type ComposerSkill, ComposerSuggestions } from './ComposerSuggestions';
+import { menuPanelSections } from './composerMenuPanel';
 import { KeyboardDismissButton } from './KeyboardDismissButton';
 
 const CIRCLE = 40;
@@ -81,6 +83,7 @@ const useStyles = makeStyles((t) => ({
   },
   // Height comes from the content (between minHeight and the six-line cap), width from the column.
   inputStack: { alignSelf: 'stretch', paddingHorizontal: t.spacing.xs },
+  circleActive: { backgroundColor: t.colors.accentContainer },
   badge: {
     position: 'absolute',
     right: -2,
@@ -93,6 +96,8 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.surfaceRaised,
   },
 }));
+
+type MenuPanel = 'add' | 'more' | 'shortcuts';
 
 export type { ComposerSkill };
 
@@ -144,45 +149,36 @@ function Circle({
   label,
   onPress,
   menu,
+  active,
   anchorKey,
-  onMenuOpen,
   testID,
 }: {
   icon: IconName;
   label: string;
   onPress?: () => void;
+  /** The items the circle opens a panel of; with none and no `onPress` the circle is not drawn. */
   menu?: readonly ActionMenuItem[];
+  /** Its panel is open. */
+  active?: boolean;
   /** Registers the circle as a popover anchor (`confirm({ anchorKey })`). */
   anchorKey?: string;
-  onMenuOpen?: (open: boolean) => void;
   testID: string;
 }) {
   const styles = useStyles();
   const anchor = useAnchor(anchorKey);
   if (isDeadMenuTrigger(menu, onPress)) return null;
   return (
-    <View ref={anchor} style={styles.circle}>
-      {menu ? (
-        <ActionMenuButton
-          items={menu}
-          icon={icon}
-          iconSize={18}
-          accessibilityLabel={label}
-          neutral
-          onOpenChange={onMenuOpen}
-          testID={testID}
-        />
-      ) : (
-        <Button
-          kind="text"
-          neutral
-          icon={icon}
-          iconSize={18}
-          accessibilityLabel={label}
-          onPress={() => onPress?.()}
-          testID={testID}
-        />
-      )}
+    <View ref={anchor} style={[styles.circle, active && styles.circleActive]}>
+      <Button
+        kind="text"
+        neutral
+        icon={icon}
+        iconSize={18}
+        accessibilityLabel={label}
+        expanded={menu ? Boolean(active) : undefined}
+        onPress={() => onPress?.()}
+        testID={testID}
+      />
     </View>
   );
 }
@@ -221,13 +217,22 @@ export function ComposerCard({
   const theme = useTheme();
   const [dismissed, setDismissed] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  // The one panel open at a time; the `/` list takes precedence over it.
+  const [open, setOpen] = useState<MenuPanel | null>(null);
   const action = composerAction(value, working, onStop !== undefined, hasAttachments);
   const showSkills =
     Boolean(skills?.length || commands?.length) && value.startsWith('/') && !dismissed;
-  // An open "..." menu holds the layout: its Modal blurs the input, and folding would unmount it.
+  const panel = showSkills ? null : open;
+  // An open "..." or shortcuts panel holds the layout: their circles live in the stacked one, and
+  // folding would take them away. The "+" circle is in both, so its panel leaves the layout alone.
   const stacked =
-    (expanded ?? (value.includes('\n') || value.length > 36)) || showSkills || moreOpen;
+    (expanded ?? (value.includes('\n') || value.length > 36)) ||
+    showSkills ||
+    panel === 'more' ||
+    panel === 'shortcuts';
+  // Undefined for a menu with no items, so its circle is not drawn (no dead buttons).
+  const toggle = (which: MenuPanel, items?: readonly ActionMenuItem[]) =>
+    items?.length ? () => setOpen(panel === which ? null : which) : undefined;
   const stopInk = theme.appearance === 'dark' ? 'textPrimary' : 'onAccent';
   const hint = placeholder ?? labels.messagePlaceholder;
   const input = (
@@ -235,6 +240,7 @@ export function ComposerCard({
       value={value}
       onChangeText={(text) => {
         if (!text.startsWith('/')) setDismissed(false);
+        else setOpen(null);
         onChange(text);
       }}
       placeholder={hint}
@@ -267,7 +273,10 @@ export function ComposerCard({
     ) : (
       <Tappable
         style={[styles.circle, { backgroundColor: theme.colors.textPrimary }]}
-        onPress={onSend}
+        onPress={() => {
+          setOpen(null);
+          onSend();
+        }}
         disabled={disabled || action !== 'send'}
         accessibilityRole="button"
         accessibilityLabel={labels.send}
@@ -300,7 +309,19 @@ export function ComposerCard({
       </View>
     </View>
   ) : null;
-  const plus = <Circle icon="add" label={labels.add} menu={addMenu} testID={`${testID}-add`} />;
+  const plus = (
+    <Circle
+      icon="add"
+      label={labels.add}
+      menu={addMenu}
+      active={panel === 'add'}
+      onPress={toggle('add', addMenu)}
+      testID={`${testID}-add`}
+    />
+  );
+  const menuFor = { add: addMenu, more: moreMenu, shortcuts: shortcutsMenu };
+  const panelTitle = { add: labels.add, more: labels.moreOptions, shortcuts: labels.shortcuts };
+  const panelItems = panel ? menuFor[panel] : undefined;
   return (
     <View style={styles.card} testID={testID}>
       {showSkills ? (
@@ -313,6 +334,16 @@ export function ComposerCard({
           closeLabel={labels.closeSkills}
           onClose={() => setDismissed(true)}
           testID={testID}
+        />
+      ) : null}
+      {panel && panelItems?.length ? (
+        <ComposerPanel
+          title={panelTitle[panel]}
+          sections={menuPanelSections(panelItems, () => setOpen(null), `${testID}-${panel}`)}
+          closeLabel={labels.closePanel}
+          onClose={() => setOpen(null)}
+          testID={`${testID}-${panel}-panel`}
+          idPrefix={`${testID}-${panel}`}
         />
       ) : null}
       <View style={stacked ? styles.stack : styles.oneLine}>
@@ -332,8 +363,9 @@ export function ComposerCard({
               icon="more"
               label={labels.moreOptions}
               menu={moreMenu}
+              active={panel === 'more'}
+              onPress={toggle('more', moreMenu)}
               anchorKey={moreAnchorKey}
-              onMenuOpen={setMoreOpen}
               testID={`${testID}-more`}
             />
           ) : null}
@@ -342,6 +374,8 @@ export function ComposerCard({
               icon="shortcuts"
               label={labels.shortcuts}
               menu={shortcutsMenu}
+              active={panel === 'shortcuts'}
+              onPress={toggle('shortcuts', shortcutsMenu)}
               testID={`${testID}-shortcuts`}
             />
           ) : null}

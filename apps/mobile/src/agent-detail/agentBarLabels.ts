@@ -12,6 +12,7 @@ export function agentBarLabels(): AgentBarLabels {
     workspaces: t('Workspaces'),
     newItem: t('New'),
     closeSkills: t('Close Skills'),
+    closePanel: t('Close'),
     skills: t('Skills'),
     commands: t('Commands'),
     messagePlaceholder: t('Message Agent'),

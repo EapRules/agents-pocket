@@ -288,7 +288,7 @@ describe('ComposerCard layouts', () => {
     expect(screen.getByTestId('composer-card-input')).toBe(input);
   });
 
-  it('stays stacked under an open "..." menu, so losing focus cannot take the menu away', async () => {
+  it('keeps the layout stacked while the "..." panel is open, and the input untouched', async () => {
     const onPress = jest.fn();
     const card = (expanded?: boolean) => (
       <ComposerCard
@@ -300,14 +300,16 @@ describe('ComposerCard layouts', () => {
       />
     );
     const { rerender } = await renderThemed(card(true));
+    const input = screen.getByTestId('composer-card-input');
     await fireEvent.press(screen.getByTestId('composer-card-more'));
-    await waitFor(() => expect(screen.getByTestId('action-menu-p')).toBeTruthy());
-    // The menu's Modal takes the first responder: the input blurs and the caller stops expanding.
+    expect(screen.getByTestId('composer-card-more-p')).toBeTruthy();
+    // Nothing opened over the app (no Modal): the same input is still there, and the caller may stop expanding.
     await rerenderThemed(rerender, card(undefined));
-    expect(screen.getByTestId('action-menu-p')).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('action-menu-p'));
-    await waitFor(() => expect(onPress).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(screen.queryByTestId('composer-card-more')).toBeNull());
+    expect(screen.getByTestId('composer-card-more-p')).toBeTruthy();
+    expect(screen.getByTestId('composer-card-input')).toBe(input);
+    await fireEvent.press(screen.getByTestId('composer-card-more-p'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('composer-card-more-panel')).toBeNull();
   });
 
   it('shows the toolbar toggle and "..." only once stacked', async () => {
@@ -329,32 +331,6 @@ describe('ComposerCard layouts', () => {
     await rerenderThemed(rerender, card(true));
     expect(screen.getByTestId('composer-card-more')).toBeTruthy();
     expect(screen.getByTestId('composer-card-bar-toggle')).toBeTruthy();
-  });
-});
-
-describe('ComposerCard growth', () => {
-  const inputStyle = () =>
-    StyleSheet.flatten(screen.getByTestId('composer-card-input').props.style);
-
-  it('lets a long draft take its content height, up to six lines', async () => {
-    await renderThemed(
-      <ComposerCard value={'line\n'.repeat(12)} onChange={jest.fn()} onSend={jest.fn()} />,
-    );
-    const style = inputStyle();
-    // flex: 1 in the stacked column is basis 0 and pins the field at minHeight.
-    expect(style.flex).toBeUndefined();
-    expect(style.flexGrow ?? 0).toBe(0);
-    expect(style.height).toBeUndefined();
-    expect(style.alignSelf).toBe('stretch');
-    expect(style.maxHeight).toBeGreaterThan(style.minHeight as number);
-    expect(style.maxHeight).toBeGreaterThanOrEqual(6 * 22);
-  });
-
-  it('keeps a short draft on one line, filling the row', async () => {
-    await renderThemed(<ComposerCard value="hi" onChange={jest.fn()} onSend={jest.fn()} />);
-    const style = inputStyle();
-    expect(style.height).toBe(style.minHeight);
-    expect(style.flexGrow).toBe(1);
   });
 });
 

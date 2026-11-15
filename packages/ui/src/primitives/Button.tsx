@@ -75,6 +75,8 @@ interface CommonProps {
   kind?: ButtonKind;
   size?: ButtonSize;
   disabled?: boolean;
+  /** A button that opens a panel in place: whether that panel is open (read by screen readers). */
+  expanded?: boolean;
   /** Shows a spinner and ignores presses. */
   loading?: boolean;
   accessibilityHint?: string;
@@ -108,6 +110,7 @@ export function Button({
   size = 'regular',
   disabled = false,
   loading = false,
+  expanded,
   accessibilityLabel,
   accessibilityHint,
   iconSize,
@@ -130,7 +133,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: inactive, busy: loading }}
+      accessibilityState={{ disabled: inactive, busy: loading, expanded }}
       disabled={inactive}
       // Drops a returned promise (`onPress={() => confirm(...)}`): nothing awaits a press.
       onPress={() => {

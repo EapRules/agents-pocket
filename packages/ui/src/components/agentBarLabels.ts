@@ -8,6 +8,8 @@ export interface AgentBarLabels {
   workspaces: string;
   newItem: string;
   closeSkills: string;
+  /** Closes the panel of the "+", "..." and shortcuts buttons. */
+  closePanel: string;
   skills: string;
   /** The `/` panel's heading over the program's own commands. */
   commands: string;
@@ -45,6 +47,7 @@ export const defaultAgentBarLabels: AgentBarLabels = {
   workspaces: 'Workspaces',
   newItem: 'New',
   closeSkills: 'Close skills',
+  closePanel: 'Close',
   skills: 'Skills',
   commands: 'Commands',
   messagePlaceholder: 'Message Agent',

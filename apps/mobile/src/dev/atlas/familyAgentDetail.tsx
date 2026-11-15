@@ -252,6 +252,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'rn.composer-very-long-draft': veryLongDraft,
   'agent-detail.composer-more-menu': detail('p4', 'terminal', ['composer-input', 'composer-more']),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
+  'rn.composer-shortcuts-panel': detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
   'agent-detail.header-more-menu': detail('p2', 'chat', ['agent-header-more']),
   'agent-detail.session-drawer': detail('p2', 'chat', ['agent-header-sidebar']),
   'agent-detail.session-drawer--agents': detail('p2', 'chat', ['agent-header-sidebar']),
