@@ -40,7 +40,15 @@ const useStyles = makeStyles((t) => ({
   },
   full: { width: '100%' },
   fits: { maxHeight: '100%' },
-  dragArea: { alignItems: 'center', paddingBottom: t.spacing.xs },
+  // Over the content, like the system's grabber: the header's top space (`sheetHeaderTop`) clears it.
+  dragArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingBottom: t.spacing.xs,
+  },
   grabber: {
     alignSelf: 'center',
     width: t.metrics.sheetGrabberWidth,

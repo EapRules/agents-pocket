@@ -8,23 +8,26 @@ import { Text } from '../primitives/Text';
 import { makeStyles } from '../theme/theme';
 
 const useStyles = makeStyles((t) => ({
+  // One header layout (the same metrics as `SheetBar`): clear of the grabber, buttons and title on the content gutter.
+  headerBox: { paddingTop: t.metrics.sheetHeaderTop, paddingBottom: t.metrics.sheetHeaderGap },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.xs,
-    paddingLeft: t.metrics.screenInset,
-    paddingRight: t.spacing.xs,
+    paddingHorizontal: t.metrics.screenInset,
     minHeight: t.metrics.minTapSize,
   },
-  // A bar's capsules sit on the content gutter, not hugging the edge.
-  barHeader: { paddingRight: t.metrics.screenInset },
   title: { flex: 1 },
+  // The bare close glyph sits in a 44 pt target: pull the target out so the glyph's edge is near the content gutter.
+  closeEnd: { marginRight: -t.spacing.xs },
   barTitle: { flex: 1, textAlign: 'center' },
   barSlot: { minWidth: t.metrics.minTapSize * 1.5, flexDirection: 'row' },
   barEnd: { justifyContent: 'flex-end' },
-  largeHeader: { paddingHorizontal: t.metrics.screenInset, gap: t.spacing.xs },
-  largeTitle: { paddingBottom: t.spacing.xs },
-  body: { paddingHorizontal: t.metrics.screenInset, paddingTop: t.spacing.xs, gap: t.spacing.md },
+  largeHeader: { paddingHorizontal: t.metrics.screenInset, paddingTop: t.spacing.xs },
+  largeTitle: {},
+  body: { paddingHorizontal: t.metrics.screenInset, gap: t.spacing.md },
+  // No header row: the content starts at the header's top, clear of the grabber.
+  bodyNoHeader: { paddingTop: t.metrics.sheetHeaderTop },
   // Floats over the content on the native host: the canvas under it hides what scrolls behind.
   hostFooter: { backgroundColor: t.colors.canvas, paddingBottom: t.spacing.sm },
   // The native host already counts its footer in a content-sized sheet's height; the body only needs air above it.
@@ -90,68 +93,75 @@ export function SheetContent({
 }: SheetContentProps) {
   const styles = useStyles();
   const bar = leading !== undefined || trailing !== undefined;
+  const hasHeader = !headerless && (bar || closeButton || title !== undefined);
   return (
     <>
-      {headerless ? null : bar ? (
-        <>
-          <View style={[styles.header, styles.barHeader]} testID={`${testID}-bar`}>
-            <View style={styles.barSlot}>
-              {leading ? <BarButton action={leading} testID={`${testID}-leading`} /> : null}
-            </View>
-            {largeTitle ? (
-              <View style={styles.title} />
-            ) : (
-              <Text
-                variant="headline"
-                accessibilityRole="header"
-                style={styles.barTitle}
-                numberOfLines={1}
-              >
-                {title ?? ''}
-              </Text>
-            )}
-            <View style={[styles.barSlot, styles.barEnd]}>
-              {trailing ? (
-                <GlassCapsule>
-                  <BarAction action={trailing} testID={`${testID}-trailing`} />
-                </GlassCapsule>
+      {hasHeader ? (
+        <View style={styles.headerBox}>
+          {bar ? (
+            <>
+              <View style={styles.header} testID={`${testID}-bar`}>
+                <View style={styles.barSlot}>
+                  {leading ? <BarButton action={leading} testID={`${testID}-leading`} /> : null}
+                </View>
+                {largeTitle ? (
+                  <View style={styles.title} />
+                ) : (
+                  <Text
+                    variant="headline"
+                    accessibilityRole="header"
+                    style={styles.barTitle}
+                    numberOfLines={1}
+                  >
+                    {title ?? ''}
+                  </Text>
+                )}
+                <View style={[styles.barSlot, styles.barEnd]}>
+                  {trailing ? (
+                    <GlassCapsule>
+                      <BarAction action={trailing} testID={`${testID}-trailing`} />
+                    </GlassCapsule>
+                  ) : null}
+                </View>
+              </View>
+              {largeTitle ? (
+                <View style={styles.largeHeader}>
+                  <Text
+                    variant="title"
+                    accessibilityRole="header"
+                    style={styles.largeTitle}
+                    numberOfLines={2}
+                  >
+                    {title ?? ''}
+                  </Text>
+                </View>
               ) : null}
-            </View>
-          </View>
-          {largeTitle ? (
-            <View style={styles.largeHeader}>
-              <Text
-                variant="title"
-                accessibilityRole="header"
-                style={styles.largeTitle}
-                numberOfLines={2}
-              >
+            </>
+          ) : (
+            <View style={styles.header}>
+              <Text variant="headline" accessibilityRole="header" style={styles.title}>
                 {title ?? ''}
               </Text>
+              <View style={styles.closeEnd}>
+                <Button
+                  kind="text"
+                  icon="close"
+                  accessibilityLabel={closeLabel}
+                  onPress={onClose}
+                  testID={`${testID}-close`}
+                />
+              </View>
             </View>
-          ) : null}
-        </>
-      ) : closeButton || title !== undefined ? (
-        <View style={styles.header}>
-          <Text variant="headline" accessibilityRole="header" style={styles.title}>
-            {title ?? ''}
-          </Text>
-          <Button
-            kind="text"
-            icon="close"
-            accessibilityLabel={closeLabel}
-            onPress={onClose}
-            testID={`${testID}-close`}
-          />
+          )}
         </View>
       ) : null}
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={
-          fit && footerPlacement === 'host' && footerHeight > 0
-            ? [styles.body, styles.aboveHostFooter]
-            : styles.body
-        }
+        contentContainerStyle={[
+          styles.body,
+          !hasHeader && styles.bodyNoHeader,
+          fit && footerPlacement === 'host' && footerHeight > 0 && styles.aboveHostFooter,
+        ]}
         keyboardShouldPersistTaps="handled"
         // Inline, the JS panel lifts with the keyboard and this scrolls the focused field into
         // view; on the native host True Sheet insets the plugged scroll view: once, not twice.

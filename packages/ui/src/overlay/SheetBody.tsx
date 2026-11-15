@@ -9,7 +9,7 @@ interface Props {
   sheet: SheetProps;
   /** As tall as its content. */
   fit: boolean;
-  /** Drawn over the background, above the content (the JS host's grabber). */
+  /** Drawn over the content, at the top edge (the JS host's grabber). */
   top?: ReactNode;
   scrollRef?: Ref<ComponentRef<typeof ScrollView>>;
   /** Who draws the footer and keeps it above the keyboard (see `SheetContent`). */
@@ -24,7 +24,6 @@ export function SheetBody({ sheet, fit, top, scrollRef, footerPlacement, footerH
   return (
     <>
       <ScreenBackground testID={`${testID}-background`} />
-      {top}
       <SheetContent
         onClose={sheet.onClose}
         title={sheet.title}
@@ -43,6 +42,7 @@ export function SheetBody({ sheet, fit, top, scrollRef, footerPlacement, footerH
       >
         {sheet.children}
       </SheetContent>
+      {top}
     </>
   );
 }

@@ -20,16 +20,20 @@ export interface SheetBarItem {
 }
 
 const useStyles = makeStyles((t) => ({
-  root: { paddingTop: t.spacing.sm, gap: t.spacing.xs },
+  // The sheet header: the same top, side inset and gap to the content as `Sheet`'s own bar.
+  root: {
+    paddingTop: t.metrics.sheetHeaderTop,
+    paddingBottom: t.metrics.sheetHeaderGap,
+    gap: t.spacing.xs,
+  },
   // At the top of a full screen the controls start a hairline under the safe top, as every top bar.
-  rootFullScreen: { paddingTop: CHROME_TOP_GAP },
-  barFullScreen: { minHeight: t.metrics.minTapSize },
+  rootFullScreen: { paddingTop: CHROME_TOP_GAP, paddingBottom: 0 },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: t.metrics.screenInset,
-    minHeight: t.metrics.minTapSize + t.spacing.xs,
+    minHeight: t.metrics.minTapSize,
     gap: t.spacing.sm,
   },
   slot: { minWidth: 72, flexDirection: 'row' },
@@ -112,7 +116,7 @@ export function SheetBar({
   const styles = useStyles();
   return (
     <View style={[styles.root, fullScreen && styles.rootFullScreen]} testID={testID}>
-      <View style={[styles.bar, fullScreen && styles.barFullScreen]}>
+      <View style={styles.bar}>
         <View style={styles.slot}>
           {leading ? (
             <GlassCapsule>

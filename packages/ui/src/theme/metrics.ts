@@ -67,6 +67,13 @@ export const metrics = {
   sheetMaxShare: 0.92,
   sheetGrabberWidth: 36,
   sheetGrabberHeight: 5,
+  /**
+   * From a sheet's top edge to its header row: clear of the grabber (5 pt at 5 pt, so its bottom is
+   * at 10 pt) with room to breathe, and of the 28 pt corner. Without a header the content starts here.
+   */
+  sheetHeaderTop: spacing.md + spacing.xs,
+  /** The one gap between a sheet's header (bar and large title) and its content. */
+  sheetHeaderGap: spacing.sm,
   hairlineWidth: 1,
   /** Share of the primary text color used for card borders. */
   hairlineOpacity: 0.16,
