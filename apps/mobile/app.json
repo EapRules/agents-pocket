@@ -2,7 +2,7 @@
   "expo": {
     "name": "Agents Pocket",
     "slug": "openagentspocket",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "runtimeVersion": { "policy": "fingerprint" },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
