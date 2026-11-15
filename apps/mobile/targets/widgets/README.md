@@ -11,6 +11,22 @@ the prompt from the Host and answers through the notification's gates (`AgentAct
 `UsageCore`, `Widgets` (Usage widgets, Live Activity UI, island, rows), `ActivityCore`,
 `NotificationCore`, `Theme`, `Support`. They contain no personal identifiers (checked by grep).
 
+The Live Activity and Dynamic Island views no longer match the Swift app: they follow the approved
+direction A ("Sobrio") design (near-black card, Blocked first, the app's mark drawn in code in
+`Widgets/AgentsPocketMark.swift`). Do not copy the Swift app's `AgentLiveActivityWidget*`,
+`AgentActivityIsland` or `AgentActivityRows` over them; the data model and `ActivityCore` are still shared.
+
+## Seeing the Live Activity
+
+- Xcode canvas: `Widgets/AgentLiveActivityWidget+Previews.swift` has one preview per drawn state
+  (Lock Screen, compact, minimal, expanded), stale included.
+- Simulator, Debug build: `xcrun simctl openurl booted "openagentspocket:///__live-activity?step=one"`
+  (or `several`, `blocked`, `done`; `end` removes it). Then lock (Cmd+L) or go home (Shift+Cmd+H) to
+  see the island. Coming back to the foreground ends the demo activity (the coordinator ends
+  activities of unknown Hosts), which can race the URL's own step: with the app already open, open
+  the same URL a second time and the step lands. Stale cannot be started from JS: the module always
+  passes a nil `staleDate`.
+
 ## Sync procedure
 
 1. Copy the changed files from the Swift app over the same relative path here.
