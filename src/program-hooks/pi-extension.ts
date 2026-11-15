@@ -1,4 +1,4 @@
-// Installed by OpenAgentsPocket: forwards this Agent's asks and ends of turn to its notify hook.
+// Installed by Agents Pocket: forwards this Agent's asks and ends of turn to its notify hook.
 import { spawn } from "node:child_process";
 
 const forward = (input) => {

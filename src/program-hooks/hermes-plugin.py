@@ -1,4 +1,4 @@
-"""Installed by OpenAgentsPocket: forwards Hermes' asks and ends of turn to its notify hook."""
+"""Installed by Agents Pocket: forwards Hermes' asks and ends of turn to its notify hook."""
 import json
 import os
 import subprocess

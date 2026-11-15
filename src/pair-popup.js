@@ -89,7 +89,7 @@ async function holdFatal(message) {
 
 function renderChecklist(state, config, warning, fromTailscale = false) {
   const lines = [
-    `${BOLD}Pair an Agentico device${RESET}`,
+    `${BOLD}Pair an Agents Pocket device${RESET}`,
     "",
     "Select the addresses the phone can reach this machine on:",
     "",
@@ -166,7 +166,7 @@ async function renderPairingCode(payload, { copied = false, printedCode = null }
   // viewport instead, so any overflow costs trailing text, never the QR.
   const hint = copied
     ? `${BOLD}copied${RESET} ${DIM}-- any other key close${RESET}`
-    : `${BOLD}Scan with Agentico${RESET} ${DIM}-- c: copy pairing code, any other key close${RESET}`;
+    : `${BOLD}Scan with Agents Pocket${RESET} ${DIM}-- c: copy pairing code, any other key close${RESET}`;
   const lines = [
     ...qr.trimEnd().split("\n"),
     hint,
