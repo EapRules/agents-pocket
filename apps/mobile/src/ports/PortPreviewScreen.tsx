@@ -2,7 +2,8 @@ import { hostUrl, type PortsStore, parseUrl, tunnelUrl } from '@openagentspocket
 import { t } from '@openagentspocket/i18n';
 import { confirm, makeStyles, type ScreenHeader, useStoreState } from '@openagentspocket/ui';
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Share, View } from 'react-native';
+import { Share, View } from 'react-native';
+import { openExternally } from '@/links/openLink';
 import { AppScreen } from '@/navigation/AppScreen';
 import { askLeavePreview } from './leaveDialog';
 import { PreviewStates } from './PreviewStates';
@@ -60,7 +61,7 @@ export function PortPreviewScreen({
 
   const askExternal = async (url: string) => {
     if (await askLeavePreview(parseUrl(url)?.host ?? url, store.hostName)) {
-      void Linking.openURL(url);
+      void openExternally(url);
     }
   };
   const noDownloads = () =>

@@ -20,7 +20,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn() }),
   Stack: { Screen: () => null },
 }));
-jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn() }));
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: 'cancel' }),
+  WebBrowserPresentationStyle: { PAGE_SHEET: 'pageSheet' },
+}));
 
 interface Options {
   authenticator?: Authenticator;
@@ -117,7 +120,7 @@ describe('SettingsScreen', () => {
   it("opens the site's privacy page from Help", async () => {
     await setup('root');
     await fireEvent.press(screen.getByTestId('settings.about.privacyPolicy'));
-    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(PRIVACY_POLICY_URL);
+    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(PRIVACY_POLICY_URL, expect.anything());
   });
 
   it('opens the root as a sheet (Done capsule, large title) and pushed pages without them', async () => {

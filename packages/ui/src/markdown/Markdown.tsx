@@ -1,6 +1,7 @@
 import { marked, type Token, type Tokens } from 'marked';
 import { Fragment, memo, type ReactNode, useMemo, useState } from 'react';
-import { Linking, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { useLinkOpener } from '../links/LinkOpenerContext';
 import { Card } from '../primitives/Card';
 import { Text, type TextVariant } from '../primitives/Text';
 import { useFontScale } from '../theme/accessibility';
@@ -243,11 +244,12 @@ export const Markdown = memo(function Markdown({
 }: MarkdownProps) {
   const styles = useStyles();
   const theme = useTheme();
+  const openLink = useLinkOpener();
   const tokens = useMemo(() => marked.lexer(text), [text]);
   const ctx: Context = {
     styles,
     theme,
-    onLinkPress: onLinkPress ?? ((href) => void Linking.openURL(href).catch(() => {})),
+    onLinkPress: onLinkPress ?? ((href) => void openLink(href)),
     onLongPress,
   };
   return (

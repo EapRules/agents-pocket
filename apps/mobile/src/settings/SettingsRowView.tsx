@@ -9,7 +9,7 @@ import {
   ToggleRow,
 } from '@openagentspocket/ui';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
+import { useOpenLink } from '@/links/useOpenLink';
 import { CustomRow } from './customRows';
 import { useAuthenticator, useSettingsStore } from './SettingsProvider';
 import type { SettingsContext, SettingsRow } from './schema';
@@ -22,6 +22,7 @@ interface Props {
 /** One schema row as a primitive: the only place a row kind turns into UI. */
 export function SettingsRowView({ row, ctx }: Props) {
   const router = useRouter();
+  const openLink = useOpenLink();
   const store = useSettingsStore();
   const authenticator = useAuthenticator();
   const title = row.title(ctx);
@@ -61,7 +62,7 @@ export function SettingsRowView({ row, ctx }: Props) {
           title={title}
           icon={row.icon ?? 'info'}
           trailing={<Icon name="arrowUp" size={13} color="textTertiary" />}
-          onPress={() => WebBrowser.openBrowserAsync(row.url)}
+          onPress={() => void openLink(row.url)}
           testID={row.id}
         />
       );

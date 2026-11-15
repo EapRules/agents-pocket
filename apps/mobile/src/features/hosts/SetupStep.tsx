@@ -1,6 +1,7 @@
 import { t } from '@openagentspocket/i18n';
 import { airy, CommandBlock, Tappable, Text, useTheme } from '@openagentspocket/ui';
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
+import { useOpenLink } from '@/links/useOpenLink';
 import type { GuideStep } from './setupGuideSteps';
 
 interface SetupStepProps {
@@ -11,6 +12,7 @@ interface SetupStepProps {
 /** One numbered step of the Setup Guide: a badge, a title, a sentence, then links or commands. */
 export function SetupStep({ number, step }: SetupStepProps) {
   const theme = useTheme();
+  const openLink = useOpenLink();
   return (
     <View
       style={{
@@ -44,10 +46,7 @@ export function SetupStep({ number, step }: SetupStepProps) {
           </Text>
         </View>
         {step.link ? (
-          <Tappable
-            accessibilityRole="link"
-            onPress={() => void Linking.openURL(step.link?.url ?? '')}
-          >
+          <Tappable accessibilityRole="link" onPress={() => void openLink(step.link?.url ?? '')}>
             <Text variant="subheadline" tone="accent">
               {step.link.label}
             </Text>

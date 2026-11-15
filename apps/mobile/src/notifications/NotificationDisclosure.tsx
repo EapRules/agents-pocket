@@ -1,6 +1,7 @@
 import { t } from '@openagentspocket/i18n';
 import { Button, Icon, Sheet, spacing, Text } from '@openagentspocket/ui';
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
+import { useOpenLink } from '@/links/useOpenLink';
 
 /**
  * The privacy policy the disclosure links to: the site's /privacy, which redirects to the policy the
@@ -10,9 +11,10 @@ import { Linking, View } from 'react-native';
 export const NOTIFICATION_PRIVACY_URL: string | null = 'https://openagentspocket.com/privacy';
 
 function PrivacyLink({ label }: { label: string }) {
+  const openLink = useOpenLink();
   if (NOTIFICATION_PRIVACY_URL === null) return null;
   return (
-    <Button kind="text" title={label} onPress={() => Linking.openURL(NOTIFICATION_PRIVACY_URL)} />
+    <Button kind="text" title={label} onPress={() => void openLink(NOTIFICATION_PRIVACY_URL)} />
   );
 }
 

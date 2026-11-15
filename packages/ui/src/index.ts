@@ -65,6 +65,7 @@ export {
   KeyRow,
   type KeySpec,
 } from './keys/KeyboardDock';
+export { LinkOpenerProvider, type OpenLink, useLinkOpener } from './links/LinkOpenerContext';
 export { CodeBlock } from './markdown/CodeBlock';
 export { Markdown } from './markdown/Markdown';
 export {

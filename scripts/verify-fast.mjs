@@ -65,6 +65,7 @@ const checks = [
   run('file length', 'node', ['scripts/check-file-length.mjs']),
   run('theme literals', 'node', ['scripts/check-theme-literals.mjs']),
   run('raw pressable', 'node', ['scripts/check-raw-pressable.mjs']),
+  run('link opener', 'node', ['scripts/check-link-opener.mjs']),
   run('reuse', 'node', ['scripts/check-reuse.mjs']),
   run('ui duplicates', 'node', ['scripts/check-ui-duplicates.mjs']),
   run('spacing literals', 'node', ['scripts/check-spacing-literals.mjs']),

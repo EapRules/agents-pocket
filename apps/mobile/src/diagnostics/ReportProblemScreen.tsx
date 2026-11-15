@@ -1,7 +1,7 @@
 import { t } from '@openagentspocket/i18n';
 import { Button, Card, Section, Text, ToggleRow } from '@openagentspocket/ui';
 import { useState } from 'react';
-import { Linking } from 'react-native';
+import { openExternally } from '@/links/openLink';
 import { AppScreen } from '@/navigation/AppScreen';
 import { appBuild } from './appBuild';
 import { type CrashStorage, readLastCrash } from './crashRecorder';
@@ -21,7 +21,7 @@ interface ReportProblemScreenProps {
 export function ReportProblemScreen({
   storage,
   build = appBuild(),
-  open = (url) => void Linking.openURL(url),
+  open = (url) => void openExternally(url),
 }: ReportProblemScreenProps) {
   const [crash] = useState(() => readLastCrash(storage));
   const [includeCrash, setIncludeCrash] = useState(true);

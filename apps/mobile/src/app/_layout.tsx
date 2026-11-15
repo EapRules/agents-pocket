@@ -14,6 +14,7 @@ import { ConnectionsProvider } from '@/connections/ConnectionsProvider';
 import { bindDemoModeStorage } from '@/connections/mode';
 import { recordUncaughtErrors } from '@/diagnostics/crashStorage';
 import { LaunchAnimation } from '@/launch/LaunchAnimation';
+import { AppLinkOpener } from '@/links/AppLinkOpener';
 import { useIncomingLinks } from '@/links/useIncomingLinks';
 import { useOpenAgent } from '@/links/useOpenAgent';
 import { LiveActivityActions } from '@/live-activity/LiveActivityActions';
@@ -58,7 +59,7 @@ function SettingsTheme({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider themeId={themeId}>
       <TerminalThemeProvider light={terminalThemeLight} dark={terminalThemeDark}>
-        {children}
+        <AppLinkOpener>{children}</AppLinkOpener>
       </TerminalThemeProvider>
     </ThemeProvider>
   );

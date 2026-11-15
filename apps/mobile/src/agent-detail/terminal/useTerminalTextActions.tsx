@@ -8,8 +8,8 @@ import {
   SelectTextSheet,
 } from '@openagentspocket/ui';
 import { useRef, useState } from 'react';
-import { Linking } from 'react-native';
 import { useConversationRegistry } from '@/conversations/useConversation';
+import { useOpenLink } from '@/links/useOpenLink';
 import { openLinkLabels, terminalSheetTitles } from '@/terminal/selectionLabels';
 import type { AgentTerminalSession } from './AgentTerminalSession';
 import { useTerminalMessageJump } from './useTerminalMessageJump';
@@ -26,6 +26,7 @@ export function useTerminalTextActions(
   program: string | null | undefined,
 ) {
   const registry = useConversationRegistry();
+  const openLink = useOpenLink();
   const jumpItems = useTerminalMessageJump(session, hostId, paneId, program);
   const index = useRef(new AttachLinkIndex());
   const [text, setText] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function useTerminalTextActions(
   };
   const open = (link: AttachLink) =>
     void openAttachLink(link.target, {
-      open: (target) => Linking.openURL(target).then(() => true),
+      open: openLink,
       copy: (target) => copyToClipboard(target, t('Copied')),
       labels: openLinkLabels(link.host),
     });

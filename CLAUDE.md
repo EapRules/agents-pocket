@@ -59,6 +59,7 @@ changes it everywhere. Judges reject duplication.
 - Screens (`apps/mobile/src/app/**`, `*Screen.tsx`) stay at 150 lines or fewer; any file at 400 or fewer (ratchet:
   `scripts/file-length-baseline.json` may only shrink; run `node scripts/check-file-length.mjs --update` after a split).
 - Every control starts from `Button` (`ActionMenuButton` for a menu); a row or card from `Tappable`, the base `Button` is built on. `scripts/check-raw-pressable.mjs` rejects anything else. A card starts from `Card` and every ui component needs a caller: `scripts/check-reuse.mjs` rejects a hand-drawn card radius and an unused component.
+- Links open through one path: `useOpenLink` (web links in a sheet, other schemes to the system) or `openExternally` from `apps/mobile/src/links`; ui components read `useLinkOpener`. The policy is `linkTarget` in core. `scripts/check-link-opener.mjs` rejects `Linking.openURL` and `openBrowserAsync` anywhere else.
 - Colors only from theme tokens (`useTheme()`); no hex/rgb literal in app or UI source.
 - Spacing and type sizes only from tokens (`t.spacing`, `airy`, a `Text` variant or `typography`); `scripts/check-spacing-literals.mjs`
   rejects a numeric padding, margin, gap or fontSize, and lists the few allowed design values with their reasons.
