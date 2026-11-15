@@ -161,17 +161,21 @@ so no program-specific branches.
   hunks.
 - [ ] **Waiting for the next store build** (branch `encryption-declaration`): the encryption declaration
   and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
-- [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
-  the publish script with the real R2 upload, the app side behind the official-build flag, the signing
-  certificate in the repo (the key is with the owner), the privacy policy and the store wording, a local
-  end-to-end on a Release simulator build, store build 1.0.1 (5) submitted with updates on, and the first real
-  update: manifest `80207f58` on beta only (2026-11-14), applied on the owner's iPhone from a TestFlight
-  install, with the server seeing that phone ask as `channel="beta"` and answer 204 once it ran the update.
-  The owner then chose **one channel** (ADR 0028, amendment): the beta channel and the Early Updates
-  setting are gone, the server ignores the old param, and an upload reaches every official build at once.
-  Left: the first update for everyone once 1.0.1 is approved, when the owner asks (it also removes the
-  Early Updates switch from builds that still show it). Not checked on a device: rollback after a crash
-  at launch, Android.
+- [x] **Over-the-air JS updates** (ADR 0028). Done: the update server, the publish script with the real R2
+  upload, the app side behind the official-build flag, the signing certificate in the repo (the key is with
+  the owner), the privacy policy and the store wording, a local end-to-end on a Release simulator build,
+  store build 1.0.1 (5) submitted with updates on, and a first real update applied on the owner's iPhone
+  (2026-11-14). Since 2026-11-15 (ADR 0028, "internal channel and staged rollout"): an internal channel,
+  a production rollout (start 10%, `rollout`, `stop`, `revert`), one command (`pnpm ota`), and CI that
+  holds no secret and prints an OTA verdict per push (`sourceFingerprint` in `docs/releases/builds.json`).
+- [ ] **Owner decides the privacy clause** for the update request (the install id and the channel), then
+  merge `internal-channel-app` (TestFlight installs ask for `internal`).
+- [ ] **On a real iPhone:** a TestFlight install asks for `internal` and an App Store install does not
+  (detection reads the StoreKit receipt name; unverified).
+- [ ] **On a device:** a `revert` (the device on the bad update takes the re-signed previous one), the
+  rollback after a crash at launch, and Android.
+- [ ] **First production update** waits for Apple's approval of 1.0.1 and the paste device check listed
+  above. It also removes the Early Updates switch from builds that still show it.
 
 ## 5. Needs the owner
 

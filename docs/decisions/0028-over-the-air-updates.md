@@ -1,7 +1,7 @@
 # 0028. Over-the-air JS updates: expo-updates, a signed static server on our Cloudflare account
 
 Status: accepted (2026-11-14). Researched 2026-11-13; the owner decided the open points on 2026-11-14
-(section "Decided") and later that day chose a single channel (section "Amendment: one channel"). Built: the update server (`packages/updates-server`), the publish script
+(section "Decided") and later that day chose a single channel (section "Amendment: one channel"); on 2026-11-15 he replaced that with an internal channel and a staged production rollout (section "Amendment: internal channel and staged rollout"). Built: the update server (`packages/updates-server`), the publish script
 (`scripts/publish-update.mjs`) with the real R2 upload, the Worker's deploy script, and the app side;
 how to use them is in the [updates guide](../guides/updates.md). Since then (2026-11-14): the
 signing key exists with the owner, the Worker is deployed, store build 1.0.1 (5) carries `expo-updates`, and
@@ -366,6 +366,32 @@ the plan ("beta channel only, then everyone").
 - **Left in the bucket:** the retired pointer `channels/ios/84ef6352…/beta` and the objects of that
   update. Nothing reads the pointer; the objects are content-addressed and are reused if the same bundle
   is published.
+
+## Amendment (owner, 2026-11-15): internal channel and staged rollout
+
+Two channels again, neither one chosen by the user. This supersedes "one channel" above.
+
+- **Channels.** `internal` is asked for only by installs from TestFlight and receives every verified push
+  to `main`. `production` is every App Store install.
+- **Why.** The one-channel amendment removed a user-facing switch and left no place to try an update before
+  all users got it. This keeps "no switch" and restores the place.
+- **Production is never automatic.** It is a promotion of the exact update the internal channel served
+  (same id). It starts at 10% and the owner raises it by hand. `stop` (0%) halts it. `revert` re-signs the
+  previous update as a newer one, because a device never goes back to an older `createdAt`: for a manifest,
+  its content with a new id and `createdAt`; for a directive or nothing, a new `rollBackToEmbedded`
+  (`packages/updates-server/README.md`, "Channels, rollout, revert").
+- **Signing and the log.** The signing key still never leaves the owner's machine and is never in GitHub;
+  CI only tests. Internal publishes therefore run on the owner's machine, after the push. The public log
+  `docs/releases/updates.jsonl` records production only.
+- **Rollout and privacy.** The rollout uses the random install id the update library already sends, hashed
+  in memory with the update id, never stored or logged.
+- **Risk accepted.** An internal update is signed with the same key and would be valid on any build. What
+  keeps it off store installs is the server's channel pointer, so a compromised server could serve it to
+  everyone. The signature still stops unsigned code.
+- **Open.** The app-side change that makes TestFlight installs ask for `internal` is on branch
+  `internal-channel-app`, not merged: the privacy policy's list of what an update request carries needs one
+  added clause first (owner's decision). Detection reads the StoreKit receipt name and is unverified on a
+  device.
 
 ## Not verified
 

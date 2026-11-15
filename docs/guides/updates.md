@@ -16,97 +16,81 @@ Pieces:
 | Released builds and their runtime versions | `docs/releases/builds.json` (appended by `scripts/release-ios.mjs`) | No |
 | Public log of published updates | `docs/releases/updates.jsonl` (appended by a real upload) | No |
 
-Status (2026-11-14): everything here is built and deployed. The signing key is with the owner, the
-Worker runs on the update domain, store build 1.0.1 (5) has updates on, and the first real update was
-uploaded and applied on a phone. There is **one channel**: an upload reaches every official build with
-that runtime at once, with no step in between (ADR 0028, "Amendment: one channel"). iOS only; Android
-stays off until its client is verified on a device.
+Status (2026-11-15): everything here is built and deployed. The signing key is with the owner, the
+Worker runs on the update domain, store build 1.0.1 (5) has updates on, and a first real update was
+applied on a phone. There are **two channels, neither chosen by the user** (ADR 0028, "Amendment:
+internal channel and staged rollout"): `internal` is asked for only by TestFlight installs and gets every
+verified push to `main`; `production` is every App Store install, and gets an update only when the owner
+promotes it. iOS only; Android stays off until its client is verified on a device.
 
-## Publish
+## The one command
 
-From a clean `main`, level with `origin/main`, on the owner's machine:
-
-```sh
-# 1. Build, sign and verify a bundle. Uploads nothing.
-node scripts/publish-update.mjs --key /path/outside/the/repo/updates-key.pem \
-  --base-url https://<update domain>
-```
-
-What it does, in order, stopping at the first problem:
-
-1. Refuses unless on `main`, with nothing uncommitted, level with `origin/main` (the same check
-   `release-ios.mjs` makes; shared code in `scripts/lib/git-state.mjs`).
-2. Computes the runtime version as expo-updates does for a store build (fingerprint policy,
-   `APNS_ENVIRONMENT=production`) and refuses it unless `docs/releases/builds.json` records a build
-   with it: an update must only target a binary that exists.
-3. Loads the certificate (`--cert`, default `apps/mobile/certs/updates.pem`): RSA, code signing usage,
-   not expired. Loads the key from `--key`: a file path only (never key text, never an environment
-   variable, never a path inside the repository), held in memory, never printed or copied. Refuses a
-   key that is not the certificate's.
-4. Prints the commits since the last update for this runtime (from the public log).
-5. Runs `pnpm test` (`--skip-tests` to skip, as `release-ios.mjs` allows).
-6. `npx expo export --platform ios --output-dir <temp> --clear` in `apps/mobile` (Hermes bytecode).
-7. Builds the manifest (ADR 0028; field by field in `packages/updates-server/publish/manifest.js`),
-   with the public Expo config as `extra.expoClient` (the app reads `Constants.expoConfig` from it while
-   it runs the update) and the commit as `extra.commit`.
-8. Signs it (RSA-SHA256 over the exact bytes), verifies the signature against the certificate
-   before writing anything, writes `build/updates/<id>/`, then verifies the written bundle as the app
-   would (signature, runtime version, every asset's hash, `createdAt` newer than the last update).
+Run it on the owner's machine, from a clean `main` level with `origin/main`, after the push. The signing
+key never leaves that machine and is never in GitHub, so internal publishes are not run by CI.
 
 ```sh
-# 2. Re-check a bundle that is not published yet
-node scripts/publish-update.mjs verify build/updates/<id>
-
-# 3. Upload: separate and explicit. Look at the plan first, then upload. It reaches everyone.
-node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
-  --base-url https://<update domain> --dry-run
-node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
-  --base-url https://<update domain>
-git add docs/releases/updates.jsonl && git commit -m "Updates: manifest <id> published" && git push origin main
-
-# 4. Check what the server serves, as the app would (the upload already did once)
-node scripts/publish-update.mjs verify --url https://<update domain>/manifest
+pnpm ota                              # build, sign, verify and upload to internal (TestFlight installs)
+pnpm ota --production [--rollout N] --yes   # promote the update internal served; starts at 10% unless N
+pnpm ota rollout <percent>            # change production's percent (100 finishes it)
+pnpm ota stop                         # production to 0%: nobody new gets it
+pnpm ota revert --yes                 # back to the previous production update, for everyone
+pnpm ota status                       # what internal and production serve, and the rollout percent
 ```
 
-There is no beta step, so run "Test locally" below before an upload that changes more than copy: it is
-the only place an update runs on a device build before users get it. `--channel` and `--skip-beta` are
-refused with a message (there is one channel).
+Every form takes `--dry-run`, which prints what it would do and writes nothing.
 
-What the upload does (`packages/updates-server/publish/publish-upload.js` and `upload.js`), stopping at
-the first problem, with nothing written before the first write:
+- **Internal** is never logged and has no rollout. Try the update on a TestFlight install first.
+- **Production is a promotion of the exact update internal served** (same id), never a new build. It
+  starts at 10% and is raised by hand with `rollout`. A new production upload is refused while the current
+  one is below 100%: finish it (`rollout 100`) or `revert` first.
+- **`revert` signs**, so it needs the key. A device never loads an update with an older `createdAt`, so
+  the pointer cannot just move back: `revert` re-signs the previous update as a new one (new id,
+  `createdAt` now). When the previous was the embedded bundle it publishes a `rollBackToEmbedded`
+  directive. Details: `packages/updates-server/README.md`, "Channels, rollout, revert".
+- **The log** `docs/releases/updates.jsonl` records production only (uploads and reverts). After a
+  production step the command prints the git commands to commit and push the new line; it never commits or
+  pushes. Commit and push it before the next production step: the upload compares the bucket with it.
 
-1. Refuses a `--local-test` bundle for `r2`, and a bundle that fails `verify` (signature, released
-   runtime, asset hashes, already published, not newer than the last update for that runtime).
-2. With `--base-url`, refuses a bundle whose asset URLs point at another server.
-3. `--dry-run` stops here: it prints every object it would write and the pointer change (from the log's
-   last entry for that runtime) and reads or writes nothing in any bucket.
-4. Reads the pointer and refuses when it names something other than what the log's last entry says (an
-   upload that was never logged, or a log that is behind: add the missing line from the bundle's
-   `log-entry.json` plus `uploadedAt`, then retry).
-5. Writes each asset (`assets/<sha256>`), then `updates/<id>/body` and `updates/<id>/signature`. An object
-   already present is skipped when its SHA-256 matches and refused when it does not: nothing is ever
-   overwritten.
-6. Reads back every object it wrote and compares SHA-256 (assets through the deployed Worker with
-   `--base-url`, which also checks their content type; otherwise `wrangler r2 object get`). A failure
-   stops before the pointer: the server keeps serving what it served.
-7. Writes the pointer, last. With `--base-url` it then asks `/manifest` as the app would and requires
-   this exact update; if that fails it puts the previous pointer back (or removes the new one when
-   there was none) and stops.
-8. Appends the entry to `docs/releases/updates.jsonl` and prints the git commands to commit and push it.
-   It never commits or pushes. **Commit and push the log line before the next upload**: step 4 compares
-   the bucket with it.
+What happens on the way, stopping at the first problem: it refuses unless on `main`, clean and level with
+`origin/main`; computes the runtime version and refuses it unless `docs/releases/builds.json` records a
+build with it (an update must only target a binary that exists); loads the certificate and the key (a file
+path outside the repository, held in memory, never printed); runs `pnpm test`; exports the bundle; builds
+and signs the manifest; verifies it as the app would (signature, runtime, asset hashes, `createdAt` newer
+than the last update); then uploads assets first, the signed body and signature next and the channel
+pointer last, reads everything back, asks the deployed Worker as a device would, and puts the previous
+pointer back if the answer is wrong. Nothing is ever overwritten.
 
-The log's first line carries `"channel":"beta"`: the test update of 2026-11-14, from when there were two
-channels. Lines are never rewritten; readers skip that one (`isRetiredChannelEntry`), and its pointer in
-the bucket (`channels/ios/<runtime>/beta`) is read by nothing.
+The same steps are available one by one in `scripts/publish-update.mjs` (`--upload`, `verify`, `rollout`,
+`revert`, `rollback`); its flags are in `packages/updates-server/README.md`. `--target local` runs the
+same code against the local bucket ("Test locally").
 
 `--target r2` runs `npx wrangler r2 object get|put|delete <bucket>/<key> --remote` (wrangler 4, which
 reads local storage unless told `--remote`). The repository does not pin wrangler; `npx` uses the
 `wrangler` on your PATH or fetches the latest 4.x. It authenticates as wrangler does: the session
 `npx wrangler login` left, or `CLOUDFLARE_API_TOKEN` in your shell. If your login sees more than one
 account, set `CLOUDFLARE_ACCOUNT_ID` in the shell or `"accountId"` in `packages/updates-server/deploy.local.json`.
-Nothing is printed but wrangler's own error text on a failure. `--target local` is the same code against
-the local bucket `wrangler dev` serves ("Test locally").
+Nothing is printed but wrangler's own error text on a failure.
+
+The log's first line carries `"channel":"beta"`: the test update of 2026-11-14, from the first two-channel
+design. Lines are never rewritten; readers skip that one (`isRetiredChannelEntry`), and its pointer in the
+bucket (`channels/ios/<runtime>/beta`) is read by nothing.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request to `main`, with read-only
+repository permissions and no secret. Two jobs:
+
+- **test**: the static gates (`node scripts/verify-fast.mjs --static`) and `pnpm test`.
+- **ota-verdict** (macOS, because the released fingerprints were computed there):
+  `node scripts/ci-ota-verdict.mjs`. It computes the iOS native-inputs fingerprint of the commit and
+  compares it with the `sourceFingerprint` of each build in `docs/releases/builds.json` (the runtime
+  version without the Apple team id, which a clean checkout lacks). `release-ios.mjs` now records
+  `sourceFingerprint` next to `runtimeVersion` for every build.
+
+Read the verdict in the job log or the run's summary page: **Can ship over the air** names the newest
+released build that runs these native inputs; **Needs a store build** lists the fingerprints released
+builds have. Both exit 0; the job fails only when the computation itself fails. CI never publishes: it
+cannot, it holds no key.
 
 ## Owner steps
 
@@ -165,23 +149,14 @@ Everything that needs the key, the Cloudflare account or a store submission, in 
 
 ## Roll back
 
-Prefer **republishing the last good code**. Publishing runs only from `main`, so revert the bad
-change on `main` (`git revert`), push, and publish. The new update has a
+Use `pnpm ota stop` to halt a production rollout in progress (0%: nobody new gets it; devices already
+on it keep it), and `pnpm ota revert --yes` to take everyone back to the previous production update. Or
+revert the bad change on `main`, push, and promote a new update. Every path publishes something with a
 newer `createdAt`, so every device takes it on its next launch.
 
-Emergency, when no fix can be built quickly: a signed `rollBackToEmbedded` directive sends devices
-back to the JS inside their binary:
-
-```sh
-node scripts/publish-update.mjs rollback --key /path/outside/the/repo/updates-key.pem
-node scripts/publish-update.mjs --upload build/updates/<id> --target r2 \
-  --base-url https://<update domain>
-# commit and push docs/releases/updates.jsonl as the upload prints
-```
-
 Expo warns that the embedded JS may not read state a newer update wrote
-([error recovery](https://docs.expo.dev/eas-update/error-recovery/)). A later normal update replaces the
-directive (newer `createdAt`).
+([error recovery](https://docs.expo.dev/eas-update/error-recovery/)), which matters when a revert goes
+back to the embedded bundle.
 
 A crash at launch already rolls a device back by itself (the client marks the update failed and goes
 back to the last one that launched), but only for a fatal JS error before the first render is reported.
@@ -307,8 +282,10 @@ prebuild does.
 - `apps/mobile/src/updates/appUpdates.ts`: the `AppUpdates` interface over `expo-updates`, with a fake
   (`fakeUpdatesApi`) and `disabledUpdates`; `deviceUpdates.ts` loads the native module lazily and never on
   web. Tests run with updates off (`jest.setup.js`), as a build from source does.
-- No channel: the app sends none and has no setting for one. Builds up to 1.0.1 (5) still show an
-  "Early Updates" switch until they run newer JS; it sends `channel=beta`, which the server ignores.
+- No channel setting: the user chooses nothing. Builds up to 1.0.1 (5) still show an "Early Updates"
+  switch until they run newer JS; it sends `channel=beta`, which the server serves production. The
+  change that makes TestFlight installs ask for `internal` is on branch `internal-channel-app`, not merged
+  (it waits on one added clause in the privacy policy; ADR 0028, "Amendment: internal channel").
 - **Update** row (Settings, About; only when the build has updates): "Built In" for the binary's own JS, or the running update's
   first 8 id characters as the value with its date as the row's second line (both on one line were cut
   on a phone); the Report a Problem text carries both as `- Update: <id> (<date>)`.
