@@ -10,6 +10,10 @@ export { type ChoiceOption, ChoiceSheet } from './components/ChoiceSheet';
 export { CommandBlock } from './components/CommandBlock';
 export * from './components/chatRows';
 export * from './components/composerExtras';
+export {
+  ComposerRoomProvider,
+  composerPanelMaxHeight,
+} from './components/composerPanelRoom';
 export * from './components/homeShell';
 export * from './components/hostsSettingsFiles';
 export { ImageAnnotator } from './components/ImageAnnotator';

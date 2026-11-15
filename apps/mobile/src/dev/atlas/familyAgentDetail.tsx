@@ -1,7 +1,7 @@
 // Atlas entries of the agent detail family (agent-detail.*). Owned by its UX family task, so parallel tasks never edit the same registry file.
 import { chatCommands, makeSkill, sendPolicyFor, slashPanel } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import { ComposerCard } from '@openagentspocket/ui';
+import { ComposerCard, ComposerRoomProvider } from '@openagentspocket/ui';
 import { Stack } from 'expo-router';
 import { AgentDetailScreen } from '@/agent-detail/AgentDetailScreen';
 import { slashRows } from '@/agent-detail/composer/useSlashPanel';
@@ -20,6 +20,21 @@ import {
 import type { AtlasEntry } from './entries';
 
 /** The Agent detail in a fixed state: Agent pane, surface, and what is pressed after it settles. */
+/** A phone keyboard's height (portrait, with the home strip). */
+const SIMULATED_KEYBOARD = 336;
+
+/** Draws the state as if the keyboard were up (web has none): the panel's cap reads this height. */
+function withKeyboard(entry: AtlasEntry): AtlasEntry {
+  return {
+    ...entry,
+    render: () => (
+      <ComposerRoomProvider top={0} keyboardHeight={SIMULATED_KEYBOARD}>
+        {entry.render()}
+      </ComposerRoomProvider>
+    ),
+  };
+}
+
 function detail(
   pane: 'p1' | 'p2' | 'p4' | 'p5',
   surface: 'chat' | 'terminal',
@@ -253,6 +268,9 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.composer-more-menu': detail('p4', 'terminal', ['composer-input', 'composer-more']),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
   'rn.composer-shortcuts-panel': detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
+  'rn.composer-shortcuts-keyboard': withKeyboard(
+    detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
+  ),
   'agent-detail.header-more-menu': detail('p2', 'chat', ['agent-header-more']),
   'agent-detail.session-drawer': detail('p2', 'chat', ['agent-header-sidebar']),
   'agent-detail.session-drawer--agents': detail('p2', 'chat', ['agent-header-sidebar']),

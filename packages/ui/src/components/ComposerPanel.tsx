@@ -5,12 +5,7 @@ import { Tappable } from '../primitives/Tappable';
 import { Text } from '../primitives/Text';
 import { airy } from '../theme/metrics';
 import { makeStyles } from '../theme/theme';
-
-/**
- * The panel takes at most this share of the window, so the input and the keyboard stay usable over
- * a list of dozens; its rows scroll inside it.
- */
-const MAX_SHARE = 0.3;
+import { PANEL_HEAD, PANEL_MAX_SHARE } from './composerPanelRoom';
 
 const CLOSE_SIZE = 32;
 const ROW_ICON = 20;
@@ -77,6 +72,11 @@ export interface ComposerPanelProps {
   testID: string;
   /** The prefix of the sections and rows (default: the panel's testID). */
   idPrefix?: string;
+  /**
+   * The panel's tallest height, head included (`composerPanelMaxHeight`: what the room under the
+   * header and over the keyboard allows). Default: its share of the window; its rows scroll inside.
+   */
+  maxHeight?: number;
 }
 
 function Heading({ title }: { title: string }) {
@@ -100,6 +100,7 @@ export function ComposerPanel({
   resetKey,
   testID,
   idPrefix = testID,
+  maxHeight,
 }: ComposerPanelProps) {
   const styles = useStyles();
   const shown = sections.filter((section) => section.rows.length > 0);
@@ -118,7 +119,13 @@ export function ComposerPanel({
           <Icon name="close" size={16} />
         </Tappable>
       </View>
-      <BoundedScroll share={MAX_SHARE} resetKey={resetKey} spaced={false} testID={`${testID}-list`}>
+      <BoundedScroll
+        share={PANEL_MAX_SHARE}
+        maxHeight={maxHeight === undefined ? undefined : maxHeight - PANEL_HEAD}
+        resetKey={resetKey}
+        spaced={false}
+        testID={`${testID}-list`}
+      >
         {shown.map((section, index) => (
           <View key={section.key} testID={`${idPrefix}-${section.key}-section`}>
             {index > 0 ? (

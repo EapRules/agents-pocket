@@ -23,7 +23,8 @@ appId: com.openagentspocket.app
 # "..." is a panel over the Composer: its first row shows, the rest scroll inside it, the keyboard
 # stays up.
 - extendedWaitUntil:
-    visible: "Back to Console"
+    visible:
+      id: composer-more-back
     timeout: 4000
 - takeScreenshot: design/atlas/sim/10-agent-menu
 # The program's shortcuts open from their own circle, after more; one panel is open at a time, so
@@ -32,6 +33,7 @@ appId: com.openagentspocket.app
     id: composer-shortcuts
     retryTapIfNoChange: false
 - extendedWaitUntil:
-    visible: "Interrupt"
+    visible:
+      id: composer-shortcuts-panel-list
     timeout: 4000
 - takeScreenshot: design/atlas/sim/10-agent-shortcuts

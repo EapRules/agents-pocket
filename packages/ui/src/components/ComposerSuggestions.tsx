@@ -23,6 +23,8 @@ interface Props {
   closeLabel: string;
   onClose: () => void;
   testID: string;
+  /** `ComposerPanel`'s `maxHeight`. */
+  maxHeight?: number;
 }
 
 const asRow = (row: ComposerSkill, onPick?: (name: string) => void): ComposerPanelRow => ({
@@ -38,7 +40,14 @@ const asRow = (row: ComposerSkill, onPick?: (name: string) => void): ComposerPan
  * The Composer's `/` list: a use of `ComposerPanel`. Each non-empty section under its heading
  * (commands, then skills), the first heading pinned beside Close.
  */
-export function ComposerSuggestions({ sections, query, closeLabel, onClose, testID }: Props) {
+export function ComposerSuggestions({
+  sections,
+  query,
+  closeLabel,
+  onClose,
+  testID,
+  maxHeight,
+}: Props) {
   const shown = sections.filter((section) => section.rows.length > 0);
   const [first] = shown;
   if (!first) return null;
@@ -55,6 +64,7 @@ export function ComposerSuggestions({ sections, query, closeLabel, onClose, test
       resetKey={query}
       testID={`${testID}-skills`}
       idPrefix={testID}
+      maxHeight={maxHeight}
     />
   );
 }

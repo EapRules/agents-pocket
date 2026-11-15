@@ -3,13 +3,18 @@
 appId: com.openagentspocket.app
 ---
 - runFlow: _demo.yaml
-- openLink: openagentspocket:///__atlas/agent-detail.chat
+- tapOn:
+    id: inbox-p2
 - extendedWaitUntil:
     visible:
-      id: composer-card-input
+      id: agent-header-sidebar
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: composer-input
     timeout: 15000
 - tapOn:
-    id: composer-card-input
+    id: composer-input
 - inputText: "First line of a long draft"
 - takeScreenshot: design/atlas/sim/22-composer-grows-one
 - inputText: "\nSecond line\nThird line\nFourth line"

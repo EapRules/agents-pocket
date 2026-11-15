@@ -14,6 +14,7 @@ import { type AgentBarLabels, defaultAgentBarLabels } from './agentBarLabels';
 import { ComposerPanel } from './ComposerPanel';
 import { type ComposerSkill, ComposerSuggestions } from './ComposerSuggestions';
 import { menuPanelSections } from './composerMenuPanel';
+import { useComposerPanelMax } from './composerPanelRoom';
 import { KeyboardDismissButton } from './KeyboardDismissButton';
 
 const CIRCLE = 40;
@@ -216,6 +217,8 @@ export function ComposerCard({
   const styles = useStyles();
   const theme = useTheme();
   const [dismissed, setDismissed] = useState(false);
+  const [fieldHeight, setFieldHeight] = useState(0);
+  const panelMax = useComposerPanelMax(fieldHeight);
   const [focused, setFocused] = useState(false);
   // The one panel open at a time; the `/` list takes precedence over it.
   const [open, setOpen] = useState<MenuPanel | null>(null);
@@ -334,6 +337,7 @@ export function ComposerCard({
           closeLabel={labels.closeSkills}
           onClose={() => setDismissed(true)}
           testID={testID}
+          maxHeight={panelMax}
         />
       ) : null}
       {panel && panelItems?.length ? (
@@ -344,9 +348,13 @@ export function ComposerCard({
           onClose={() => setOpen(null)}
           testID={`${testID}-${panel}-panel`}
           idPrefix={`${testID}-${panel}`}
+          maxHeight={panelMax}
         />
       ) : null}
-      <View style={stacked ? styles.stack : styles.oneLine}>
+      <View
+        style={stacked ? styles.stack : styles.oneLine}
+        onLayout={(event) => setFieldHeight(event.nativeEvent.layout.height)}
+      >
         <View style={[styles.buttons, stacked && styles.pinLeft]}>
           {plus}
           {leadingMark}

@@ -327,6 +327,11 @@
     "note": "RN-only state: the Agent's shortcuts as a panel over the Composer (Swift opens a menu); the + and ... panels are agent-detail.composer-add-menu and -more-menu"
   },
   {
+    "id": "rn.composer-shortcuts-keyboard",
+    "rn": "ComposerCard (ComposerPanel)",
+    "note": "RN-only state: the shortcuts panel with a simulated keyboard height; the panel's cap follows the room left (web does not shrink the screen)"
+  },
+  {
     "id": "rn.composer-long-draft",
     "rn": "ComposerCard (stacked input)",
     "note": "RN-only state: a four-line draft, the field grows with it"

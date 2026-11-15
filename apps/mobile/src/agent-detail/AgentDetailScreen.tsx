@@ -2,6 +2,7 @@ import type { ConsoleRow, KeyValueStorage } from '@openagentspocket/core';
 import {
   type ActionMenuItem,
   airy,
+  ComposerRoomProvider,
   EdgeFade,
   makeStyles,
   useChromeInsets,
@@ -75,8 +76,6 @@ export function AgentDetailScreen({
   useFocusDone(hostId, paneId, row?.agent.agent_status === 'done');
   const composer = useAgentComposer(hostId, paneId, row?.agent.agent_status ?? 'unknown', storage);
   if (!row) return <AgentUnavailable gone={phase === 'gone'} hostId={hostId} />;
-  const status = statusDot(row.agent.agent_status);
-  const toggle = () => setSurface(surface === 'chat' ? 'terminal' : 'chat');
   return (
     <DetailUiProvider hostId={hostId} paneId={paneId}>
       <BlockedCardProvider
@@ -93,55 +92,57 @@ export function AgentDetailScreen({
           onSelect={onSwitch}
           onHome={onHome}
         >
-          <AppScreen scroll={false} bare bottomBar keyboardAvoiding testID="agent-detail">
-            <View style={styles.fill} testID={`slot-${surface}`}>
-              <DetailSlot
-                hostId={hostId}
-                paneId={paneId}
-                program={row.agent.agent}
-                surface={surface}
-                activity={activityOf(row)}
-                messages={composer.snapshot.messages}
-                composer={composer.store}
-                headerHeight={headerHeight}
-                onShowTerminal={() => setSurface('terminal')}
-                visit={visit}
-              />
-              {surface === 'chat' ? (
-                <EdgeFade height={headerHeight + HEADER_FADE} solidHeight={headerHeight} />
-              ) : null}
-              <View
-                style={styles.header}
-                pointerEvents="box-none"
-                onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
-              >
-                <AgentHeader
-                  row={row}
-                  rows={rows}
-                  onSwitch={onSwitch}
+          <ComposerRoomProvider top={headerHeight}>
+            <AppScreen scroll={false} bare bottomBar keyboardAvoiding testID="agent-detail">
+              <View style={styles.fill} testID={`slot-${surface}`}>
+                <DetailSlot
+                  hostId={hostId}
+                  paneId={paneId}
+                  program={row.agent.agent}
                   surface={surface}
-                  onSurface={setSurface}
-                  onSidebar={() => setDrawer(true)}
-                  onHome={onHome}
-                  menu={menu}
-                  onOpenChanges={onOpenChanges}
-                  stale={phase === 'stale'}
-                  latencyMs={latency}
+                  activity={activityOf(row)}
+                  messages={composer.snapshot.messages}
+                  composer={composer.store}
+                  headerHeight={headerHeight}
+                  onShowTerminal={() => setSurface('terminal')}
+                  visit={visit}
+                />
+                {surface === 'chat' ? (
+                  <EdgeFade height={headerHeight + HEADER_FADE} solidHeight={headerHeight} />
+                ) : null}
+                <View
+                  style={styles.header}
+                  pointerEvents="box-none"
+                  onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+                >
+                  <AgentHeader
+                    row={row}
+                    rows={rows}
+                    onSwitch={onSwitch}
+                    surface={surface}
+                    onSurface={setSurface}
+                    onSidebar={() => setDrawer(true)}
+                    onHome={onHome}
+                    menu={menu}
+                    onOpenChanges={onOpenChanges}
+                    stale={phase === 'stale'}
+                    latencyMs={latency}
+                  />
+                </View>
+              </View>
+              <View style={[styles.dock, { paddingBottom: chrome.bottom }]}>
+                <DetailDock row={row} surface={surface} />
+                <AgentComposerBar
+                  composer={composer}
+                  surface={surface}
+                  program={row.agent.agent ?? 'unknown'}
+                  projectRoot={row.agent.cwd ?? undefined}
+                  status={statusDot(row.agent.agent_status)}
+                  onToggleSurface={() => setSurface(surface === 'chat' ? 'terminal' : 'chat')}
                 />
               </View>
-            </View>
-            <View style={[styles.dock, { paddingBottom: chrome.bottom }]}>
-              <DetailDock row={row} surface={surface} />
-              <AgentComposerBar
-                composer={composer}
-                surface={surface}
-                program={row.agent.agent ?? 'unknown'}
-                projectRoot={row.agent.cwd ?? undefined}
-                status={status}
-                onToggleSurface={toggle}
-              />
-            </View>
-          </AppScreen>
+            </AppScreen>
+          </ComposerRoomProvider>
         </AgentSessionDrawer>
       </BlockedCardProvider>
     </DetailUiProvider>

@@ -12,6 +12,8 @@ interface BoundedScrollProps {
   testID?: string;
   /** Of the window's height the content may take; the default leaves room under it. */
   share?: number;
+  /** An exact limit in points, which wins over `share` (a caller that knows the room left). */
+  maxHeight?: number;
   /** The content starts again at its top whenever this changes (a new filter query). */
   resetKey?: string;
   /** Children are spaced apart (default); rows that draw their own dividers turn it off. */
@@ -23,6 +25,7 @@ export function BoundedScroll({
   children,
   testID = 'bounded-scroll',
   share = WINDOW_SHARE,
+  maxHeight,
   resetKey,
   spaced = true,
 }: BoundedScrollProps) {
@@ -36,7 +39,7 @@ export function BoundedScroll({
   return (
     <ScrollView
       ref={scroll}
-      style={{ maxHeight: height * share, flexGrow: 0 }}
+      style={{ maxHeight: maxHeight ?? height * share, flexGrow: 0 }}
       contentContainerStyle={spaced ? styles.content : undefined}
       keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
