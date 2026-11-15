@@ -60,7 +60,7 @@ The relay wraps the envelope in a `mutable-content: 1` alert push with a
 generic fallback title/body (the app's service extension rewrites them after
 decrypting) and the `default` sound, and enforces Apple's 4 KB payload cap
 before forwarding. iOS plays nothing for an alert without a sound; with one,
-the user can still turn it off under Settings > Notifications > Agentico.
+the user can still turn it off under Settings > Notifications > Agents Pocket.
 
 #### FCM (`platform: "android"`)
 
@@ -167,7 +167,7 @@ FCM assertion and access-token cache, and the rate-limit windows.
 
 ## Deploy
 
-OpenAgentsPocket's default relay URL is `https://relay.openagentspocket.com`, the
+Agents Pocket's default relay URL is `https://relay.openagentspocket.com`, the
 Cloudflare Worker `openagentspocket-relay` the project deploys. A self-hosted copy answers on
 workers.dev, or on your own domain via `domains`; set that origin as the app's Custom Push Relay. The same Worker serves the app's
 privacy policy at `GET /privacy` (`src/privacy.js`, contact from the

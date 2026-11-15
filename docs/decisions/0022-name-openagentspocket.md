@@ -37,3 +37,13 @@ assets (iOS icon, Android adaptive foreground/background/monochrome, splash) bef
 "OpenAgentsPocket" truncates under the icon on both platforms ("OpenAgentsPo…" on iOS, "OpenAgents…" on
 Android), so the app's display name (`expo.name`: CFBundleDisplayName and the Android label) is "Agents Pocket".
 The store listings, README and in-app title keep the full name OpenAgentsPocket.
+
+## Amendment (2026-11-15): the product name
+
+- The product is "Agents Pocket" wherever a person reads: prose, comments in docs, examples. This matches the store
+  listing and the home-screen label. "OpenAgentsPocket" and "Agentico" are not used as the product's name in new
+  text; "Agentico" may still name the earlier Swift app.
+- `openagentspocket` stays as the technical namespace (domain, bundle id, npm scope, Cloudflare names); `agentico`
+  stays where it is a persistent identifier (plugin id, URL scheme, storage keys, `AGENTICO_*` markers, i18n catalog
+  keys from the Swift app).
+- The repository moved from `openagentspocket/openagentspocket` to `EapRules/agents-pocket`; the old path redirects.

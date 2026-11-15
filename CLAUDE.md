@@ -1,8 +1,8 @@
-# OpenAgentsPocket (React Native) - start here
+# Agents Pocket (React Native) - start here
 
 Mobile companion for herdr (agent console over SSH). Expo SDK 58, React Native 0.88.1, React 19.3.0,
-TypeScript strict, pnpm 11 workspaces. Pre-alpha. Where the work stands: [docs/roadmap.md](docs/roadmap.md)
-("Now / RESUME HERE"). Decisions: [docs/decisions](docs/decisions). Behavior spec: [docs/spec/parity.md](docs/spec/parity.md).
+TypeScript strict, pnpm 11 workspaces. Pre-alpha. Where the work stands: [docs/todo.md](docs/todo.md) (the live list, groups in
+priority order), then [docs/roadmap.md](docs/roadmap.md) ("Now / RESUME HERE"). Decisions: [docs/decisions](docs/decisions). Behavior spec: [docs/spec/parity.md](docs/spec/parity.md).
 
 ## Layout
 
@@ -39,6 +39,9 @@ TypeScript strict, pnpm 11 workspaces. Pre-alpha. Where the work stands: [docs/r
 
 ## Rules
 
+- Naming: the product is "Agents Pocket" wherever a person reads (prose, doc comments, examples). `openagentspocket` stays as
+  the technical namespace (domain, bundle id, npm scope, Cloudflare names); `agentico` stays where it is a persistent identifier (plugin id,
+  URL scheme, storage keys, `AGENTICO_*` markers, i18n catalog keys). "OpenAgentsPocket" and "Agentico" are not the product's name in new text.
 - Reuse first: search `packages/ui` exports before writing any UI. Add a primitive there if a second screen needs it.
 
 ## Reusable by default (Enzo, 2026-11-05: for everything that comes)

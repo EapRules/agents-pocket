@@ -159,8 +159,10 @@ so no program-specific branches.
   and delete the loose component (Moshi's viewer is side by side; ours is unified, as GitHub and Gerrit do
   on narrow screens). Ideas seen in competitors, not built: a "last turn only" scope and jumping between
   hunks.
-- [ ] **Waiting for the next store build** (branch `encryption-declaration`): the encryption declaration
+- [ ] **Waiting for the next store build** (branch `next-store-build`): the encryption declaration
   and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
+- [ ] Widgets, Live Activity and the notification fallback still say Agentico (native strings), fixed on
+  `next-store-build`.
 - [x] **Over-the-air JS updates** (ADR 0028). Done: the update server, the publish script with the real R2
   upload, the app side behind the official-build flag, the signing certificate in the repo (the key is with
   the owner), the privacy policy and the store wording, a local end-to-end on a Release simulator build,
@@ -187,8 +189,8 @@ so no program-specific branches.
   after pairing a first Host, the system prompt after it, and a push arriving without visiting Settings.
 - [ ] **What a simulator cannot do:** a push with the app closed, Approve from a notification, the Live
   Activity, for Codex and OpenCode (`docs/guides/device-test-codex-opencode.md`).
-- [ ] **Local `worktree-agent-*` branches.** Their work is on main by cherry-pick, so git only deletes them
-  by force.
+- [ ] Cloudflare Web Analytics is injected on the zone (site and relay /privacy); turn it off in the
+  dashboard.
 
 ## 6. Later (each needs a decision record first)
 
@@ -198,6 +200,7 @@ so no program-specific branches.
 - [ ] **iPad.**
 - [ ] **Approve without opening the app, and Apple Watch.**
 - [ ] **A bug hunt by zones** (planned, never run).
-- [ ] **State docs.** Archive `docs/tasks.yml` and `docs/PROGRESS.md`, bring CLAUDE.md's gate notes up to
-  date, add a map of `packages/core`.
+- [ ] **State docs.** Archive `docs/tasks.yml`, `docs/PROGRESS.md` and `docs/progress/` (blocked:
+  `scripts/progress.mjs` reads them and `verify-fast` runs `progress --check`; retire the script first), bring
+  CLAUDE.md's gate notes up to date, add a map of `packages/core`.
 - [ ] **Site:** remove the Windows installer while Windows Hosts are out of scope.

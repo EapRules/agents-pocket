@@ -1,6 +1,6 @@
-# How agents build agentico-app
+# How agents build Agents Pocket
 
-The operating manual for the agent swarm porting Agentico from Swift to React
+The operating manual for the agent swarm porting the earlier Swift app (Agentico) to React
 Native. Distilled from how Anthropic, OpenAI and Cursor run long agent teams:
 
 - Anthropic, [Building a C compiler with a team of parallel Claudes](https://www.anthropic.com/engineering/building-c-compiler):

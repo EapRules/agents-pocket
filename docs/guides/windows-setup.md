@@ -1,7 +1,7 @@
 # Windows Hosts
 
-OpenAgentsPocket reaches a native Windows machine over SSH. Windows Hosts are added by hand: in
-Hosts, tap Add Host and enter the address and login. Pairing by QR code and the Agentico plugin
+Agents Pocket reaches a native Windows machine over SSH. Windows Hosts are added by hand: in
+Hosts, tap Add Host and enter the address and login. Pairing by QR code and the Agents Pocket plugin
 are not available on native Windows.
 
 ## Requirements

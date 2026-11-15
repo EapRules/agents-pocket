@@ -310,7 +310,7 @@ Needed for Android push (Phase 5):
 
 Other host-visible facts for Android users (no code change): Tailscale VPN app users hit the same Tailscale-SSH-on-port-22
 rejection in pairing; `AllowStreamLocalForwarding` and `AllowTcpForwarding` requirements identical; plugin install
-step (`herdr plugin install <owner>/agentico-app --ref plugin`) still depends on the GitHub repo existing.
+step (`herdr plugin install EapRules/agents-pocket --ref plugin`) still depends on the GitHub repo existing.
 
 ---------------------------------------------------------------------------------------------------------------------
 ## 5. Dropped / deferred ledger (with reason)

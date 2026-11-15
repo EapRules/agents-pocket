@@ -64,7 +64,7 @@ and the board entry into the Agents presentation menu; keep Usage in the ring).
 
 ## Índigo adaptation
 
-- Title "Agentico" is the product name in Swift; RN shows the product name (`OpenAgentsPocket`) as a large inline title,
+- Title "Agentico" is the product name in Swift; RN shows the product name (`Agents Pocket`) as a large inline title,
   Índigo ink. Toolbar trailing: one glass capsule holding ring + gear (no server icon, no overflow).
 - Screen background = canvas + glow. Needs-you outline uses `statusBlocked` at 40%.
 - Ring colors: accent normal, `warning`, `danger` (thresholds in `UsageLimitLevel`; RN `meterColor`).
