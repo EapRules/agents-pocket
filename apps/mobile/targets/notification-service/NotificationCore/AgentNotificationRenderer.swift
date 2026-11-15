@@ -17,7 +17,7 @@ struct AgentNotificationAlert: Sendable, Equatable {
 /// attacker-chosen text (spec #68, user story 20).
 enum AgentNotificationRenderer {
     /// Mirrors the relay's generic wrap copy; deliberately unalarming.
-    static let fallback = AgentNotificationAlert(title: "Agentico", body: String(localized: "Agent update"))
+    static let fallback = AgentNotificationAlert(title: "Agents Pocket", body: String(localized: "Agent update"))
 
     static func alert(
         userInfo: [AnyHashable: Any], keys: [NotificationKeyRecord]
@@ -36,7 +36,7 @@ enum AgentNotificationRenderer {
     /// What the extension hands back to iOS: the push's content with the
     /// alert rewritten and the default sound set. iOS plays nothing for an
     /// alert without a sound (#468); with it, the user can still turn sounds
-    /// off under Settings > Notifications > Agentico.
+    /// off under Settings > Notifications > Agents Pocket.
     static func content(
         rewriting content: UNNotificationContent, keys: [NotificationKeyRecord]
     ) -> UNNotificationContent {

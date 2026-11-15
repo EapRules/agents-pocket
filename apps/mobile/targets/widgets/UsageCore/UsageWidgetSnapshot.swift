@@ -161,23 +161,25 @@ enum UsageExclusion: String, Codable, Equatable, Sendable {
         switch self {
         case .notConnected: String(localized: "Not connected")
         case .notReadYet: String(localized: "Not read yet")
-        case .needsPlugin: String(localized: "Needs the Agentico plugin")
+        case .needsPlugin: String(localized: "Needs the Agents Pocket plugin")
         case .notSupportedOnWindows: String(localized: "Not supported on Windows")
         case .noAgentActivity: String(localized: "No Agent activity yet")
-        case .updateAgentico: String(localized: "Update Agentico")
+        case .updateAgentico: String(localized: "Update Agents Pocket")
         case .couldNotRead: String(localized: "Could not read Usage")
         }
     }
 
-    /// The code for the English text an older snapshot stored.
+    /// The code for the English text an older snapshot stored, under the app's
+    /// former name or its current one: the app writes the text and updates
+    /// separately from the widgets.
     init?(legacyText: String) {
         switch legacyText {
         case "Not connected": self = .notConnected
         case "Not read yet": self = .notReadYet
-        case "Needs the Agentico plugin": self = .needsPlugin
+        case "Needs the Agentico plugin", "Needs the Agents Pocket plugin": self = .needsPlugin
         case "Not supported on Windows": self = .notSupportedOnWindows
         case "No Agent activity yet": self = .noAgentActivity
-        case "Update Agentico": self = .updateAgentico
+        case "Update Agentico", "Update Agents Pocket": self = .updateAgentico
         case "Could not read Usage": self = .couldNotRead
         default: return nil
         }

@@ -649,13 +649,13 @@
         }
       }
     },
-    "Needs the Agentico plugin" : {
+    "Needs the Agents Pocket plugin" : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Necesita el plugin de Agentico"
+            "value" : "Necesita el plugin de Agents Pocket"
           }
         }
       }
@@ -737,46 +737,46 @@
         }
       }
     },
-    "Open Agentico to answer on this network." : {
+    "Open Agents Pocket to answer on this network." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrí Agentico para responder en esta red."
+            "value" : "Abrí Agents Pocket para responder en esta red."
           }
         }
       }
     },
-    "Open Agentico to load Usage." : {
+    "Open Agents Pocket to load Usage." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrí Agentico para cargar Usage."
+            "value" : "Abrí Agents Pocket para cargar Usage."
           }
         }
       }
     },
-    "Open Agentico to read Usage Limits." : {
+    "Open Agents Pocket to read Usage Limits." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrí Agentico para leer los límites de uso."
+            "value" : "Abrí Agents Pocket para leer los límites de uso."
           }
         }
       }
     },
-    "Opens this Agent in Agentico" : {
+    "Opens this Agent in Agents Pocket" : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre este Agent en Agentico"
+            "value" : "Abre este Agent en Agents Pocket"
           }
         }
       }
@@ -913,13 +913,13 @@
         }
       }
     },
-    "The Host's key changed. Open Agentico." : {
+    "The Host's key changed. Open Agents Pocket." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La clave del Host cambió. Abrí Agentico."
+            "value" : "La clave del Host cambió. Abrí Agents Pocket."
           }
         }
       }
@@ -1023,13 +1023,13 @@
         }
       }
     },
-    "Update Agentico" : {
+    "Update Agents Pocket" : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Actualizar Agentico"
+            "value" : "Actualizar Agents Pocket"
           }
         }
       }

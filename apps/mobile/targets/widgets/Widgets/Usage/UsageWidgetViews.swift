@@ -253,10 +253,10 @@ struct UsageWidgetView: View {
     }
 
     private func message(_ scope: UsageWidgetScope?) -> String {
-        guard let scope else { return String(localized: "Open Agentico to load Usage.") }
+        guard let scope else { return String(localized: "Open Agents Pocket to load Usage.") }
         if scope.hostID != nil, let host = scope.excluded.first, let reason = host.excludedText {
-            return host.exclusion == .notReadYet ? String(localized: "Open Agentico to load Usage.") : reason
+            return host.exclusion == .notReadYet ? String(localized: "Open Agents Pocket to load Usage.") : reason
         }
-        return String(localized: "Open Agentico to load Usage.")
+        return String(localized: "Open Agents Pocket to load Usage.")
     }
 }

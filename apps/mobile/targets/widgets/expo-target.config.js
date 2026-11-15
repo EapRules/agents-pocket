@@ -6,7 +6,7 @@
 module.exports = {
   type: 'widget',
   name: 'widgets',
-  displayName: 'OpenAgentsPocket',
+  displayName: 'Agents Pocket',
   deploymentTarget: '18.0',
   frameworks: ['SwiftUI', 'WidgetKit', 'ActivityKit', 'AppIntents', 'Charts'],
   entitlements: {

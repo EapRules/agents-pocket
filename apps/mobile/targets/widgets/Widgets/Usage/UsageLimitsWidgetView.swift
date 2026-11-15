@@ -36,7 +36,7 @@ struct UsageLimitsWidgetView: View {
                 symbol: host?.exclusion == .notConnected ? "wifi.slash" : "gauge.with.dots.needle.50percent",
                 title: (host?.name ?? String(localized: "Usage Limits"), nil),
                 message: host.flatMap { $0.exclusion == .notReadYet ? nil : $0.excludedText }
-                    ?? String(localized: "Open Agentico to read Usage Limits."))
+                    ?? String(localized: "Open Agents Pocket to read Usage Limits."))
         }
     }
 

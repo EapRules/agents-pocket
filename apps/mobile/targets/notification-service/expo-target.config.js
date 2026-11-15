@@ -8,7 +8,7 @@
 module.exports = {
   type: 'notification-service',
   name: 'notification-service',
-  displayName: 'OpenAgentsPocket Notifications',
+  displayName: 'Agents Pocket Notifications',
   deploymentTarget: '18.0',
   entitlements: {
     'com.apple.security.application-groups': ['group.com.openagentspocket.app'],

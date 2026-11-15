@@ -265,7 +265,7 @@ struct AgentActivityApproval: Equatable, Sendable {
 }
 
 enum AgentActivityCopy {
-    static let genericAppName = "Agentico"
+    static let genericAppName = "Agents Pocket"
     // Governs the Dynamic Island expanded rows; the lock screen sizes itself
     // via `lockScreenAgents` instead.
     static let rowLimit = 3
