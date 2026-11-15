@@ -156,4 +156,4 @@ PERMISSIONS
 ENCRYPTION
 The app uses standard algorithms only (SSH through libssh2 and OpenSSL, AES-GCM for notification payloads). It is not distributed in France.
 
-The app is free and open source: https://github.com/openagentspocket/openagentspocket
+The app is free and open source: https://github.com/EapRules/agents-pocket

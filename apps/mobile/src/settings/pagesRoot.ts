@@ -5,7 +5,7 @@ import type { SettingsContext, SettingsPage, SettingsRow } from './schema';
 
 type Text = SettingsRow['title'];
 
-export const REPOSITORY_URL = 'https://github.com/openagentspocket/openagentspocket';
+export const REPOSITORY_URL = 'https://github.com/EapRules/agents-pocket';
 /** The site's privacy page (apps/site redirects it to the one policy the relay serves). */
 export const PRIVACY_POLICY_URL = 'https://openagentspocket.com/privacy';
 
