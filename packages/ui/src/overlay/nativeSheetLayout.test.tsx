@@ -8,6 +8,7 @@ import type { SheetDetent } from './sheetDetents';
 
 interface Seen {
   style?: unknown;
+  maxContentHeight?: number;
   children?: ReactNode;
   footer?: ReactElement;
   footerOptions?: { position?: string; avoidKeyboard?: boolean };
@@ -46,8 +47,21 @@ describe('NativeSheet content view', () => {
     },
   );
 
-  it('keeps its own height at the fit detent, which the sheet measures', async () => {
-    expect((await contentStyle('fit'))?.flex).toBeUndefined();
+  // The sheet measures a fit sheet's natural height on its own; the laid-out content must still
+  // stop at the sheet's height, or a list past the cap runs off the screen with nothing to scroll.
+  it('keeps its own height at the fit detent and shrinks to the capped sheet', async () => {
+    const style = await contentStyle('fit');
+    expect(style?.flex).toBeUndefined();
+    expect(style?.flexShrink).toBe(1);
+    expect(screen.getByTestId('sheet-surface').props.style).toMatchObject({ flexShrink: 1 });
+  });
+
+  it('caps only a fit sheet, below the screen', async () => {
+    await contentStyle('fit');
+    const cap = seen.at(-1)?.maxContentHeight;
+    expect(cap).toBeGreaterThan(0);
+    await contentStyle('large');
+    expect(seen.at(-1)?.maxContentHeight).toBeUndefined();
   });
 });
 

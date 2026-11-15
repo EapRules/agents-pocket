@@ -1,4 +1,4 @@
-import { DRAG_THRESHOLD, settleDetent } from './sheetDetents';
+import { DRAG_THRESHOLD, panelSize, settleDetent } from './sheetDetents';
 
 describe('settleDetent', () => {
   it('grows medium to large on a long upward drag', () => {
@@ -17,5 +17,22 @@ describe('settleDetent', () => {
   });
   it('a fast flick counts', () => {
     expect(settleDetent('medium', -10, -1)).toBe('large');
+  });
+});
+
+describe('panelSize', () => {
+  const shares = { min: 0.3, max: 0.92 };
+  it('a fit panel stops at the max share and shrinks when the room is smaller', () => {
+    const size = panelSize('fit', 1000, 0, shares);
+    expect(size.maxHeight).toBe(920);
+    expect(size.minHeight).toBe(300);
+    expect(size.flexShrink).toBe(1);
+    expect(size.height).toBeUndefined();
+  });
+  it('a fixed panel takes its height, grows with the drag up to the max share', () => {
+    expect(panelSize('medium', 1000, 0, shares).height).toBe(500);
+    expect(panelSize('medium', 1000, 100, shares).height).toBe(600);
+    expect(panelSize('large', 1000, 500, shares).height).toBe(920);
+    expect(panelSize({ fraction: 0.1 }, 1000, 0, shares).height).toBe(200);
   });
 });

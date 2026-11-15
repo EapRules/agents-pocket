@@ -14,7 +14,7 @@ import { continuousCurve } from '../theme/corners';
 import { useInsets } from '../theme/insets';
 import { makeStyles, useTheme } from '../theme/theme';
 import { SheetAlertHost, SheetBody } from './SheetBody';
-import { detentShare, useSheetDrag } from './sheetDetents';
+import { panelSize, useSheetDrag } from './sheetDetents';
 import type { SheetProps } from './sheetTypes';
 
 const useStyles = makeStyles((t) => ({
@@ -39,7 +39,6 @@ const useStyles = makeStyles((t) => ({
     alignSelf: 'center',
   },
   full: { width: '100%' },
-  fits: { maxHeight: '100%' },
   // Over the content, like the system's grabber: the header's top space (`sheetHeaderTop`) clears it.
   dragArea: {
     position: 'absolute',
@@ -68,13 +67,10 @@ export function JsSheet(props: SheetProps) {
   const { height } = useWindowDimensions();
   const drag = useSheetDrag(detent, onClose, visible);
   const live = drag.detent;
-  const share = detentShare(live);
-  const limit = height * metrics.sheetMaxShare;
-  const grown = Math.min(limit, Math.max(height * 0.2, height * share + drag.offset));
-  const size =
-    live === 'fit'
-      ? { maxHeight: height * share, minHeight: height * metrics.sheetMinShare }
-      : { height: grown };
+  const size = panelSize(live, height, drag.offset, {
+    min: metrics.sheetMinShare,
+    max: metrics.sheetMaxShare,
+  });
   // The Modal never animates itself (its slide would carry the scrim up with the panel): the scrim
   // fades and only the panel rises, on one progress value, for every sheet.
   const reduce = useReducedMotion();
@@ -136,7 +132,6 @@ export function JsSheet(props: SheetProps) {
             styles.panel,
             styles.full,
             size,
-            styles.fits,
             { paddingBottom: insets.bottom, transform: [{ translateY: rise }] },
           ]}
           accessibilityViewIsModal

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, type ViewProps } from 'react-native';
+import { PanResponder, type ViewProps, type ViewStyle } from 'react-native';
 import { metrics } from '../theme/metrics';
 
 /**
@@ -22,6 +22,26 @@ export function detentShare(detent: SheetDetent): number {
     return Math.min(DETENT_SHARE.large, Math.max(0.2, detent.fraction));
   }
   return DETENT_SHARE[detent];
+}
+
+/**
+ * The JS panel's size. A fixed detent takes its height (with the drag), never past the room left
+ * under the status bar. A fit sheet is as tall as its content between the min and max shares, and
+ * shrinks (its body scrolls) when the keyboard leaves less room: the max share stays the cap, so a
+ * long fit sheet stops where `large` does and leaves the scrim above it to tap.
+ */
+export function panelSize(
+  detent: SheetDetent,
+  windowHeight: number,
+  dragOffset: number,
+  shares: { min: number; max: number } = { min: metrics.sheetMinShare, max: metrics.sheetMaxShare },
+): ViewStyle {
+  const cap = windowHeight * Math.min(shares.max, detentShare(detent));
+  if (detent === 'fit') {
+    return { maxHeight: cap, minHeight: windowHeight * shares.min, flexShrink: 1 };
+  }
+  const grown = Math.min(windowHeight * shares.max, Math.max(windowHeight * 0.2, cap + dragOffset));
+  return { height: grown, maxHeight: '100%' };
 }
 
 /** A drag shorter than this (px) snaps back. */

@@ -1,5 +1,5 @@
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
-import { type ScrollView, StyleSheet, View } from 'react-native';
+import { type ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTheme } from '../theme/theme';
 import { loadTrueSheet, type TrueSheetDetent, type TrueSheetMethods } from './loadTrueSheet';
 import { SheetAlertHost, SheetBody } from './SheetBody';
@@ -7,12 +7,25 @@ import { SheetFooter } from './SheetContent';
 import type { SheetDetent } from './sheetDetents';
 import type { SheetProps } from './sheetTypes';
 
-/** `fit` is the content's height (the native `auto`, capped at the screen); the rest are fractions. */
+/** `fit` is the content's height (the native `auto`, capped by `nativeMaxHeight`); the rest are fractions. */
 export function nativeDetents(detent: SheetDetent, maxShare: number): TrueSheetDetent[] {
   if (detent === 'fit') return ['auto'];
   if (detent === 'medium') return [0.5];
   if (detent === 'large') return [maxShare];
   return [Math.min(maxShare, Math.max(0.2, detent.fraction))];
+}
+
+/**
+ * The tallest a sheet may be, for the native `auto` detent (it otherwise grows to the screen): the
+ * same height `large` asks for, so a long fit sheet stops where a large one does. A fixed detent
+ * needs none.
+ */
+export function nativeMaxHeight(
+  detent: SheetDetent,
+  windowHeight: number,
+  maxShare: number,
+): number | undefined {
+  return detent === 'fit' ? Math.round(windowHeight * maxShare) : undefined;
 }
 
 /**
@@ -24,6 +37,7 @@ export function NativeSheet(props: SheetProps) {
   const { visible, onClose, onDismissed, detent = 'fit', grabber = true, testID = 'sheet' } = props;
   const TrueSheet = loadTrueSheet();
   const { colors, metrics, radius } = useTheme();
+  const { height } = useWindowDimensions();
   const ref = useRef<TrueSheetMethods>(null);
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   // The sheet's own dismissal (a swipe) arrives after the fact: do not dismiss it twice.
@@ -41,13 +55,17 @@ export function NativeSheet(props: SheetProps) {
     }
   }, [visible]);
   if (!TrueSheet) return null;
-  const fill = detent === 'fit' ? undefined : styles.fill;
+  // Its content view is auto-height unless told: the flex surface below would collapse to nothing.
+  // A fit sheet's content shrinks instead: True Sheet measures the content's natural height apart
+  // (for `auto`), but the laid-out content must stop at the sheet's height, or a list taller than
+  // the cap is laid out at full length, its end below the screen with nothing left to scroll.
+  const fill = detent === 'fit' ? styles.shrink : styles.fill;
   return (
     <TrueSheet
       ref={ref}
-      // Its content view is auto-height unless told: the flex surface below would collapse to nothing.
       style={fill}
       detents={nativeDetents(detent, metrics.sheetMaxShare)}
+      maxContentHeight={nativeMaxHeight(detent, height, metrics.sheetMaxShare)}
       backgroundColor={colors.canvas}
       cornerRadius={radius.sheet}
       grabber={grabber}
@@ -91,6 +109,6 @@ export function NativeSheet(props: SheetProps) {
   );
 }
 
-const styles = StyleSheet.create({ fill: { flex: 1 } });
+const styles = StyleSheet.create({ fill: { flex: 1 }, shrink: { flexShrink: 1 } });
 
 const FOOTER_OPTIONS = { position: 'absolute', avoidKeyboard: true } as const;
