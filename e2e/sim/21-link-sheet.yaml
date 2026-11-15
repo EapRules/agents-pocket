@@ -1,0 +1,25 @@
+# A web link opens inside the app, in the system browser sheet, instead of leaving for another app
+# (one opener for every link: apps/mobile/src/links). The sheet's own Done button is the proof that
+# the page is the in-app browser and that the app is still in front.
+appId: com.openagentspocket.app
+---
+- runFlow: _demo.yaml
+- openLink: openagentspocket:///settings
+- assertVisible: "Settings"
+- scrollUntilVisible:
+    element:
+      id: settings.about.privacyPolicy
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 100
+- tapOn:
+    id: settings.about.privacyPolicy
+- extendedWaitUntil:
+    visible: "Done"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: design/atlas/sim/21-link-sheet
+- tapOn: "Done"
+- assertVisible:
+    id: settings.about.privacyPolicy
+- runFlow: _guard.yaml
