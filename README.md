@@ -1,11 +1,34 @@
-# Agents Pocket
+<p align="center">
+  <a href="https://openagentspocket.com">
+    <img src="docs/readme/site.jpg" alt="Agents Pocket: your coding agents, in your pocket" width="100%">
+  </a>
+</p>
 
-Agents Pocket is a phone companion for [herdr](https://herdr.dev). It shows the coding agents running on your own
-computers, lets you read their chat, answer and approve what they ask, and open a terminal on the same session.
-The app talks to your computers (Hosts) over SSH. There are no accounts. It is free and open source.
+<h1 align="center">Agents Pocket</h1>
 
-[App Store](https://apps.apple.com/app/id6834077869) | [Site](https://openagentspocket.com) |
-[Privacy](https://relay.openagentspocket.com/privacy)
+<p align="center">
+  A phone companion for <a href="https://herdr.dev">herdr</a>: read, answer and approve what your coding agents ask,<br>
+  on your own computers, from wherever you are.
+</p>
+
+<p align="center">
+  <a href="https://apps.apple.com/app/id6834077869"><b>Download on the App Store</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://openagentspocket.com">Website</a>
+  &nbsp;·&nbsp;
+  <a href="https://relay.openagentspocket.com/privacy">Privacy</a>
+</p>
+
+<p align="center">
+  <img src="docs/store/screenshots/en/01-home.jpg" alt="Home: every agent on every Host" width="23%">
+  <img src="docs/store/screenshots/en/02-chat.jpg" alt="An agent's conversation as a chat" width="23%">
+  <img src="docs/store/screenshots/en/03-approval.jpg" alt="Approving what an agent asks" width="23%">
+  <img src="docs/store/screenshots/en/04-changes.jpg" alt="Changed files and diffs" width="23%">
+</p>
+
+Agents Pocket shows the coding agents running on your own computers, lets you read their chat, answer and approve
+what they ask, and open a terminal on the same session. The app talks to your computers (Hosts) over SSH. There are
+no accounts. It is free and open source.
 
 iOS today. The code is React Native (Expo) and the repository has Android build config, but no Android release.
 
