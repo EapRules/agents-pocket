@@ -56,8 +56,11 @@ node --version    # 20 or newer
 Install the plugin from GitHub:
 
 ```bash
-herdr plugin install openagentspocket/openagentspocket --ref plugin --yes
+herdr plugin install EapRules/agents-pocket --ref plugin --yes
 ```
+
+It replaces a plugin installed from the repository's old path
+(`openagentspocket/openagentspocket`); its config dir stays.
 
 The `plugin` branch holds only the files the plugin runs, published from
 `plugin/` on `main`, so the install skips the rest of the repository.
