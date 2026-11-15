@@ -166,7 +166,7 @@ so no program-specific branches.
 - [x] **1.0.2 (7) replaces build 6** (2026-11-15): the owner had build 6 pulled from review to add the Live
   Activity and Dynamic Island redesign (direction A, the app mark drawn in code), one status line in the Chat,
   the Composer field that grows, the Composer menus as panels, the shared sheet header and fit sheets that
-  scroll. All 22 `pnpm sim:verify` flows passed on it; uploaded, tag `ios-1.0.2-7`. The owner submits it.
+  scroll. All 22 `pnpm sim:verify` flows passed on it; uploaded, tag `ios-1.0.2-7`. Submitted for review the same day on the owner's word ("Waiting for Review").
 - [ ] **On a real iPhone, from TestFlight or the store:** the paste check listed above, a web link opening
   in the sheet, and the widgets and Live Activity with the longer name (they compile; no flow shows them).
 - [x] **Over-the-air JS updates** (ADR 0028). Done: the update server, the publish script with the real R2
