@@ -157,6 +157,16 @@ export function clientHeaders({ platform, runtimeVersion, keyId = 'main', client
   };
 }
 
+/** The update id a manifest body carries; undefined for a directive or an unreadable body. */
+function bodyId(bytes) {
+  try {
+    const id = JSON.parse(new TextDecoder().decode(bytes)).id;
+    return typeof id === 'string' ? id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Ask a server for an update as the app does and verify what comes back. The served update must
  * be one the public log records for that platform and runtime version, byte for byte
@@ -220,5 +230,8 @@ export async function verifyRemote({
   });
   problems.push(...result.problems);
   if (requireLogged && !logged) problems.push('the served update is not in the public log');
-  return { problems, served: { kind, bodySha256, logged: Boolean(logged), outsideRollout } };
+  return {
+    problems,
+    served: { kind, id: bodyId(part.body), bodySha256, logged: Boolean(logged), outsideRollout },
+  };
 }

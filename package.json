@@ -17,7 +17,8 @@
     "gen:check": "pnpm -F @openagentspocket/core gen:check && pnpm -F @openagentspocket/ui gen:check",
     "e2e:ios": "maestro test e2e/home.yaml",
     "progress": "node scripts/progress.mjs",
-    "sim:verify": "node scripts/sim-verify.mjs"
+    "sim:verify": "node scripts/sim-verify.mjs",
+    "ota": "node scripts/ota.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
