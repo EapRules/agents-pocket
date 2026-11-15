@@ -64,10 +64,13 @@ No computer at hand? Tap "Try the Demo" on the first screen to explore the app w
 Agents Pocket is an independent project. Product names are trademarks of their owners and are used only to say what the app works with.
 
 **What's New (1.0.2):**
+• New Live Activity and Dynamic Island: a clearer card, the request front and center when an agent needs you, and the app's mark in the island.
+• One status line in the chat: Working, Needs you or Idle, with background work. Tap it to see what is running.
+• The message field grows with what you type, up to six lines.
+• The +, … and shortcuts menus open as lists from the message field, like the / list, and the keyboard stays up.
 • Links open inside the app, in a sheet you close to get right back.
-• A multi-line paste is shown for review before it reaches the terminal, in the Agent's terminal and in the Shell.
-• Approval requests are easier to read, and a long command no longer gets cut.
-• Widgets, the Live Activity and notifications show the app's name correctly.
+• A multi-line paste is shown for review before it reaches the terminal.
+• Cleaner sheet headers, and the background work sheet is as tall as its content.
 • Fixes for permission requests in Codex, OpenCode and Grok.
 
 ## Spanish (Mexico)
@@ -125,10 +128,13 @@ QUÉ NECESITAS
 Agents Pocket es un proyecto independiente. Los nombres de productos son marcas de sus dueños y se usan solo para decir con qué funciona la app.
 
 **What's New (1.0.2):**
+• Nueva Live Activity y Dynamic Island: una tarjeta más clara, el pedido al frente cuando un agente te necesita, y la marca de la app en la isla.
+• Una sola línea de estado en el chat: Working, Needs you o Idle, con el trabajo en segundo plano. Tócala para ver qué está corriendo.
+• El campo de mensaje crece con lo que escribes, hasta seis líneas.
+• Los menús +, … y de atajos se abren como listas desde el campo de mensaje, igual que la lista de /, y el teclado se queda arriba.
 • Los enlaces se abren dentro de la app, en una hoja que cierras para volver donde estabas.
-• Un pegado de varias líneas se muestra para revisarlo antes de llegar a la terminal, en la terminal del Agente y en el Shell.
-• Los pedidos de aprobación se leen mejor, y un comando largo ya no se corta.
-• Los widgets, la Live Activity y las notificaciones muestran bien el nombre de la app.
+• Un pegado de varias líneas se muestra para revisarlo antes de llegar a la terminal.
+• Encabezados de hojas más limpios, y la hoja de trabajo en segundo plano mide lo que su contenido.
 • Correcciones en los pedidos de permiso de Codex, OpenCode y Grok.
 
 ## Notes for App Review
