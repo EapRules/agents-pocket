@@ -1,7 +1,7 @@
 # Brief: iPad and wide layouts (sidebar column)
 
 Task: UX1-wide. Depends on every family (it composes them). RN today: no split layout; `metrics.readableWidth` 720 centers
-single columns. Another worker (`wide-sidebar`, `wide-qa`) may be exploring this: check `git log` and `docs/progress/` before starting.
+single columns. Another worker (`wide-sidebar`, `wide-qa`) may be exploring this: check `git log` and `docs/todo.md` before starting.
 Read [../design-system.md](../design-system.md) first.
 
 ## Swift screens

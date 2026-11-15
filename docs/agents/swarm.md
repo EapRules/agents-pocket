@@ -24,15 +24,15 @@ Native. Distilled from how Anthropic, OpenAI and Cursor run long agent teams:
 
 | Role | Who | Does | Never |
 |---|---|---|---|
-| Lead | the main session | plans waves from `docs/tasks.yml`, assigns disjoint tasks, integrates branches, runs native builds, the full suite, Maestro, commits and merges, keeps PROGRESS current | writes feature code a worker could write |
-| Worker | one subagent per task, own worktree | implements one task to its acceptance, writes tests, commits on its branch, writes `docs/progress/<task>.md` | runs native builds or simulators (unless the task is native), touches files outside its task, coordinates with other workers |
+| Lead | the main session | plans waves from `docs/todo.md`, assigns disjoint tasks, integrates branches, runs native builds, the full suite, Maestro, commits and merges, keeps `docs/todo.md` current | writes feature code a worker could write |
+| Worker | one subagent per task, own worktree | implements one task to its acceptance, writes tests, commits on its branch, reports in its hand-back (no progress file) | runs native builds or simulators (unless the task is native), touches files outside its task, coordinates with other workers |
 | Native worker | one at a time | Expo Module / native code, holds the native slot, builds and runs on its own device | runs while another native build is running |
 | Judge | read-only subagent per finished task | reviews the branch against the task's acceptance, the reuse rule and the Swift reference; verdict ship / fix / redo with reasons | edits code |
 | Gardener | periodic read-only subagent | finds duplication, files over budget, stale docs, dead code; files tasks | edits code |
 
 ## The loop (one wave)
 
-1. **Plan**: the lead picks the next ready tasks from `docs/tasks.yml`
+1. **Plan**: the lead picks the next ready tasks from `docs/todo.md`
    (dependencies met, file sets disjoint), at most 6 JS workers + 1 native.
 2. **Work**: each worker gets the task id, its acceptance and file set, the
    Swift reference files, and the brief below. Fresh context per task.
@@ -42,8 +42,7 @@ Native. Distilled from how Anthropic, OpenAI and Cursor run long agent teams:
    JS suite (seconds, no simulator) and, after native changes, one native
    build per platform plus the Maestro smoke flows. Fix-verdict branches go
    back to a worker with the judge's notes.
-5. **Record**: task status in `docs/tasks.yml`, `pnpm progress` regenerates
-   `docs/PROGRESS.md` (what is done, what is left, per phase), the roadmap's
+5. **Record**: task status in `docs/todo.md`, the roadmap's
    RESUME HERE, lessons in `docs/roadmap.md`.
 6. Next wave immediately.
 
@@ -68,7 +67,7 @@ Native. Distilled from how Anthropic, OpenAI and Cursor run long agent teams:
 - Machine: 1 native build, 2 Metro servers, 1 simulator + 1 emulator at a
   time; JS tests with at most 2 workers each.
 
-## Worker report (`docs/progress/<task-id>.md`, required)
+## Worker report (in the hand-back, required; no progress file)
 
 ```
 # <task-id>: <title>

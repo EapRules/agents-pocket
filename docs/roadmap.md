@@ -89,8 +89,8 @@ Integration lessons (wave 1): a stale generated `ios/` (old deployment target) s
 wave briefs now name the existing modules to reuse; generated/union files (PROGRESS.md, index.ts export lists,
 package.json deps, pnpm-lock) are resolved mechanically by the lead's merge script.
 
-How the swarm works: [docs/agents/swarm.md](agents/swarm.md). What is done and left: [docs/PROGRESS.md](PROGRESS.md)
-(generated from [docs/tasks.yml](tasks.yml) + `docs/progress/*.md`).
+How the swarm works: [docs/agents/swarm.md](agents/swarm.md). What is done and left: [docs/archive/PROGRESS.md](archive/PROGRESS.md)
+(generated from [docs/archive/tasks.yml](archive/tasks.yml) + `docs/archive/progress/*.md`).
 
 Scaffold facts:
 

@@ -200,7 +200,6 @@ so no program-specific branches.
 - [ ] **iPad.**
 - [ ] **Approve without opening the app, and Apple Watch.**
 - [ ] **A bug hunt by zones** (planned, never run).
-- [ ] **State docs.** Archive `docs/tasks.yml`, `docs/PROGRESS.md` and `docs/progress/` (blocked:
-  `scripts/progress.mjs` reads them and `verify-fast` runs `progress --check`; retire the script first), bring
-  CLAUDE.md's gate notes up to date, add a map of `packages/core`.
+- [ ] **State docs.** Bring CLAUDE.md's gate notes up to date, add a map of `packages/core`. (The task board is
+  archived in `docs/archive/`, `progress.mjs` is gone.)
 - [ ] **Site:** remove the Windows installer while Windows Hosts are out of scope.

@@ -53,7 +53,7 @@ atlas is support, not proof of the native look.
 
 `pnpm verify-fast` green, `pnpm sim:verify` for the affected flows (screenshots listed) (it runs the tests related to your change; never run the full `pnpm test`, the lead
 runs it once per milestone), screens <=150 lines, files <=400, behavior and testIDs kept (or e2e flows updated),
-`docs/progress/<task>.md` honest (done/partial and what is left), `pnpm progress`, commit on your branch (no
+an honest hand-back report (done/partial and what is left; no progress file), commit on your branch (no
 attribution trailers, never touch main). Report: commits, the ids you captured with the sheet paths, what is
 left. The owner reviews the sheets himself; keep the report short.
 

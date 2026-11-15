@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 // Renders docs/ux/components/README.md from docs/ux/components/catalog.json and checks the catalog:
 // unique names, every crop key belongs to a catalog component/variant, every ref image exists,
-// every group has its UX3 task in docs/tasks.yml, Swift sources exist (when the Swift repo is
+// Swift sources exist (when the Swift repo is
 // reachable). `--check` fails when README.md is stale or a rule breaks; without it README is rewritten.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse } from 'yaml';
 
 const root = join(import.meta.dirname, '..');
 const dir = join(root, 'docs/ux/components');
 const catalog = JSON.parse(readFileSync(join(dir, 'catalog.json'), 'utf8'));
 const crops = JSON.parse(readFileSync(join(dir, 'crops.json'), 'utf8')).crops;
-const tasks = parse(readFileSync(join(root, 'docs/tasks.yml'), 'utf8'));
 const swiftRepo = [join(root, '../Agentico'), join(root, '../../../../Agentico')].find((d) =>
   existsSync(join(d, 'docs/ux/screens.yml')),
 );
@@ -38,9 +36,6 @@ for (const c of catalog.components) {
         errors.push(`${c.name}: missing Swift file ${file}`);
     }
 }
-for (const [group, info] of Object.entries(catalog.groups))
-  if (!tasks.some((t) => t.id === info.task))
-    errors.push(`group ${group}: task ${info.task} not in docs/tasks.yml`);
 for (const key of Object.keys(crops)) {
   if (!keys.has(key)) errors.push(`crops.json: ${key} is not a catalog variant`);
   if (!existsSync(join(dir, 'ref', `${key}.png`)))
@@ -72,7 +67,7 @@ lines.push(
   '2. Implement each component in `packages/ui/src/components/<Name>.tsx` (<= 400 lines, colors from tokens, strings through `t()`), compose primitives, add a props type and export it from your group barrel `packages/ui/src/components/<gallery file name>.ts` (already re-exported by `packages/ui/src/index.ts`; do not edit index.ts).',
   '3. Register demos in `packages/ui/src/gallery/components/<group>.tsx` (the file your task owns): one `CatalogEntry` per component, one variant per row of its variants list, ids equal to the variant ids, demo props only (no app state).',
   '4. Capture and compare: `node scripts/ux-components.mjs --port 8123 [Name ...]` then `V/bin/python3 scripts/atlas-compare.py --components` writes `design/atlas/components/compare/<Name>[.<variant>].png` (Swift crop | RN Índigo | RN Papel). Iterate until the checklist holds.',
-  '5. Component tests pin behavior (press, menu, states) with jest-expo; `pnpm verify-fast`; `docs/progress/<task>.md`; `pnpm progress`.',
+  '5. Component tests pin behavior (press, menu, states) with jest-expo; `pnpm verify-fast`; report in your hand-back (no progress file).',
   '',
   'A component is done when its gallery entry renders every variant in Índigo and Papel, the checklist below holds on the side-by-side sheet, and no screen',
   'outside `packages/ui/src/components` was needed. Screens then swap their local markup for the component in the matching `UX1-*` assembly task.',

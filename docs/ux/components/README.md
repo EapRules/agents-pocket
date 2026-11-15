@@ -12,7 +12,7 @@ is the old Noche skin: copy structure, spacing and behavior, never colors.
 2. Implement each component in `packages/ui/src/components/<Name>.tsx` (<= 400 lines, colors from tokens, strings through `t()`), compose primitives, add a props type and export it from your group barrel `packages/ui/src/components/<gallery file name>.ts` (already re-exported by `packages/ui/src/index.ts`; do not edit index.ts).
 3. Register demos in `packages/ui/src/gallery/components/<group>.tsx` (the file your task owns): one `CatalogEntry` per component, one variant per row of its variants list, ids equal to the variant ids, demo props only (no app state).
 4. Capture and compare: `node scripts/ux-components.mjs --port 8123 [Name ...]` then `V/bin/python3 scripts/atlas-compare.py --components` writes `design/atlas/components/compare/<Name>[.<variant>].png` (Swift crop | RN Índigo | RN Papel). Iterate until the checklist holds.
-5. Component tests pin behavior (press, menu, states) with jest-expo; `pnpm verify-fast`; `docs/progress/<task>.md`; `pnpm progress`.
+5. Component tests pin behavior (press, menu, states) with jest-expo; `pnpm verify-fast`; report in your hand-back (no progress file).
 
 A component is done when its gallery entry renders every variant in Índigo and Papel, the checklist below holds on the side-by-side sheet, and no screen
 outside `packages/ui/src/components` was needed. Screens then swap their local markup for the component in the matching `UX1-*` assembly task.
