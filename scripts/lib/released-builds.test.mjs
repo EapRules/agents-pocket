@@ -7,6 +7,7 @@ import { afterEach, beforeEach, test } from 'node:test';
 import {
   appendBuild,
   buildsForRuntime,
+  buildsForSource,
   bundleUpdatesReport,
   embeddedRuntimeProblem,
   embeddedUpdatesProblems,
@@ -113,4 +114,14 @@ test('a built app reports its runtime and updates state in one place', () => {
   const url = 'https://a.test/m';
   const wrong = bundleUpdatesReport(app, { runtimeVersion: 'b'.repeat(40), url, plist });
   assert.match(wrong.problems.join(), /embeds runtime a+.*not enabled/);
+});
+
+test('a source fingerprint is carried when given, and matched by buildsForSource', () => {
+  const sourceFingerprint = 's'.repeat(40);
+  appendBuild(file, entry({ sourceFingerprint }));
+  appendBuild(file, entry({ build: '5' }));
+  const builds = readBuilds(file);
+  assert.equal(builds[0].sourceFingerprint, sourceFingerprint);
+  assert.equal('sourceFingerprint' in builds[1], false);
+  assert.deepEqual(buildsForSource(builds, 'ios', sourceFingerprint), [builds[0]]);
 });

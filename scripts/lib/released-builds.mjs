@@ -9,7 +9,11 @@ import { join } from 'node:path';
 export const BUILDS_FILE = join('docs', 'releases', 'builds.json');
 const FIELDS = ['platform', 'version', 'build', 'runtimeVersion', 'commit', 'archivedAt'];
 
-/** @typedef {{platform: string, version: string, build: string, runtimeVersion: string, commit: string, archivedAt: string}} ReleasedBuild */
+/**
+ * `sourceFingerprint` is the runtime fingerprint without the Apple team id (computeSourceFingerprint):
+ * what CI, which has no team id, can compute. A build recorded without it cannot be matched by CI.
+ * @typedef {{platform: string, version: string, build: string, runtimeVersion: string, sourceFingerprint?: string, commit: string, archivedAt: string}} ReleasedBuild
+ */
 
 /** @returns {ReleasedBuild[]} */
 export function readBuilds(file) {
@@ -20,7 +24,7 @@ export function readBuilds(file) {
 }
 
 /**
- * Append a build. A build (platform, version, build number) is recorded once: archiving the same
+ * Append a build. Updates can only reach a recorded build (docs/guides/updates.md). A build (platform, version, build number) is recorded once: archiving the same
  * number again is an error, since the store would refuse it too.
  *
  * @param {string} file
@@ -34,7 +38,8 @@ export function appendBuild(file, entry) {
     b.platform === entry.platform && b.version === entry.version && b.build === entry.build;
   if (builds.some(same))
     throw new Error(`${entry.platform} ${entry.version} (${entry.build}) is already recorded`);
-  const record = Object.fromEntries(FIELDS.map((f) => [f, entry[f]]));
+  const fields = entry.sourceFingerprint ? [...FIELDS, 'sourceFingerprint'] : FIELDS;
+  const record = Object.fromEntries(fields.map((f) => [f, entry[f]]));
   writeFileSync(file, `${JSON.stringify([...builds, record], null, 2)}\n`);
   return record;
 }
@@ -112,4 +117,9 @@ export function bundleUpdatesReport(appPath, { runtimeVersion, url, plist }) {
 /** The recorded builds an update for this runtime version can reach, newest last. */
 export function buildsForRuntime(builds, platform, runtimeVersion) {
   return builds.filter((b) => b.platform === platform && b.runtimeVersion === runtimeVersion);
+}
+
+/** The recorded builds whose team-less fingerprint equals this one, newest last. */
+export function buildsForSource(builds, platform, sourceFingerprint) {
+  return builds.filter((b) => b.platform === platform && b.sourceFingerprint === sourceFingerprint);
 }

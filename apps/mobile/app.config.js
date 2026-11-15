@@ -91,7 +91,9 @@ module.exports = ({ config }) => {
   const env = process.env;
   const localFile = path.join(__dirname, 'app.local.json');
   const local = fs.existsSync(localFile) ? JSON.parse(fs.readFileSync(localFile, 'utf8')) : {};
-  const appleTeamId = env.APPLE_TEAM_ID || local.appleTeamId;
+  // SOURCE_FINGERPRINT=1: the config as a clean checkout resolves it, without the owner's team id
+  // (scripts/lib/runtime-version.mjs, computeSourceFingerprint).
+  const appleTeamId = env.SOURCE_FINGERPRINT ? undefined : env.APPLE_TEAM_ID || local.appleTeamId;
   const hasGoogleServices = fs.existsSync(path.join(__dirname, 'google-services.json'));
   const build = buildNumber(env, config);
   const aps = apnsEnvironment(env, local);

@@ -30,11 +30,11 @@ const fingerprint = await createFingerprintAsync(mobileDir, {
 process.stdout.write(fingerprint.hash);
 `;
 
-function run(cmd, args, options) {
+function run(cmd, args, options, extraEnv = {}) {
   const result = spawnSync(cmd, args, {
     encoding: 'utf8',
     ...options,
-    env: { ...process.env, ...RUNTIME_ENV },
+    env: { ...process.env, ...RUNTIME_ENV, ...extraEnv },
   });
   if (result.status !== 0)
     throw new Error(`${cmd} ${args[0]} failed: ${(result.stderr || result.stdout || '').trim()}`);
@@ -60,5 +60,26 @@ export function computeRuntimeVersion({ mobileDir, platform }) {
     throw new Error('expo-updates resolves no runtime: apps/mobile/app.json needs runtimeVersion');
   if (resolved !== hash)
     throw new Error(`expo-updates resolves runtime ${resolved}, this script computed ${hash}`);
+  return hash;
+}
+
+/**
+ * The same fingerprint as a clean checkout computes it: no Apple team id, whatever the machine has
+ * (APPLE_TEAM_ID is unset and apps/mobile/app.local.json is not applied, see app.config.js). The
+ * team id is the only input of the runtime version that is not in the repository, so a build's
+ * runtime and this value change together whenever the native inputs change. CI, which has no team
+ * id, compares this one with the `sourceFingerprint` recorded per build (docs/releases/builds.json).
+ *
+ * @param {{mobileDir: string, platform: 'ios' | 'android'}} options
+ * @returns {string} a fingerprint hash
+ */
+export function computeSourceFingerprint({ mobileDir, platform }) {
+  const hash = run(
+    process.execPath,
+    ['--input-type=module', '-e', CHILD, mobileDir, platform],
+    { cwd: mobileDir },
+    { SOURCE_FINGERPRINT: '1', APPLE_TEAM_ID: '' },
+  );
+  if (!/^[0-9a-f]{40}$/.test(hash)) throw new Error(`unexpected fingerprint output: ${hash}`);
   return hash;
 }

@@ -47,8 +47,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: OTA verdict
-        # The Apple team id is part of the runtime version. A repository variable (not a secret, not
-        # in the repo) supplies it; without it a "store build" verdict carries a caveat.
-        env:
-          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
         run: node scripts/ci-ota-verdict.mjs

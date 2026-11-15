@@ -31,7 +31,7 @@ import {
   embeddedRuntimeProblem,
   officialUpdatesUrl,
 } from './lib/released-builds.mjs';
-import { computeRuntimeVersion } from './lib/runtime-version.mjs';
+import { computeRuntimeVersion, computeSourceFingerprint } from './lib/runtime-version.mjs';
 import { runStep, shown } from './lib/steps.mjs';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -381,12 +381,12 @@ function release({ dryRun, skipTests, allowBranch }) {
   );
 }
 
-// Updates can only reach a build whose runtime version is recorded (docs/guides/updates.md).
 function recordBuild({ runtimeVersion, commit, archive }) {
   const app = join(archive, 'Products/Applications', `${PROJECT}.app`);
   const problem = embeddedRuntimeProblem(app, runtimeVersion);
   if (problem) fail(`${problem}; do not upload`);
   const entry = { platform: 'ios', version: VERSION, build: BUILD, runtimeVersion, commit };
+  entry.sourceFingerprint = computeSourceFingerprint({ mobileDir: MOBILE, platform: 'ios' });
   appendBuild(join(ROOT, BUILDS_FILE), { ...entry, archivedAt: new Date().toISOString() });
   console.log(`Recorded ${VERSION} (${BUILD}) in ${BUILDS_FILE}: commit it after the upload.`);
 }
