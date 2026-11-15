@@ -159,10 +159,13 @@ so no program-specific branches.
   and delete the loose component (Moshi's viewer is side by side; ours is unified, as GitHub and Gerrit do
   on narrow screens). Ideas seen in competitors, not built: a "last turn only" scope and jumping between
   hunks.
-- [ ] **Waiting for the next store build** (branch `next-store-build`): the encryption declaration
-  and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
-- [ ] Widgets, Live Activity and the notification fallback still say Agentico (native strings), fixed on
-  `next-store-build`.
+- [x] **Store build 1.0.2 (6)** (2026-11-15): the encryption declaration, the system permission texts and
+  the widgets, Live Activity and notification fallback saying "Agents Pocket", and the Expo SDK 58 patch
+  versions. Built, every `pnpm sim:verify` flow passed on it, uploaded to App Store Connect, recorded in
+  `docs/releases/builds.json`, tag `ios-1.0.2-6`. Version 1.0.1 (5) was released by Apple the same day.
+- [ ] **For the owner, before 1.0.2 goes to review:** on a real iPhone from TestFlight, the paste check
+  listed above, a web link opening in the sheet, and the widgets and Live Activity with the longer name
+  (they compile; no flow shows them). Then select build 6 in the 1.0.2 draft and submit.
 - [x] **Over-the-air JS updates** (ADR 0028). Done: the update server, the publish script with the real R2
   upload, the app side behind the official-build flag, the signing certificate in the repo (the key is with
   the owner), the privacy policy and the store wording, a local end-to-end on a Release simulator build,
@@ -177,8 +180,10 @@ so no program-specific branches.
   (detection reads the StoreKit receipt name; unverified).
 - [ ] **On a device:** a `revert` (the device on the bad update takes the re-signed previous one), the
   rollback after a crash at launch, and Android.
-- [ ] **First production update** waits for Apple's approval of 1.0.1 and the paste device check listed
-  above. It also removes the Early Updates switch from builds that still show it.
+- [ ] **First production update.** 1.0.1 (5) is live and can take one, but main moved past its native
+  inputs with 1.0.2: an update for 1.0.1 would have to be published from the commit before them
+  (`2aff62a1`). Otherwise the first update goes to 1.0.2 once it is released. Either way after the paste
+  device check listed above. It also removes the Early Updates switch from builds that still show it.
 
 ## 5. Needs the owner
 
