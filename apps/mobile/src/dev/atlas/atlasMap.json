@@ -322,6 +322,16 @@
     "note": "RN-only state: Claude Code /context sent from Chat, its recorded markdown as a command notice"
   },
   {
+    "id": "rn.composer-long-draft",
+    "rn": "ComposerCard (stacked input)",
+    "note": "RN-only state: a four-line draft, the field grows with it"
+  },
+  {
+    "id": "rn.composer-very-long-draft",
+    "rn": "ComposerCard (stacked input)",
+    "note": "RN-only state: a twelve-line draft, the field stops at six lines and scrolls inside"
+  },
+  {
     "id": "rn.composer-skill-list",
     "rn": "ComposerCard (skills panel)",
     "note": "RN-only state: thirty suggestions, the panel scrolls inside its height limit"

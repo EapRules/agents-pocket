@@ -66,6 +66,41 @@ const refusedCommand: AtlasEntry = {
   },
 };
 
+/** A draft of about four lines: the stacked field grows with it. */
+const longDraft: AtlasEntry = {
+  render: () => (
+    <AtlasChat>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ComposerCard
+        value={
+          'Please look at the failing build.\nStart with the lockfile.\nThen check the CI cache keys.\nReport what you changed.'
+        }
+        onChange={noop}
+        onSend={noop}
+        expanded
+      />
+    </AtlasChat>
+  ),
+};
+
+/** A draft past six lines: the field stops at its cap and scrolls inside. */
+const veryLongDraft: AtlasEntry = {
+  render: () => (
+    <AtlasChat>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ComposerCard
+        value={Array.from(
+          { length: 12 },
+          (_, index) => `Step ${index + 1}: describe what to change.`,
+        ).join('\n')}
+        onChange={noop}
+        onSend={noop}
+        expanded
+      />
+    </AtlasChat>
+  ),
+};
+
 /** The `/` panel over thirty entries: it stops at a share of the screen and its rows scroll. */
 const longSkillList: AtlasEntry = {
   render: () => (
@@ -213,6 +248,8 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
     'message',
   ),
   'rn.composer-skill-list': longSkillList,
+  'rn.composer-long-draft': longDraft,
+  'rn.composer-very-long-draft': veryLongDraft,
   'agent-detail.composer-more-menu': detail('p4', 'terminal', ['composer-input', 'composer-more']),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
   'agent-detail.header-more-menu': detail('p2', 'chat', ['agent-header-more']),

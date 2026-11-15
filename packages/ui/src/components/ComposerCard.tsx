@@ -17,6 +17,9 @@ import { KeyboardDismissButton } from './KeyboardDismissButton';
 const CIRCLE = 40;
 /** Centres one body line (22 pt) in the circle-high field. */
 const LINE_PAD = (CIRCLE - typography.body.lineHeight) / 2;
+/** The field grows a line at a time up to this many lines, then scrolls inside itself (chat apps do the same). */
+const INPUT_MAX_LINES = 6;
+const INPUT_MAX_HEIGHT = INPUT_MAX_LINES * typography.body.lineHeight + 2 * LINE_PAD;
 
 const useStyles = makeStyles((t) => ({
   card: {
@@ -53,14 +56,15 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
     backgroundColor: t.colors.control,
   },
+  // No flex here: in the stacked column `flex: 1` is basis 0 on the vertical axis, which ignores the
+  // multiline field's content height and pins it at minHeight. Only the one-line row sets flexGrow.
   input: {
-    flex: 1,
     minWidth: 0,
     color: t.colors.textPrimary,
     fontSize: typography.body.fontSize,
     lineHeight: typography.body.lineHeight,
     paddingVertical: LINE_PAD,
-    maxHeight: 6 * 22 + 18,
+    maxHeight: INPUT_MAX_HEIGHT,
     minHeight: CIRCLE,
     textAlignVertical: 'center',
   },
@@ -73,8 +77,10 @@ const useStyles = makeStyles((t) => ({
     textAlignVertical: 'center',
     width: 0,
     flexBasis: 0,
+    flexGrow: 1,
   },
-  inputStack: { paddingHorizontal: t.spacing.xs },
+  // Height comes from the content (between minHeight and the six-line cap), width from the column.
+  inputStack: { alignSelf: 'stretch', paddingHorizontal: t.spacing.xs },
   badge: {
     position: 'absolute',
     right: -2,

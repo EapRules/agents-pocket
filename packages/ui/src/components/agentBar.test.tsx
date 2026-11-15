@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
+import { StyleSheet } from 'react-native';
 import { renderThemed } from '../test-utils';
 import { ThemeProvider } from '../theme/theme';
 import { AgentHeader, ChangeRow, ChangeSection, ComposerCard, SessionDrawer } from './agentBar';
@@ -328,6 +329,32 @@ describe('ComposerCard layouts', () => {
     await rerenderThemed(rerender, card(true));
     expect(screen.getByTestId('composer-card-more')).toBeTruthy();
     expect(screen.getByTestId('composer-card-bar-toggle')).toBeTruthy();
+  });
+});
+
+describe('ComposerCard growth', () => {
+  const inputStyle = () =>
+    StyleSheet.flatten(screen.getByTestId('composer-card-input').props.style);
+
+  it('lets a long draft take its content height, up to six lines', async () => {
+    await renderThemed(
+      <ComposerCard value={'line\n'.repeat(12)} onChange={jest.fn()} onSend={jest.fn()} />,
+    );
+    const style = inputStyle();
+    // flex: 1 in the stacked column is basis 0 and pins the field at minHeight.
+    expect(style.flex).toBeUndefined();
+    expect(style.flexGrow ?? 0).toBe(0);
+    expect(style.height).toBeUndefined();
+    expect(style.alignSelf).toBe('stretch');
+    expect(style.maxHeight).toBeGreaterThan(style.minHeight as number);
+    expect(style.maxHeight).toBeGreaterThanOrEqual(6 * 22);
+  });
+
+  it('keeps a short draft on one line, filling the row', async () => {
+    await renderThemed(<ComposerCard value="hi" onChange={jest.fn()} onSend={jest.fn()} />);
+    const style = inputStyle();
+    expect(style.height).toBe(style.minHeight);
+    expect(style.flexGrow).toBe(1);
   });
 });
 

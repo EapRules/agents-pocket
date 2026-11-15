@@ -1,0 +1,24 @@
+# The Composer's field grows with the draft (a line at a time, up to six lines, then it scrolls
+# inside) and shrinks back when the draft is cleared.
+appId: com.openagentspocket.app
+---
+- runFlow: _demo.yaml
+- openLink: openagentspocket:///__atlas/agent-detail.chat
+- extendedWaitUntil:
+    visible:
+      id: composer-card-input
+    timeout: 15000
+- tapOn:
+    id: composer-card-input
+- inputText: "First line of a long draft"
+- takeScreenshot: design/atlas/sim/22-composer-grows-one
+- inputText: "\nSecond line\nThird line\nFourth line"
+- waitForAnimationToEnd
+- takeScreenshot: design/atlas/sim/22-composer-grows
+- inputText: "\nFifth line\nSixth line\nSeventh line\nEighth line"
+- waitForAnimationToEnd
+- takeScreenshot: design/atlas/sim/22-composer-grows-capped
+- eraseText: 200
+- waitForAnimationToEnd
+- takeScreenshot: design/atlas/sim/22-composer-grows-cleared
+- runFlow: _guard.yaml
