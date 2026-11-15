@@ -45,6 +45,17 @@
         }
       }
     },
+    "%@ needs you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ te necesita"
+          }
+        }
+      }
+    },
     "%@ today" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -85,6 +96,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ · %@ est."
+          }
+        }
+      }
+    },
+    "%lld agents" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agent"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agents"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agente"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agentes"
+                }
+              }
+            }
           }
         }
       }
@@ -287,6 +339,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Todos los Hosts"
+          }
+        }
+      }
+    },
+    "All done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo listo"
           }
         }
       }
