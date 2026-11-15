@@ -3,14 +3,13 @@ import { renderText } from '../../errors/text';
 import { backgroundWorkItem, notice, toolActivity, userMessage } from '../model/factories';
 import { type ChatBackgroundWorkItem, emptyTranscript } from '../model/types';
 import { type ChatRow, type ChatRowContent, chatRow, rowID } from '../timeline/row';
-import { presentBackgroundWork } from './presentation';
+import { type BackgroundWorkPresentation, presentBackgroundWork } from './presentation';
 import { backgroundSheetOf } from './sheet';
 import {
+  type ChatStatusLineInput,
   chatStatusLine,
-  liveLine,
   liveTurnOf,
   sameLiveTurn,
-  withLiveLine,
   withoutLiveTurn,
 } from './status-line';
 import { type ChatBackgroundWork, listedNotices } from './work';
@@ -67,28 +66,70 @@ function work(items: Item[]): ChatBackgroundWork {
   };
 }
 
-const line = (rows: ChatRow[], items: Item[] = [], isBlocked = false) =>
-  chatStatusLine(
-    liveTurnOf(rows),
-    presentBackgroundWork(work(items), { isHostConnected: true, now: NOW, locale: 'en' }),
-    { isBlocked },
-  );
-const text = (rows: ChatRow[], items: Item[] = []) => {
-  const shown = line(rows, items);
-  return shown === null ? null : renderText(shown.text);
-};
+const present = (listed: ChatBackgroundWork): BackgroundWorkPresentation =>
+  presentBackgroundWork(listed, { isHostConnected: true, now: NOW, locale: 'en' });
+
+const line = (rows: ChatRow[], items: Item[] = [], agent: ChatStatusLineInput['agent'] = 'idle') =>
+  chatStatusLine({ turn: liveTurnOf(rows), work: present(work(items)), agent, now: NOW });
+const text = (rows: ChatRow[], items: Item[] = [], agent: ChatStatusLineInput['agent'] = 'idle') =>
+  renderText(line(rows, items, agent).text);
 
 describe('the status line over the Composer', () => {
-  it('is absent with no turn running and nothing for the sheet to list', () => {
-    expect(line([user])).toBeNull();
-    expect(line([user], [], true)).toBeNull();
+  it('says Idle with nothing happening, and is no control then', () => {
+    const idle = line([user]);
+    expect(renderText(idle.text)).toBe('Idle');
+    expect(idle.state).toBe('idle');
+    expect(idle.opensWork).toBe(false);
+    expect(idle.ticks).toBe(false);
   });
 
-  it('stays after the turn while the sheet lists finished work, with counts only', () => {
-    const done = line([user], [{ state: 'completed', endedAt: ago(5) }, { state: 'failed' }], true);
-    expect(renderText(done?.text ?? '')).toBe('1 done · 1 failed');
-    expect(done?.state).toBe('failed');
-    expect(done?.ticks).toBe(false);
+  it('says how long the turn has worked, then what the newest record shows', () => {
+    expect(text([user, header(ago(116))])).toBe('Working… 1m 56s');
+    expect(text([user, header(ago(116)), reasoning])).toBe('Working… 1m 56s · Thinking');
+    expect(text([user, header(ago(5)), call('running')])).toBe('Working… 5s · pnpm test');
+    expect(text([user, header(ago(5)), call('succeeded')])).toBe('Working… 5s');
+    const working = line([user, header(ago(5))]);
+    expect(working.state).toBe('working');
+    expect(working.ticks).toBe(true);
+    expect(renderText(working.accessibilityValue)).toBe('Working for 5 seconds');
+  });
+
+  it('says Working with no turn read yet while herdr reports the Agent working', () => {
+    const working = line([user], [], 'working');
+    expect(renderText(working.text)).toBe('Working');
+    expect(working.state).toBe('working');
+  });
+
+  it('says the Agent waits on the user for an approval or a Blocked report', () => {
+    const asked = line([user, header(ago(5)), call('awaitingApproval')]);
+    expect(asked.state).toBe('waiting');
+    expect(renderText(asked.text)).toBe('Waiting for you… 5s');
+    expect(text([user, header(ago(116)), reasoning], [], 'blocked')).toBe(
+      'Waiting for you… 1m 56s · Thinking',
+    );
+    const blocked = line([user], [], 'blocked');
+    expect(blocked.state).toBe('waiting');
+    expect(renderText(blocked.text)).toBe('Needs you');
+  });
+
+  it('adds the Background Work as counts to whatever the Agent does', () => {
+    const items: Item[] = [{}, { state: 'completed' }, { state: 'completed' }, { state: 'failed' }];
+    expect(text([user, header(ago(5))], items)).toBe('Working… 5s · 1 running · 2 done · 1 failed');
+    expect(text([user], [{}], 'blocked')).toBe('Needs you · 1 running');
+    const idle = line([user], [{}, { state: 'completed' }]);
+    expect(renderText(idle.text)).toBe('Idle · 1 running · 1 done');
+    expect(idle.opensWork).toBe(true);
+    expect(idle.ticks).toBe(true);
+  });
+
+  it("wears the work's mark while the Agent is idle, its own otherwise", () => {
+    expect(line([user], [{}]).state).toBe('running');
+    const done = line([user], [{ state: 'completed', endedAt: ago(5) }, { state: 'failed' }]);
+    expect(done.state).toBe('failed');
+    expect(done.ticks).toBe(false);
+    expect(line([user], [{ state: 'completed' }]).state).toBe('completed');
+    expect(line([user, header(ago(5))], [{}]).state).toBe('working');
+    expect(line([user], [{}], 'blocked').state).toBe('waiting');
   });
 
   it('counts what the sheet lists: a running background command runs, a stray notice is a row', () => {
@@ -123,13 +164,9 @@ describe('the status line over the Composer', () => {
         },
       ],
     };
-    const listed = presentBackgroundWork(backgroundSheetOf(transcript, {}, true, NOW), {
-      isHostConnected: true,
-      now: NOW,
-      locale: 'en',
-    });
-    const shown = chatStatusLine(null, listed, { isBlocked: false });
-    expect(renderText(shown?.text ?? '')).toBe('1 running · 1 done');
+    const listed = present(backgroundSheetOf(transcript, {}, true, NOW));
+    const shown = chatStatusLine({ turn: null, work: listed, agent: 'idle', now: NOW });
+    expect(renderText(shown.text)).toBe('Idle · 1 running · 1 done');
     // A notice that names no work is no row of the sheet, so the line has nothing to count.
     const stray = {
       ...emptyTranscript(),
@@ -142,34 +179,10 @@ describe('the status line over the Composer', () => {
         },
       ],
     };
-    const empty = presentBackgroundWork(backgroundSheetOf(stray, {}, true, NOW), {
-      isHostConnected: true,
-      now: NOW,
-      locale: 'en',
-    });
-    expect(chatStatusLine(null, empty, { isBlocked: false })).toBeNull();
-  });
-
-  it('leaves the turn itself to the live line: no time, nothing it does', () => {
-    expect(line([user, header(ago(116))])).toBeNull();
-    expect(line([user, header(ago(116)), reasoning])).toBeNull();
-    expect(line([user, header(ago(5)), call('running')])).toBeNull();
-  });
-
-  it('says the Agent waits on the user for an approval or a Blocked report', () => {
-    const waiting = line([user, header(ago(5)), call('awaitingApproval')]);
-    expect(waiting?.state).toBe('waiting');
-    expect(renderText(waiting?.text ?? '')).toBe('Needs you');
-    expect(line([user, header(ago(5)), reasoning], [], true)?.state).toBe('waiting');
-  });
-
-  it('folds running and finished work into counts', () => {
-    const items: Item[] = [{}, { state: 'completed' }, { state: 'completed' }, { state: 'failed' }];
-    expect(text([user, header(ago(5))], items)).toBe('1 running · 2 done · 1 failed');
-    const after = line([user], [{}, { state: 'completed' }]);
-    expect(renderText(after?.text ?? '')).toBe('1 running · 1 done');
-    expect(after?.state).toBe('running');
-    expect(after?.ticks).toBe(true);
+    const empty = present(backgroundSheetOf(stray, {}, true, NOW));
+    const idle = chatStatusLine({ turn: null, work: empty, agent: 'idle', now: NOW });
+    expect(renderText(idle.text)).toBe('Idle');
+    expect(idle.opensWork).toBe(false);
   });
 
   it('leaves the live header out of the rows, and tells a changed turn from the same one', () => {
@@ -180,48 +193,6 @@ describe('the status line over the Composer', () => {
     expect(sameLiveTurn(liveTurnOf(rows), running)).toBe(false);
     expect(sameLiveTurn(null, liveTurnOf(rows))).toBe(false);
     expect(sameLiveTurn(null, null)).toBe(true);
-  });
-});
-
-describe('the live line at the end of the transcript', () => {
-  const said = (rows: ChatRow[]) => {
-    const turn = liveTurnOf(rows);
-    return turn === null ? null : renderText(liveLine(turn, NOW).text);
-  };
-
-  it('ends the rows while a turn runs, in place of the turn header, and is absent otherwise', () => {
-    const rows = [user, header(ago(5)), reasoning];
-    const shown = withLiveLine(rows);
-    expect(shown.map((r) => r.id)).toEqual([user.id, reasoning.id, rowID.working]);
-    expect(shown.at(-1)?.content).toEqual({ type: 'working', turn: liveTurnOf(rows) });
-    expect(withLiveLine([user, reasoning]).map((r) => r.id)).toEqual([user.id, reasoning.id]);
-  });
-
-  it('keeps its revision while the turn does the same thing, and changes it when that changes', () => {
-    const revision = (rows: ChatRow[]) => withLiveLine(rows).at(-1)?.revision;
-    expect(revision([user, header(ago(5)), reasoning])).toBe(
-      revision([user, header(ago(5)), reasoning]),
-    );
-    expect(revision([user, header(ago(5)), reasoning])).not.toBe(
-      revision([user, header(ago(5)), call('running')]),
-    );
-  });
-
-  it('says how long the turn has worked, then what the newest record shows', () => {
-    expect(said([user, header(ago(116))])).toBe('Working… 1m 56s');
-    expect(said([user, header(ago(116)), reasoning])).toBe('Working… 1m 56s · Thinking');
-    expect(said([user, header(ago(5)), call('running')])).toBe('Working… 5s · pnpm test');
-    expect(said([user, header(ago(5)), call('succeeded')])).toBe('Working… 5s');
-  });
-
-  it('says it waits for the user, not that it works, on a request or a Blocked report', () => {
-    expect(said([user, header(ago(5)), call('awaitingApproval')])).toBe('Waiting for you… 5s');
-    const turn = liveTurnOf([user, header(ago(116)), reasoning]);
-    if (turn === null) throw new Error('no turn');
-    const blocked = liveLine(turn, NOW, true);
-    expect(renderText(blocked.text)).toBe('Waiting for you… 1m 56s · Thinking');
-    expect(blocked.waiting).toBe(true);
-    expect(liveLine(turn, NOW).waiting).toBe(false);
   });
 });
 

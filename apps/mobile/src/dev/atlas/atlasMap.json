@@ -308,8 +308,8 @@
   },
   {
     "id": "rn.chat-agent-message",
-    "rn": "AgentDetailScreen (ChatMessages ChatAgentMessageLine, ChatWorkingRow)",
-    "note": "RN-only state: a Subagent's report as one quiet line in the running turn, the live Working line under it"
+    "rn": "AgentDetailScreen (ChatMessages ChatAgentMessageLine, StatusLine)",
+    "note": "RN-only state: a Subagent's report as one quiet line in the running turn, the Working status line over the Composer"
   },
   {
     "id": "rn.chat-agent-message-sheet",
@@ -429,7 +429,7 @@
   {
     "id": "agent-detail.chat",
     "rn": "AgentDetailScreen",
-    "note": "chat surface, scripted conversation (atlasChat); the running turn ends in the live Working line"
+    "note": "chat surface, scripted conversation (atlasChat); the running turn is the Working status line over the Composer"
   },
   {
     "id": "agent-detail.chat-timeline",
@@ -443,8 +443,8 @@
   },
   {
     "id": "agent-detail.chat-background-strip",
-    "rn": "AgentDetailScreen (AgentBackgroundWork status line)",
-    "note": "one status line: two running, two finished as counts (the running turn is the live line at the transcript's end); scripted conversation"
+    "rn": "AgentDetailScreen (AgentBackgroundWork StatusLine)",
+    "note": "one status line: the Agent idle after its turn, then its Background Work as counts; scripted conversation"
   },
   {
     "id": "agent-detail.chat-background-sheet",
@@ -460,6 +460,26 @@
     "id": "agent-detail.chat-background-sheet-long-open",
     "rn": "AgentBackgroundWork sheet (BackgroundWorkList)",
     "note": "the long list with Finished opened by its header"
+  },
+  {
+    "id": "rn.chat-status-idle",
+    "rn": "AgentDetailScreen (AgentBackgroundWork StatusLine)",
+    "note": "RN-only state: the Agent idle with no Background Work, the status line says Idle as plain text"
+  },
+  {
+    "id": "rn.chat-status-idle-work",
+    "rn": "AgentDetailScreen (AgentBackgroundWork StatusLine)",
+    "note": "RN-only state: the Agent idle while one Subagent runs, Idle and the count, a tap opens the sheet"
+  },
+  {
+    "id": "rn.chat-status-working-work",
+    "rn": "AgentDetailScreen (AgentBackgroundWork StatusLine)",
+    "note": "RN-only state: the running turn with one Subagent running, Working and its time, then the count"
+  },
+  {
+    "id": "rn.chat-background-sheet-one",
+    "rn": "AgentBackgroundWork sheet (BackgroundWorkList)",
+    "note": "RN-only state: a one-row sheet at the fit detent, as tall as its row (web shows the JS host only)"
   },
   {
     "id": "agent-detail.chat-banners",

@@ -1,5 +1,6 @@
-# A Subagent's report is one quiet line in the running turn, above the live Working line; a tap
-# opens it in a sheet with who sent it and the whole report. Uses the atlas state with the report.
+# A Subagent's report is one quiet line in the running turn, with the Working status line over the
+# Composer; a tap opens it in a sheet with who sent it and the whole report. Uses the atlas state
+# with the report.
 appId: com.openagentspocket.app
 ---
 - runFlow: _demo.yaml
@@ -9,7 +10,7 @@ appId: com.openagentspocket.app
       id: chat-agent-message-open
     timeout: 15000
 - assertVisible:
-    id: chat-working-row
+    id: chat-status-line
 - waitForAnimationToEnd
 - takeScreenshot: design/atlas/sim/20-chat-agent-message
 - tapOn:

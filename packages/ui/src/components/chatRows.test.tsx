@@ -6,8 +6,8 @@ import { ChatNoticeRow } from './ChatNoticeRow';
 import { ChatThoughtRow } from './ChatThoughtRow';
 import { ChatToolRow } from './ChatToolRow';
 import { ChatUserBubble } from './ChatUserBubble';
-import { ChatWorkingRow } from './ChatWorkingRow';
 import { DiffRow } from './DiffRow';
+import { StatusLine } from './StatusLine';
 
 describe('ChatUserBubble', () => {
   it('speaks its text, shows attachment chips and opens the long press menu', async () => {
@@ -243,19 +243,37 @@ describe('DiffRow', () => {
   });
 });
 
-describe('ChatWorkingRow', () => {
-  it('reads as one element with its spoken label and a working mark', async () => {
+describe('StatusLine', () => {
+  it('is plain text read as its words, with a working mark, when it opens nothing', async () => {
     await renderThemed(
-      <ChatWorkingRow text="Working 5s" accessibilityLabel="Working, 5 seconds" />,
+      <StatusLine state="working" text="Working 5s" accessibilityValue="Working, 5 seconds" />,
     );
+    const line = screen.getByTestId('chat-status-line');
+    expect(line.props.accessibilityRole).toBeUndefined();
     expect(screen.getByLabelText('Working, 5 seconds')).toBeTruthy();
     expect(screen.getByTestId('status-dot-working', { includeHiddenElements: true })).toBeTruthy();
   });
 
-  it('wears the needs-you mark, not the working one, while the turn waits on the user', async () => {
-    await renderThemed(<ChatWorkingRow text="Waiting 5s" waiting />);
+  it('wears the needs-you mark, not the working one, while the Agent waits on the user', async () => {
+    await renderThemed(<StatusLine state="waiting" text="Waiting 5s" />);
     expect(screen.getByTestId('work-glyph-waiting', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.queryByTestId('status-dot-working', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it("shows an idle Agent's running work, and opens it as a named button", async () => {
+    const onPress = jest.fn();
+    await renderThemed(
+      <StatusLine
+        state="running"
+        text="Idle · 1 running"
+        open={{ onPress, label: 'Background work', hint: 'Shows all background work.' }}
+      />,
+    );
+    expect(screen.getByTestId('work-spinner', { includeHiddenElements: true })).toBeTruthy();
+    const line = screen.getByRole('button', { name: 'Background work' });
+    expect(line.props.accessibilityValue).toEqual({ text: 'Idle · 1 running' });
+    await fireEvent.press(line);
+    expect(onPress).toHaveBeenCalled();
   });
 });
 

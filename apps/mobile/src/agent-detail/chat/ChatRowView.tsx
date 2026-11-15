@@ -29,7 +29,7 @@ import { memo, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { renderMessage } from '@/lib/renderText';
 import { useAgentWait } from '../../blocked/BlockedCardProvider';
-import { ChatAgentMessageLine, ChatLiveLine } from './ChatMessages';
+import { ChatAgentMessageLine } from './ChatMessages';
 import { ChatQuestionBlock } from './ChatQuestionBlock';
 import { ChatToolDetail } from './ChatToolDetail';
 import { durationText, echoStatus, rowToolStatus, toolIcon, toolStatusLabel } from './chatRowModel';
@@ -246,8 +246,6 @@ export const ChatRowView = memo(function ChatRowView({
             detailFormat={content.notice.detailFormat}
           />
         );
-      case 'working':
-        return <ChatLiveLine turn={content.turn} />;
       case 'olderHistory':
         return content.older === 'available' ? (
           <View style={styles.center}>

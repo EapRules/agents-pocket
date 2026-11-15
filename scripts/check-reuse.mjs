@@ -19,7 +19,6 @@ const BASES = new Set([
 
 /** Not cards: a shape drawn with the card radius for its own reason. */
 const NOT_CARDS = new Map([
-  ['packages/ui/src/components/BackgroundWorkStrip.tsx', 'a floating status line'],
   ['packages/ui/src/components/ChatUserBubble.tsx', 'message bubble'],
   ['packages/ui/src/components/SessionsStrip.tsx', 'terminal thumbnail in its own palette'],
   ['packages/ui/src/components/TerminalThemePreview.tsx', 'a preview in a terminal palette'],

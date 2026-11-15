@@ -139,7 +139,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.subagent-transcript': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary', 'work-section-finished-header-toggle', 'work-open-w3'],
+    ['chat-status-line', 'work-section-finished-header-toggle', 'work-open-w3'],
     false,
     false,
     'list',
@@ -147,7 +147,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.chat-background-sheet': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary'],
+    ['chat-status-line'],
     false,
     false,
     'list',
@@ -156,7 +156,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.chat-background-sheet-long': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary'],
+    ['chat-status-line'],
     false,
     false,
     'long',
@@ -164,7 +164,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.chat-background-sheet-long-open': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary', 'work-section-finished-header-toggle'],
+    ['chat-status-line', 'work-section-finished-header-toggle'],
     false,
     false,
     'long',
@@ -172,10 +172,24 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.subagent-transcript-prompt': detail(
     'p5',
     'chat',
-    ['background-work-strip-summary', 'work-section-finished-header-toggle', 'work-open-l0'],
+    ['chat-status-line', 'work-section-finished-header-toggle', 'work-open-l0'],
     false,
     false,
     'long',
+  ),
+  // The status line with the Agent idle: alone, and with one Subagent still running, whose
+  // one-row sheet is as tall as its row.
+  'rn.chat-status-idle': detail('p5', 'chat', undefined, false, false, 'command'),
+  'rn.chat-status-idle-work': detail('p5', 'chat', undefined, false, false, 'idleWork'),
+  // The working Agent's running turn with one Subagent running beside it.
+  'rn.chat-status-working-work': detail('p2', 'chat', undefined, false, false, 'blocked'),
+  'rn.chat-background-sheet-one': detail(
+    'p5',
+    'chat',
+    ['chat-status-line'],
+    false,
+    false,
+    'idleWork',
   ),
   'agent-detail.chat-banners': detail('p2', 'chat', undefined, false, true),
   'agent-detail.chat-command-suggestions': chat,

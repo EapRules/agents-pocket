@@ -37,8 +37,6 @@ export const rowID = {
   group: (lastCall: string) => make(`group:${lastCall}`),
   /** A running tool group, by its first call: it grows at its end. */
   liveGroup: (firstCall: string) => make(`liveGroup:${firstCall}`),
-  /** The live line that ends the transcript while the newest turn runs. */
-  working: make('working'),
 } as const;
 
 /** The entry id of an `entry:` row id, else null. */
@@ -128,9 +126,7 @@ export type ChatRowContent =
   | { type: 'pending'; echo: ChatPendingEcho }
   | { type: 'olderHistory'; older: ChatOlderHistory }
   | { type: 'turnHeader'; header: ChatTurnHeader }
-  | { type: 'toolGroup'; group: ChatToolGroup }
-  /** The live line at the end of the transcript while the newest turn runs. */
-  | { type: 'working'; turn: ChatLiveTurn };
+  | { type: 'toolGroup'; group: ChatToolGroup };
 
 export interface ChatRow {
   id: ChatRowID;

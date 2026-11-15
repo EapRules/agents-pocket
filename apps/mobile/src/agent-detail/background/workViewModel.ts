@@ -9,7 +9,7 @@ import { t } from '@openagentspocket/i18n';
 import type {
   BackgroundWorkAgentItem,
   BackgroundWorkDetailItem,
-  BackgroundWorkSummaryLine,
+  StatusLineProps,
 } from '@openagentspocket/ui';
 import { renderMessage } from '@/lib/renderText';
 
@@ -77,7 +77,9 @@ export function openableItem(
 }
 
 /** The status line over the Composer, in the current locale. */
-export function statusLineItem(line: ChatStatusLine): BackgroundWorkSummaryLine {
+export function statusLineItem(
+  line: ChatStatusLine,
+): Pick<StatusLineProps, 'state' | 'text' | 'accessibilityValue'> {
   return {
     state: line.state,
     text: renderMessage(line.text),

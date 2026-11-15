@@ -40,7 +40,6 @@ class Shared<T> {
 const dockSlot = () => new Shared<ReactNode>(null);
 const liveTurnSlot = () => new Shared<ChatLiveTurn | null>(null, sameLiveTurn);
 const requestSlot = () => new Shared(0);
-const flagSlot = () => new Shared(false);
 
 interface DetailUi {
   /** The node a surface hands the dock (the terminal's key toolbar), drawn over the composer. */
@@ -54,8 +53,6 @@ interface DetailUi {
   openSubagent: (agentId: string) => void;
   /** Counts the asks to open the Background Work sheet (a Subagent row with no transcript yet). */
   workSheet: Shared<number>;
-  /** herdr reports the Agent Blocked (as the dock shows it): the live line says it waits on the user. */
-  blocked: Shared<boolean>;
 }
 
 const DetailUiContext = createContext<DetailUi>({
@@ -65,7 +62,6 @@ const DetailUiContext = createContext<DetailUi>({
   setComposing: () => undefined,
   openSubagent: () => undefined,
   workSheet: requestSlot(),
-  blocked: flagSlot(),
 });
 
 export const useDetailUi = () => useContext(DetailUiContext);
@@ -119,21 +115,6 @@ export function useBackgroundWorkAsks(open: () => void): void {
 export function useLiveTurn(): ChatLiveTurn | null {
   const { liveTurn } = useDetailUi();
   return useSyncExternalStore(liveTurn.subscribe, liveTurn.get, liveTurn.get);
-}
-
-/** Whether herdr reports the Agent Blocked, as the dock last handed it over. */
-export function useAgentBlocked(): boolean {
-  const { blocked } = useDetailUi();
-  return useSyncExternalStore(blocked.subscribe, blocked.get, blocked.get);
-}
-
-/** Hands the detail's parts whether the Agent is Blocked, while the caller is mounted. */
-export function useShareAgentBlocked(isBlocked: boolean): void {
-  const { blocked } = useDetailUi();
-  useEffect(() => {
-    blocked.set(isBlocked);
-    return () => blocked.set(false);
-  }, [blocked, isBlocked]);
 }
 
 // The sheet pads its body; the transcript draws its own bar and runs edge to edge.
@@ -205,18 +186,16 @@ export function DetailUiProvider({
   const slot = useRef(dockSlot()).current;
   const liveTurn = useRef(liveTurnSlot()).current;
   const workSheet = useRef(requestSlot()).current;
-  const blocked = useRef(flagSlot()).current;
   const value = useMemo(
     () => ({
       slot,
       liveTurn,
       workSheet,
-      blocked,
       composing,
       setComposing,
       openSubagent: setAgentId,
     }),
-    [slot, liveTurn, workSheet, blocked, composing],
+    [slot, liveTurn, workSheet, composing],
   );
   return (
     <DetailUiContext.Provider value={value}>

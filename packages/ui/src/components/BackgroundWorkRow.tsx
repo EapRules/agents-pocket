@@ -8,7 +8,7 @@ import { Text } from '../primitives/Text';
 import { rounded } from '../theme/corners';
 import { airy } from '../theme/metrics';
 import { makeStyles } from '../theme/theme';
-import { BackgroundWorkGlyph, type BackgroundWorkState } from './BackgroundWorkStrip';
+import { BackgroundWorkGlyph, type BackgroundWorkState } from './BackgroundWorkGlyph';
 
 /** What a piece of Background Work is; its row's icon says it. */
 export type BackgroundWorkItemKind = 'subagent' | 'workflow' | 'command';

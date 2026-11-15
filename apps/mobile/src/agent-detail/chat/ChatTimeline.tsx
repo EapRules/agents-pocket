@@ -5,7 +5,7 @@ import {
   latestAnswer,
   liveTurnOf,
   pendingEchoes,
-  withLiveLine,
+  withoutLiveTurn,
 } from '@openagentspocket/core';
 import { makeStyles, metrics } from '@openagentspocket/ui';
 import { useMemo, useRef } from 'react';
@@ -84,11 +84,10 @@ export function ChatTimeline({
     messages,
   );
   const { rows, toggle } = useChatRows(conversation.state, activity, pending);
-  // The strip over the Composer reads the running turn (whether it needs the user).
+  // The status line over the Composer shows the running turn, so its header leaves the list.
   usePublishLiveTurn(useMemo(() => liveTurnOf(rows), [rows]));
-  // Inverted: the newest row sits at offset 0, where the list opens and stays. While a turn runs
-  // that row is its live line, so it scrolls with the list and the end spacing stays under it.
-  const newestFirst = useMemo(() => withLiveLine(rows).reverse(), [rows]);
+  // Inverted: the newest row sits at offset 0, where the list opens and stays.
+  const newestFirst = useMemo(() => withoutLiveTurn(rows).reverse(), [rows]);
   const message = useAgentMessageSheet();
   const answer = useMemo(() => latestAnswer(rows), [rows]);
   const list = useRef<FlatList<ChatRow>>(null);

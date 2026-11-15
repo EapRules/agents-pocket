@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BackgroundWorkStrip } from '../../components/BackgroundWorkStrip';
 import { agentPadKeys, KeyPad } from '../../components/KeyPad';
 
 import { TerminalToolbar } from '../../components/TerminalToolbar';
@@ -70,47 +69,6 @@ function Toolbar({ agent, dpad }: { agent?: boolean; dpad?: boolean }) {
 
 /** Demos of the UX3 group 'blockedTerminal': one entry per component, one variant per catalog variant id. */
 export const blockedTerminalEntries: readonly CatalogEntry[] = [
-  {
-    name: 'BackgroundWorkStrip',
-    variants: [
-      {
-        id: 'default',
-        render: () => (
-          <Padded>
-            <BackgroundWorkStrip
-              line={{
-                state: 'running',
-                text: 'Working for 1m 56s · Thinking · 2 running · 1 done',
-              }}
-              onOpen={noop}
-            />
-          </Padded>
-        ),
-      },
-      {
-        id: 'waiting',
-        render: () => (
-          <Padded>
-            <BackgroundWorkStrip
-              line={{ state: 'waiting', text: 'Working for 4m 2s · Needs you · 1 running' }}
-              onOpen={noop}
-            />
-          </Padded>
-        ),
-      },
-      {
-        id: 'work',
-        render: () => (
-          <Padded>
-            <BackgroundWorkStrip
-              line={{ state: 'running', text: '1 running · 2 done' }}
-              onOpen={noop}
-            />
-          </Padded>
-        ),
-      },
-    ],
-  },
   {
     // The catalog key of Swift's notice banners (docs/ux/components/catalog.json).
     name: 'NoticeBanner',

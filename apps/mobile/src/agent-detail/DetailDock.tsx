@@ -3,7 +3,7 @@ import { statusDot } from '@/console/agentStatus';
 import { useShownStatus } from '../blocked/BlockedCardProvider';
 import { BlockedCardSlot } from '../blocked/BlockedCardSlot';
 import { AgentBackgroundWork } from './background/AgentBackgroundWork';
-import { DockSlotView, useShareAgentBlocked } from './detailUi';
+import { DockSlotView } from './detailUi';
 import type { Surface } from './surface';
 
 interface Props {
@@ -12,21 +12,19 @@ interface Props {
 }
 
 /**
- * What sits over the Composer: the status line (Chat: the running turn and its Background Work),
+ * What sits over the Composer: the status line (Chat: what the Agent does and its Background Work),
  * the Blocked card (Chat), then what the surface hands the dock.
  */
 export function DetailDock({ row, surface }: Props) {
   const chat = surface === 'chat';
   const shown = useShownStatus(statusDot(row.agent.agent_status));
-  // The live line at the end of Chat says the Agent waits on the user, as the line here does.
-  useShareAgentBlocked(shown === 'blocked');
   return (
     <>
       {chat ? (
         <AgentBackgroundWork
           hostId={row.hostId}
           paneId={row.agent.pane_id}
-          isBlocked={shown === 'blocked'}
+          agent={shown === 'blocked' ? 'blocked' : shown === 'working' ? 'working' : 'idle'}
         />
       ) : null}
       {chat ? <BlockedCardSlot /> : null}

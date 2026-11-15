@@ -1,14 +1,7 @@
-import { type ChatLiveTurn, type ChatNotice, liveLine } from '@openagentspocket/core';
+import type { ChatNotice } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
-import {
-  ChatMessageSheet,
-  ChatToolRow,
-  ChatWorkingRow,
-  copyToClipboard,
-} from '@openagentspocket/ui';
-import { useCallback, useEffect, useState } from 'react';
-import { renderMessage } from '@/lib/renderText';
-import { useAgentBlocked } from '../detailUi';
+import { ChatMessageSheet, ChatToolRow, copyToClipboard } from '@openagentspocket/ui';
+import { useCallback, useState } from 'react';
 
 /** Who sent a message, as the line and the sheet name them. */
 export function senderName(from: ChatNotice['from']): string {
@@ -66,22 +59,4 @@ export function useAgentMessageSheet() {
     />
   ) : null;
   return { open, sheet };
-}
-
-/** The live line that ends the transcript while the turn runs; its time moves once a second. */
-export function ChatLiveLine({ turn }: { turn: ChatLiveTurn }) {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    setNow(Date.now());
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  const line = liveLine(turn, now, useAgentBlocked());
-  return (
-    <ChatWorkingRow
-      text={renderMessage(line.text)}
-      accessibilityLabel={renderMessage(line.accessibilityLabel)}
-      waiting={line.waiting}
-    />
-  );
 }

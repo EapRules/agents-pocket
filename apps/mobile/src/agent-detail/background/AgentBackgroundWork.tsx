@@ -1,11 +1,11 @@
-import { chatStatusLine } from '@openagentspocket/core';
+import { type ChatStatusLineInput, chatStatusLine } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import {
   BackgroundWorkList,
   type BackgroundWorkSections,
-  BackgroundWorkStrip,
   makeStyles,
   Sheet,
+  StatusLine,
   useHandoverSheet,
 } from '@openagentspocket/ui';
 import { useEffect, useMemo, useState } from 'react';
@@ -15,36 +15,34 @@ import { useBackgroundWorkAsks, useDetailUi, useLiveTurn } from '../detailUi';
 import { openableItem, statusLineItem } from './workViewModel';
 
 const useStyles = makeStyles((th) => ({
-  strip: { paddingHorizontal: th.spacing.sm, paddingTop: th.spacing.xxs },
   body: { padding: th.spacing.md },
 }));
 
 interface Props {
   hostId: string;
   paneId: string;
-  /** herdr reports the Agent Blocked: the line says it waits on the user. */
-  isBlocked?: boolean;
+  /** herdr's status for the Agent, as the dock shows it. */
+  agent: ChatStatusLineInput['agent'];
 }
 
 /**
- * Chat's status line over the Composer (the running turn needs the user, Background Work as counts)
- * and the sheet it opens, which lists every kind of work in two collapsible sections, the harness's
+ * Chat's one status line over the Composer (what the Agent does, its Background Work as counts) and
+ * the sheet it opens, which lists every kind of work in two collapsible sections, the harness's
  * notices folded into the work they announce. The line counts what the sheet lists, so it never
- * promises a row the sheet lacks. The turn itself is the live line at the transcript's end. Absent
- * with nothing to say, so its height drops to zero.
+ * promises a row the sheet lacks; with nothing listed it is plain text.
  */
-export function AgentBackgroundWork({ hostId, paneId, isBlocked = false }: Props) {
+export function AgentBackgroundWork({ hostId, paneId, agent }: Props) {
   const styles = useStyles();
   const turn = useLiveTurn();
-  const { sheet: listed, subagentIdOf } = useBackgroundWork(hostId, paneId);
+  const { sheet: listed, subagentIdOf, now } = useBackgroundWork(hostId, paneId, turn !== null);
   const { openSubagent } = useDetailUi();
   const sheet = useHandoverSheet();
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   // The sections the user opened or closed, for as long as the sheet stays up.
   const [sections, setSections] = useState<BackgroundWorkSections>({});
   const line = useMemo(
-    () => chatStatusLine(turn, listed, { isBlocked }),
-    [turn, listed, isBlocked],
+    () => statusLineItem(chatStatusLine({ turn, work: listed, agent, now })),
+    [turn, listed, agent, now],
   );
   const empty = listed.rows.length === 0;
   const show = () => {
@@ -62,22 +60,22 @@ export function AgentBackgroundWork({ hostId, paneId, isBlocked = false }: Props
     openableItem(row, subagentIdOf, (agentId) => sheet.closeThen(() => openSubagent(agentId)));
   return (
     <>
-      {line ? (
-        <View style={styles.strip}>
-          <BackgroundWorkStrip
-            line={statusLineItem(line)}
-            onOpen={show}
-            labels={{ name: t('Background work'), hint: t('Shows all background work.') }}
-          />
-        </View>
-      ) : null}
+      <StatusLine
+        {...line}
+        open={
+          empty
+            ? undefined
+            : { onPress: show, label: t('Background work'), hint: t('Shows all background work.') }
+        }
+      />
       <Sheet
         visible={sheet.visible}
         onClose={sheet.close}
         onDismissed={sheet.onDismissed}
         title={t('Background Work')}
         leading={{ label: t('Done'), onPress: sheet.close, testID: 'work-done' }}
-        detent="large"
+        // As tall as its rows, capped at the screen; past that the list scrolls inside.
+        detent="fit"
         testID="background-work-sheet"
       >
         <View style={styles.body}>

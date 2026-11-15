@@ -7,7 +7,6 @@ export { ChatQuestions, type ChatQuestionsItem } from './ChatQuestions';
 export { ChatThoughtRow } from './ChatThoughtRow';
 export { ChatToolRow, type SubagentItem, type ToolStatus } from './ChatToolRow';
 export { ChatUserBubble, type ChatUserBubbleStatus } from './ChatUserBubble';
-export { ChatWorkingRow } from './ChatWorkingRow';
 export {
   type DiffFile,
   type DiffHunk,
@@ -16,3 +15,4 @@ export {
   type DiffRowLine,
   type DiffSegment,
 } from './DiffRow';
+export { StatusLine, type StatusLineProps } from './StatusLine';

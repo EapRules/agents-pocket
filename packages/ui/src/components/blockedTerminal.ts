@@ -1,6 +1,11 @@
 // Barrel of the UX3 group 'blockedTerminal'.
 
 export {
+  BackgroundWorkGlyph,
+  type BackgroundWorkState,
+  type StatusLineState,
+} from './BackgroundWorkGlyph';
+export {
   type BackgroundWorkAgentItem,
   type BackgroundWorkDetailItem,
   type BackgroundWorkItemKind,
@@ -10,15 +15,6 @@ export {
   type BackgroundWorkSections,
   sectionOpen,
 } from './BackgroundWorkList';
-export {
-  BackgroundWorkGlyph,
-  type BackgroundWorkLabels,
-  type BackgroundWorkState,
-  BackgroundWorkStrip,
-  type BackgroundWorkSummaryLine,
-  defaultBackgroundWorkLabels,
-  type StatusLineState,
-} from './BackgroundWorkStrip';
 export {
   agentPadKeys,
   KeyPad,

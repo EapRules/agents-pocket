@@ -2,7 +2,6 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { Banner } from '../primitives/Banner';
 import { renderThemed } from '../test-utils';
 import { BackgroundWorkList, sectionOpen } from './BackgroundWorkList';
-import { BackgroundWorkStrip } from './BackgroundWorkStrip';
 import { agentPadKeys, KeyPad, swipedPage } from './KeyPad';
 import {
   afterKey,
@@ -11,30 +10,6 @@ import {
   nextModifierState,
   TerminalToolbar,
 } from './TerminalToolbar';
-
-describe('BackgroundWorkStrip', () => {
-  it('is one line that opens the sheet, and draws nothing without a line', async () => {
-    const onOpen = jest.fn();
-    await renderThemed(
-      <BackgroundWorkStrip
-        line={{ state: 'running', text: 'Working for 5s · 2 done' }}
-        onOpen={onOpen}
-      />,
-    );
-    expect(screen.getByTestId('work-spinner', { includeHiddenElements: true })).toBeTruthy();
-    await fireEvent.press(screen.getByTestId('background-work-strip-summary'));
-    expect(onOpen).toHaveBeenCalled();
-    await renderThemed(<BackgroundWorkStrip line={null} onOpen={onOpen} />);
-    expect(screen.queryByTestId('background-work-strip-summary')).toBeNull();
-  });
-
-  it('shows the Agent waiting on the user with its own glyph', async () => {
-    await renderThemed(
-      <BackgroundWorkStrip line={{ state: 'waiting', text: 'Needs you' }} onOpen={jest.fn()} />,
-    );
-    expect(screen.getByTestId('work-glyph-waiting', { includeHiddenElements: true })).toBeTruthy();
-  });
-});
 
 describe('BackgroundWorkList sections', () => {
   const row = (id: string, kind: 'subagent' | 'command', state: 'running' | 'completed') => ({

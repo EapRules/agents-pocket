@@ -67,13 +67,14 @@ describe('the actions under the latest answer', () => {
 });
 
 describe('the running turn', () => {
-  it('is the live line at the end of the transcript, not the line over the Composer', async () => {
+  it('is the one status line over the Composer, not a row of the transcript', async () => {
     await showAtlasChat();
-    const live = await screen.findByTestId('chat-row-working');
-    expect(within(live).getByTestId('chat-working-row')).toBeTruthy();
+    const line = await screen.findByTestId('chat-status-line');
+    expect(screen.queryByTestId('chat-row-working')).toBeNull();
     expect(screen.queryByTestId('chat-row-liveTurn')).toBeNull();
-    // With no Background Work and nothing waiting on the user, the line over the Composer is gone.
-    expect(screen.queryByTestId('background-work-strip-summary')).toBeNull();
+    // With no Background Work there is nothing to open: plain text, no button.
+    expect(line.props.accessibilityRole).toBeUndefined();
+    expect(screen.getByTestId('status-dot-working', { includeHiddenElements: true })).toBeTruthy();
   });
 });
 
@@ -91,10 +92,11 @@ describe('a message another agent sent', () => {
 describe('the status line over the Composer', () => {
   it('folds finished work into a count and opens the sheet, notices folded into its rows', async () => {
     await showAtlasChat('list');
-    const line = await screen.findByTestId('background-work-strip-summary');
+    const line = await screen.findByTestId('chat-status-line');
+    expect(line.props.accessibilityRole).toBe('button');
     // It counts what the sheet lists: the running command, and the notice standing in as a row.
     // (Running reads "not updating" here: the test has no connected Host.)
-    expect(line.props.accessibilityValue.text).toMatch(/^3 .+, 3 done, 1 failed$/);
+    expect(line.props.accessibilityValue.text).toMatch(/, 3 .+, 3 done, 1 failed$/);
     expect(screen.queryByTestId('work-row-w3')).toBeNull();
     await fireEvent.press(line);
     // Something runs, so Finished starts collapsed.

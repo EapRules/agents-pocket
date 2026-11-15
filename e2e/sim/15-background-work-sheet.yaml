@@ -1,4 +1,4 @@
-# The Background Work strip opens its sheet and the sheet's body works. The demo Host has no
+# The status line over the Composer opens the Background Work sheet and the sheet's body works. The demo Host has no
 # conversation, so this uses the atlas state with work running. A row in a body collapsed to no
 # height still reads as visible (the accessibility tree ignores the clip), so the proof is a tap:
 # only a body that is really there lets a Workflow open to its agents.
@@ -8,10 +8,10 @@ appId: com.openagentspocket.app
 - openLink: openagentspocket:///__atlas/agent-detail.chat-background-strip
 - extendedWaitUntil:
     visible:
-      id: background-work-strip-summary
+      id: chat-status-line
     timeout: 15000
 - tapOn:
-    id: background-work-strip-summary
+    id: chat-status-line
 - extendedWaitUntil:
     visible:
       id: work-done

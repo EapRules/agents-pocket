@@ -253,20 +253,37 @@ const commandState: ConversationState = {
   },
 };
 
+/** The Agent idle after its first turn while one Subagent it started still runs. */
+const idleWorkState: ConversationState = {
+  ...commandState,
+  snapshot: {
+    ...commandState.snapshot,
+    transcript: {
+      ...commandState.snapshot.transcript,
+      entries: ENTRIES.slice(0, 4),
+      backgroundWork: [
+        work('w1', 'Find other retry callers', { subtitle: 'Explore', launchedAgo: 30 }),
+      ],
+    },
+  },
+};
+
 const registry = registryFor(state);
 const commandRegistry = registryFor(commandState);
 const workRegistry = registryFor(workStateOf(state));
 const longWorkRegistry = registryFor(longWorkStateOf(state), LONG_PROMPT);
 const blockedWorkRegistry = registryFor(blockedWorkState);
+const idleWorkRegistry = registryFor(idleWorkState);
 const lookingRegistry = registryFor(lookingState);
 const messageRegistry = registryFor(withAgentMessage(state));
 
-export type AtlasBackground = 'list' | 'long' | 'blocked' | 'command' | 'message';
+export type AtlasBackground = 'list' | 'long' | 'blocked' | 'idleWork' | 'command' | 'message';
 
 const BACKGROUND_REGISTRIES: Record<AtlasBackground, ConversationRegistry> = {
   list: workRegistry,
   long: longWorkRegistry,
   blocked: blockedWorkRegistry,
+  idleWork: idleWorkRegistry,
   command: commandRegistry,
   message: messageRegistry,
 };
@@ -281,8 +298,9 @@ export function AtlasChat({
   /** The conversation is still being located and the last read failed (chat-banners). */
   looking?: boolean;
   /**
-   * Background Work over the Composer (`long`: a dozen finished, Subagents with a long prompt), or
-   * in place of it a local command's output or a Subagent's report.
+   * Background Work over the Composer (`long`: a dozen finished, Subagents with a long prompt;
+   * `idleWork`: the Agent idle, one Subagent running), or in place of it a local command's output
+   * or a Subagent's report.
    */
   background?: AtlasBackground;
 }) {

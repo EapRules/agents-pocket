@@ -1,34 +1,32 @@
-// The running turn and the line over Chat's Composer. The turn shows as the live line that ends
-// the transcript: how long it has worked and what the Agent is doing as its records show it. The
-// line over the Composer holds only what is not the turn itself: that it needs the user, and how
-// much Background Work runs, with what finished folded into counts. Built from the projected rows
-// and the Background Work presentation, so it reads the same for every program: a program that
-// records no reasoning or running calls shows only the time.
+// Chat's one status line, pinned over the Composer: what the Agent does (its running turn, that it
+// needs the user, or that it is idle) and its Background Work as counts. Built from the projected
+// rows, herdr's status and the Background Work presentation, so it reads the same for every
+// program: a program that records no reasoning or running calls shows only the time.
 
 import { message, renderText, type Text } from '../../errors/text';
 import { formatDuration } from '../../format/duration';
-import {
-  type ChatLiveTurn,
-  type ChatRow,
-  type ChatTurnDoing,
-  chatRow,
-  hashRevision,
-  rowID,
-  topSpacing,
-} from '../timeline/row';
+import { type ChatLiveTurn, type ChatRow, type ChatTurnDoing, rowID } from '../timeline/row';
 import { toolLine } from '../timeline/tool-line';
 import type { BackgroundWorkPresentation, BackgroundWorkStatus } from './presentation';
 
 export type { ChatLiveTurn, ChatTurnDoing } from '../timeline/row';
 
-export type ChatStatusLineState = BackgroundWorkStatus | 'waiting';
+/**
+ * What the line's mark shows: the Agent working or waiting on the user, or, while it is idle, the
+ * state of its Background Work (`idle` with none).
+ */
+export type ChatStatusLineState = BackgroundWorkStatus | 'working' | 'waiting' | 'idle';
 
 export interface ChatStatusLine {
   state: ChatStatusLineState;
+  /** "Working… 1m 56s · Thinking · 2 running · 1 done". */
   text: Text;
+  /** The same, as VoiceOver reads it. */
   accessibilityValue: Text;
   /** The line holds a moving time. */
   ticks: boolean;
+  /** The Background Work sheet has rows to show, so a tap opens it. */
+  opensWork: boolean;
 }
 
 const RUNNING_CALL: ReadonlySet<string> = new Set(['running', 'started']);
@@ -60,27 +58,11 @@ export function liveTurnOf(rows: readonly ChatRow[]): ChatLiveTurn | null {
   return { since: head.header.state.since, doing: doingOf(live) };
 }
 
-/** The transcript's rows without the running turn's header. */
+/** The transcript's rows without the running turn's header: the status line shows the turn. */
 export const withoutLiveTurn = (rows: readonly ChatRow[]): ChatRow[] =>
   rows.filter((row) => row.id !== rowID.liveTurn);
 
-/**
- * The transcript's rows with the running turn as its last row, the live line, in place of the
- * header that opens it; the rows unchanged but for the header when no turn runs.
- */
-export function withLiveLine(rows: readonly ChatRow[]): ChatRow[] {
-  const turn = liveTurnOf(rows);
-  const shown = withoutLiveTurn(rows);
-  if (turn === null) return shown;
-  const content = { type: 'working' as const, turn };
-  const title = turn.doing?.kind === 'tool' ? renderText(turn.doing.title) : '';
-  const revision = hashRevision(turn.since, turn.doing?.kind ?? '', title);
-  const previous = shown.at(-1)?.content ?? null;
-  shown.push(chatRow(rowID.working, content, revision, topSpacing(content, previous)));
-  return shown;
-}
-
-/** What the live line says the Agent does, null when its records say nothing. */
+/** What the line says the Agent does, null when its records say nothing. */
 export function doingText(doing: ChatTurnDoing | null): Text | null {
   if (doing?.kind === 'waiting') return message('Needs you');
   if (doing?.kind === 'thinking') return message('Thinking');
@@ -88,20 +70,42 @@ export function doingText(doing: ChatTurnDoing | null): Text | null {
   return null;
 }
 
-export interface ChatLiveLine {
-  text: Text;
-  accessibilityLabel: Text;
-  /** The turn waits on the user: the line wears the needs-you look, not the working one. */
-  waiting: boolean;
+export function sameLiveTurn(a: ChatLiveTurn | null, b: ChatLiveTurn | null): boolean {
+  if (a === null || b === null) return a === b;
+  const title = (turn: ChatLiveTurn) =>
+    turn.doing?.kind === 'tool' ? renderText(turn.doing.title) : null;
+  return a.since === b.since && a.doing?.kind === b.doing?.kind && title(a) === title(b);
 }
 
-/**
- * The live line: "Working… 1m 56s · pnpm test", or "Waiting for you… 1m 56s" while the turn waits
- * on the user (a request in its records, or `isBlocked`: herdr reports the Agent Blocked).
- */
-export function liveLine(turn: ChatLiveTurn, now: number, isBlocked = false): ChatLiveLine {
+export interface ChatStatusLineInput {
+  /** The running turn of the transcript; null with none. */
+  turn: ChatLiveTurn | null;
+  /** What the Background Work sheet lists (`backgroundSheetOf`: every kind, notices folded in). */
+  work: BackgroundWorkPresentation;
+  /** herdr's status for the Agent: Blocked waits on the user; working runs with no turn read yet. */
+  agent: 'blocked' | 'working' | 'idle';
+  /** Epoch milliseconds the turn's time is counted to. */
+  now: number;
+}
+
+interface Said {
+  shown: Text[];
+  spoken: Text[];
+}
+
+/** The Agent's own part: its turn with time and what it does, that it needs you, or Idle. */
+function agentPart(
+  turn: ChatLiveTurn | null,
+  agent: ChatStatusLineInput['agent'],
+  now: number,
+): Said & { state: 'working' | 'waiting' | 'idle' } {
+  if (turn === null) {
+    const key = agent === 'blocked' ? 'Needs you' : agent === 'working' ? 'Working' : 'Idle';
+    const state = agent === 'blocked' ? 'waiting' : agent === 'working' ? 'working' : 'idle';
+    return { state, shown: [message(key)], spoken: [message(key)] };
+  }
   const seconds = Math.max(0, (now - Date.parse(turn.since)) / 1000);
-  const waiting = isBlocked || turn.doing?.kind === 'waiting';
+  const waiting = agent === 'blocked' || turn.doing?.kind === 'waiting';
   // "Needs you" would repeat the line's own words.
   const doing = turn.doing?.kind === 'waiting' ? null : doingText(turn.doing);
   const key = waiting ? 'Waiting for you… %@' : 'Working… %@';
@@ -115,48 +119,21 @@ export function liveLine(turn: ChatLiveTurn, now: number, isBlocked = false): Ch
     shown.push(doing);
     spoken.push(doing);
   }
-  return {
-    text: { join: shown, separator: ' · ' },
-    accessibilityLabel: { join: spoken, separator: ', ' },
-    waiting,
-  };
-}
-
-export function sameLiveTurn(a: ChatLiveTurn | null, b: ChatLiveTurn | null): boolean {
-  if (a === null || b === null) return a === b;
-  const title = (turn: ChatLiveTurn) =>
-    turn.doing?.kind === 'tool' ? renderText(turn.doing.title) : null;
-  return a.since === b.since && a.doing?.kind === b.doing?.kind && title(a) === title(b);
-}
-
-export interface ChatStatusLineOptions {
-  /** herdr reports the Agent Blocked: it waits on the user. */
-  isBlocked: boolean;
+  return { state: waiting ? 'waiting' : 'working', shown, spoken };
 }
 
 const n = (value: number) => String(value);
 
 /**
- * The line over the Composer: what is not the turn itself (the live line at the transcript's end
- * shows that). It says the running turn needs the user, and counts the Background Work the sheet
- * lists (`backgroundSheetOf`: every kind, notices folded in), so it never promises a row the sheet
- * lacks. Null with none of it.
+ * The status line over Chat's Composer, the one place Chat says what goes on. It always says
+ * something: "Working… 5s · Thinking", "Waiting for you… 5s", "Needs you" or "Idle", then the
+ * Background Work the sheet lists as counts ("· 1 running · 2 done"), so it never promises a row
+ * the sheet lacks.
  */
-export function chatStatusLine(
-  turn: ChatLiveTurn | null,
-  work: BackgroundWorkPresentation,
-  { isBlocked }: ChatStatusLineOptions,
-): ChatStatusLine | null {
-  // Waiting on the user belongs to a running turn.
-  const waiting = turn !== null && (isBlocked || turn.doing?.kind === 'waiting');
-  if (!waiting && work.rows.length === 0) return null;
-  const shown: Text[] = [];
-  const spoken: Text[] = [];
-  const both = (text: Text) => {
-    shown.push(text);
-    spoken.push(text);
-  };
-  if (waiting) both(message('Needs you'));
+export function chatStatusLine({ turn, work, agent, now }: ChatStatusLineInput): ChatStatusLine {
+  const own = agentPart(turn, agent, now);
+  const shown = [...own.shown];
+  const spoken = [...own.spoken];
   const count = (...statuses: BackgroundWorkStatus[]) =>
     work.rows.filter((row) => statuses.includes(row.status)).length;
   const running = count('running');
@@ -168,24 +145,30 @@ export function chatStatusLine(
     [count('failed'), '%lld failed'],
     [count('stopped'), '%lld stopped'],
   ] as const) {
-    if (value > 0) both(message(key, n(value)));
+    if (value > 0) {
+      shown.push(message(key, n(value)));
+      spoken.push(message(key, n(value)));
+    }
   }
-  const failed = count('failed') > 0;
-  const state: ChatStatusLineState = waiting
-    ? 'waiting'
-    : running > 0
-      ? 'running'
-      : notUpdating > 0
-        ? 'unconfirmed'
-        : failed
-          ? 'failed'
-          : count('completed') > 0
-            ? 'completed'
-            : 'stopped';
+  const opensWork = work.rows.length > 0;
+  // An idle Agent's mark is its work's.
+  const state: ChatStatusLineState =
+    own.state !== 'idle' || !opensWork
+      ? own.state
+      : running > 0
+        ? 'running'
+        : notUpdating > 0
+          ? 'unconfirmed'
+          : count('failed') > 0
+            ? 'failed'
+            : count('completed') > 0
+              ? 'completed'
+              : 'stopped';
   return {
     state,
     text: { join: shown, separator: ' · ' },
     accessibilityValue: { join: spoken, separator: ', ' },
-    ticks: work.ticks,
+    ticks: turn !== null || work.ticks,
+    opensWork,
   };
 }
