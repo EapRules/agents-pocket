@@ -1,7 +1,7 @@
-# App Store listing (version 1.0.1)
+# App Store listing (version 1.0.2)
 
-> Version 1.0 is live with the earlier English text. This text, both languages, is entered in the 1.0.1
-> draft in App Store Connect (2026-11-13) and goes out when that version is released.
+> Version 1.0.1 is live (released 2026-11-15). This text, both languages, is for the 1.0.2 draft in
+> App Store Connect: against 1.0.1 it adds Pi to "Works with" and replaces "What's New".
 
 The text entered in App Store Connect, kept here so a change is reviewed like code. English is the primary
 language; Spanish is the second localization. Limits: subtitle 30, promotional text 170, keywords 100,
@@ -52,7 +52,7 @@ STRAIGHT TO YOUR COMPUTER
 • No analytics and no tracking. Free and open source (MIT).
 
 WORKS WITH
-Claude Code, Codex, OpenCode, Hermes Agent, Grok and Oh My Pi, running under herdr. Support depends on each program's version; some features are available only for some programs.
+Claude Code, Codex, OpenCode, Pi, Oh My Pi, Hermes Agent and Grok, running under herdr. Support depends on each program's version; some features are available only for some programs.
 
 WHAT YOU NEED
 • A Mac or Linux computer with herdr installed and SSH turned on.
@@ -63,12 +63,12 @@ No computer at hand? Tap "Try the Demo" on the first screen to explore the app w
 
 Agents Pocket is an independent project. Product names are trademarks of their owners and are used only to say what the app works with.
 
-**What's New (1.0.1):**
-• Chat reads lighter: tool calls fold into one line, and a single status line shows what the agent is doing.
-• Type / to see each program's own commands next to your skills.
-• A clearer notice when a Host can't be reached, with the way to pair it again.
-• New icon and launch animation.
-• Fixes for Codex and OpenCode.
+**What's New (1.0.2):**
+• Links open inside the app, in a sheet you close to get right back.
+• A multi-line paste is shown for review before it reaches the terminal, in the Agent's terminal and in the Shell.
+• Approval requests are easier to read, and a long command no longer gets cut.
+• Widgets, the Live Activity and notifications show the app's name correctly.
+• Fixes for permission requests in Codex, OpenCode and Grok.
 
 ## Spanish (Mexico)
 
@@ -113,7 +113,7 @@ DIRECTO A TU COMPUTADORA
 • Sin analítica y sin rastreo. Gratis y de código abierto (MIT).
 
 FUNCIONA CON
-Claude Code, Codex, OpenCode, Hermes Agent, Grok y Oh My Pi, corriendo bajo herdr. El soporte depende de la versión de cada programa; algunas funciones están disponibles solo para algunos programas.
+Claude Code, Codex, OpenCode, Pi, Oh My Pi, Hermes Agent y Grok, corriendo bajo herdr. El soporte depende de la versión de cada programa; algunas funciones están disponibles solo para algunos programas.
 
 QUÉ NECESITAS
 • Una computadora Mac o Linux con herdr instalado y SSH activado.
@@ -124,12 +124,12 @@ QUÉ NECESITAS
 
 Agents Pocket es un proyecto independiente. Los nombres de productos son marcas de sus dueños y se usan solo para decir con qué funciona la app.
 
-**What's New (1.0.1):**
-• El Chat se lee más liviano: las llamadas a herramientas se agrupan en una línea y una sola línea de estado muestra en qué trabaja el agente.
-• Al escribir / ves los comandos de cada programa además de tus skills.
-• Un aviso más claro cuando no se puede llegar a un Host, con el camino para volver a vincularlo.
-• Nuevo ícono y animación de inicio.
-• Correcciones para Codex y OpenCode.
+**What's New (1.0.2):**
+• Los enlaces se abren dentro de la app, en una hoja que cierras para volver donde estabas.
+• Un pegado de varias líneas se muestra para revisarlo antes de llegar a la terminal, en la terminal del Agente y en el Shell.
+• Los pedidos de aprobación se leen mejor, y un comando largo ya no se corta.
+• Los widgets, la Live Activity y las notificaciones muestran bien el nombre de la app.
+• Correcciones en los pedidos de permiso de Codex, OpenCode y Grok.
 
 ## Notes for App Review
 
