@@ -46,6 +46,8 @@ export interface TerminalConnectionPoolOptions {
   readonly idleTimeoutMs?: number;
   readonly maximumShellsPerHost?: number;
   readonly budget?: TerminalRetentionBudget;
+  /** Passed to every shell's input path (see `TerminalInputControllerOptions`). */
+  readonly bracketedPasteIsReviewed?: boolean;
 }
 
 const keyOf = (hostId: string, identity: ShellTerminalIdentity) =>
@@ -66,6 +68,7 @@ export class TerminalConnectionPool {
   private readonly clock: Clock;
   private readonly idleTimeoutMs: number;
   private readonly maximumShellsPerHost: number;
+  private readonly bracketedPasteIsReviewed: boolean;
   private tail: Promise<void> = Promise.resolve();
   private selections = 0;
   private readonly listeners = new Set<() => void>();
@@ -81,6 +84,7 @@ export class TerminalConnectionPool {
       ),
     );
     this.budget = options.budget ?? new TerminalRetentionBudget();
+    this.bracketedPasteIsReviewed = options.bracketedPasteIsReviewed ?? false;
   }
 
   get size(): number {
@@ -154,6 +158,7 @@ export class TerminalConnectionPool {
       isOnStage: () => lifetime.retained,
       runTerminal: options.runTerminal,
       clock: this.clock,
+      bracketedPasteIsReviewed: this.bracketedPasteIsReviewed,
     });
     const entry: InternalEntry = {
       store,

@@ -6,6 +6,7 @@ import {
   TerminalConnectionPool,
 } from '@openagentspocket/core';
 import type { HerdrApi } from '@openagentspocket/transport';
+import { terminalViewReviewsBracketedPaste } from '@openagentspocket/ui';
 import {
   hostTerminalRunner,
   type TerminalHostSource,
@@ -48,7 +49,10 @@ export function createLiveShellServices(deps: {
   const { console } = deps;
   const remembered = new Map<string, ShellTerminalIdentity>();
   return {
-    pool: new TerminalConnectionPool({ clock: deps.clock }),
+    pool: new TerminalConnectionPool({
+      clock: deps.clock,
+      bracketedPasteIsReviewed: terminalViewReviewsBracketedPaste,
+    }),
     hostName: deps.hostName,
     remote: (hostId) => remoteFor(console, hostId),
     memory: (hostId, key): ShellTerminalMemory => ({

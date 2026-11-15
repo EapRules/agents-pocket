@@ -165,7 +165,12 @@ export {
   type TerminalThemeSlots,
   useTerminalColors,
 } from './terminal/TerminalThemeContext';
-export { type TerminalHandle, TerminalView, type TerminalViewProps } from './terminal/TerminalView';
+export {
+  type TerminalHandle,
+  TerminalView,
+  type TerminalViewProps,
+  terminalViewReviewsBracketedPaste,
+} from './terminal/TerminalView';
 export { appendOutput, gridSize, stripAnsi } from './terminal/terminalText';
 export { type AttachedTerminal, useAttachedTerminal } from './terminal/useAttachedTerminal';
 export { decodeUtf8Stream } from './terminal/utf8';

@@ -27,6 +27,8 @@ export interface ShellTerminalStoreOptions {
   readonly isOnStage: () => boolean;
   readonly runTerminal: TerminalSessionRunner;
   readonly input?: TerminalInputController;
+  /** The terminal view asks before a bracketed paste itself (see `TerminalInputControllerOptions`). */
+  readonly bracketedPasteIsReviewed?: boolean;
   readonly clock: Clock;
 }
 
@@ -59,7 +61,10 @@ export class ShellTerminalStore {
     this.identity = options.identity;
     this.input =
       options.input ??
-      new TerminalInputController({ observeOutgoing: () => this.touchScroll.halt() });
+      new TerminalInputController({
+        observeOutgoing: () => this.touchScroll.halt(),
+        bracketedPasteIsReviewed: options.bracketedPasteIsReviewed,
+      });
     this.touchScroll = new TerminalTouchScroll({
       clock: options.clock,
       modes: this.modes,

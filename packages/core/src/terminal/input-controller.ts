@@ -1,6 +1,8 @@
 import { message, type Text } from '../errors/text';
 import { utf8Encode } from '../pairing/bytes';
+import { type IncomingInput, IncomingInputClassifier } from './incoming-paste';
 import type { InputSessionGeneration, TerminalInputPort } from './input-port';
+import { pasteLineCount, pastePreview } from './paste-preview';
 import type { PasteRequestResult, PasteReview } from './paste-review';
 import { containsOnlySafeScalars, encodePaste, isMultiline } from './text-safety';
 import type { OutgoingSource } from './user-message-index';
@@ -18,6 +20,11 @@ export interface TerminalInputControllerOptions {
   readonly observeSubmitted?: (text: string) => void;
   /** Called when a session begins or ends, so per-session indexes reset with the writer. */
   readonly sessionDidReset?: () => void;
+  /**
+   * The terminal view already asked before it sent a bracketed paste (Android's native dialog),
+   * so a bracketed multi-line event goes out without asking again.
+   */
+  readonly bracketedPasteIsReviewed?: boolean;
 }
 
 interface Writer {
@@ -25,30 +32,9 @@ interface Writer {
   scroll(sequence: Uint8Array, rows: number): void;
 }
 
-const PREVIEW_LIMIT = 2000;
 const UNSAFE_PASTE = message('The clipboard contains unsafe terminal control characters.');
 
-/** Lines in `text`: CRLF counts once, a lone CR or LF starts a line. */
-export function lineCount(text: string): number {
-  let count = 1;
-  let previousWasCR = false;
-  for (const char of text) {
-    if (char === '\n') {
-      if (!previousWasCR) count += 1;
-    } else if (char === '\r') {
-      count += 1;
-    }
-    previousWasCR = char === '\r';
-  }
-  return count;
-}
-
 const characters = (text: string): number => [...text].length;
-
-function previewOf(text: string): string {
-  const all = [...text];
-  return all.length > PREVIEW_LIMIT ? `${all.slice(0, PREVIEW_LIMIT).join('')}…` : text;
-}
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matching control characters is the point.
 const hasControlOrNewline = (text: string) => /[\u0000-\u001F\u007F-\u009F\u2028\u2029]/.test(text);
@@ -67,6 +53,7 @@ export class TerminalInputController implements TerminalInputPort {
   /** Captured at request time: the framing the user agreed to is the one they were shown. */
   private pendingPasteIsBracketed = false;
   private heldInsertion = '';
+  private readonly incoming = new IncomingInputClassifier();
   private snapshot: InputSnapshot = { live: false, pendingPaste: null, pasteError: null };
   private readonly listeners = new Set<() => void>();
 
@@ -106,6 +93,7 @@ export class TerminalInputController implements TerminalInputPort {
     this.liveSession = this.generation;
     this.readyGeneration = null;
     this.writer = writer;
+    this.incoming.reset();
     this.options.sessionDidReset?.();
     this.publish();
     return this.generation;
@@ -119,6 +107,7 @@ export class TerminalInputController implements TerminalInputPort {
     this.liveSession = null;
     this.readyGeneration = null;
     this.writer = null;
+    this.incoming.reset();
     this.options.sessionDidReset?.();
     if (options.preservingPendingPaste) this.publish();
     else this.cancelPaste();
@@ -132,6 +121,7 @@ export class TerminalInputController implements TerminalInputPort {
     this.liveSession = null;
     this.readyGeneration = null;
     this.writer = null;
+    this.incoming.reset();
     this.options.sessionDidReset?.();
     this.publish();
   }
@@ -154,11 +144,50 @@ export class TerminalInputController implements TerminalInputPort {
     if (generation === this.liveSession) this.options.observeSubmitted?.(text);
   }
 
-  /** Sends ordinary terminal bytes; false when empty or no live session. */
+  /**
+   * Input from the terminal view and the key toolbars; false when empty or no live session.
+   * Typing goes out byte for byte. A paste the view delivered (see `IncomingInputClassifier`) is
+   * held for review like `requestPaste` when it carries more than one line.
+   */
   send(data: Uint8Array): boolean {
     if (!this.writer || data.length === 0) return false;
-    this.emit(data, 'keystroke');
+    const input = this.incoming.receive(data);
+    if (input?.kind === 'typing') this.emit(input.bytes, 'keystroke');
+    else if (input) this.receivePaste(input);
     return true;
+  }
+
+  private receivePaste(input: Extract<IncomingInput, { kind: 'paste' }>): void {
+    if (!containsOnlySafeScalars(input.text)) {
+      this.refusePaste();
+      return;
+    }
+    if (!input.lines) {
+      this.emit(input.bytes, 'keystroke');
+      return;
+    }
+    if (input.bracketed && this.options.bracketedPasteIsReviewed) {
+      this.emit(input.bytes, 'paste');
+      return;
+    }
+    this.holdForReview(input.text, input.bracketed);
+  }
+
+  private refusePaste(): void {
+    this.cancelPaste();
+    this.publish({ pasteError: UNSAFE_PASTE });
+  }
+
+  private holdForReview(text: string, bracketed: boolean): PasteReview {
+    const review: PasteReview = {
+      lineCount: pasteLineCount(text),
+      characterCount: characters(text),
+      preview: pastePreview(text),
+    };
+    this.pendingPasteText = text;
+    this.pendingPasteIsBracketed = bracketed;
+    this.publish({ pendingPaste: review });
+    return review;
   }
 
   /** Composer text into the live PTY without submitting; a later Esc cancels this pending line. */
@@ -213,23 +242,14 @@ export class TerminalInputController implements TerminalInputPort {
     this.publish({ pasteError: null });
     if (!this.writer) return { kind: 'blocked' };
     if (!containsOnlySafeScalars(text)) {
-      this.cancelPaste();
-      this.publish({ pasteError: UNSAFE_PASTE });
+      this.refusePaste();
       return { kind: 'rejected' };
     }
     if (!isMultiline(text)) {
       if (text) this.emit(utf8Encode(text), 'paste');
       return { kind: 'inserted' };
     }
-    const review: PasteReview = {
-      lineCount: lineCount(text),
-      characterCount: characters(text),
-      preview: previewOf(text),
-    };
-    this.pendingPasteText = text;
-    this.pendingPasteIsBracketed = bracketedPaste;
-    this.publish({ pendingPaste: review });
-    return { kind: 'requiresReview', review };
+    return { kind: 'requiresReview', review: this.holdForReview(text, bracketedPaste) };
   }
 
   confirmPaste(): boolean {

@@ -6,6 +6,7 @@ import {
   TerminalConnectionPool,
 } from '@openagentspocket/core';
 import { systemClock } from '@openagentspocket/transport';
+import { terminalViewReviewsBracketedPaste } from '@openagentspocket/ui';
 import { utf8Encode } from 'agentico-ssh';
 import type { ShellTerminalServices } from './services';
 
@@ -27,7 +28,10 @@ export function createDemoShellServices(): ShellTerminalServices {
     close: async () => undefined,
   };
   return {
-    pool: new TerminalConnectionPool({ clock: systemClock }),
+    pool: new TerminalConnectionPool({
+      clock: systemClock,
+      bracketedPasteIsReviewed: terminalViewReviewsBracketedPaste,
+    }),
     hostName: () => 'Demo Host',
     remote: () => remote,
     memory: (hostId, key): ShellTerminalMemory => ({

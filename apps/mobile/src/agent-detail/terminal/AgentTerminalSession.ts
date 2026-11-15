@@ -13,6 +13,7 @@ import {
   type TerminalSessionRunner,
   TerminalTouchScroll,
 } from '@openagentspocket/core';
+import { terminalViewReviewsBracketedPaste } from '@openagentspocket/ui';
 
 /** What one Agent's terminal needs from its Host. */
 export interface TerminalHostPort {
@@ -42,6 +43,7 @@ export class AgentTerminalSession {
       this.touchScroll.modesDidChange();
       this.jump?.reset();
     },
+    bracketedPasteIsReviewed: terminalViewReviewsBracketedPaste,
   });
   readonly keyboard = new TerminalKeyboardControl({ send: (bytes) => this.input.send(bytes) });
   /** A drag on the terminal; a Message Jump in flight gives way to it. */

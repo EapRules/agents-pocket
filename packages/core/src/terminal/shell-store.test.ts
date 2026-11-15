@@ -118,9 +118,20 @@ describe('ShellTerminalStore', () => {
 
     it('keeps typing raw and a single safe line immediate', async () => {
       const { store, session } = await attached();
-      store.send(utf8Encode('ls\r'));
+      for (const key of ['l', 's', '\r']) store.send(utf8Encode(key));
       expect(store.input.requestPaste('git status').kind).toBe('inserted');
-      expect(session.sent).toEqual([utf8Encode('ls\r'), utf8Encode('git status')]);
+      expect(session.sent).toEqual([...['l', 's', '\r', 'git status'].map(utf8Encode)]);
+      await store.leave();
+    });
+
+    it('reviews a multi-line paste the terminal view delivers as input', async () => {
+      const { store, session } = await attached();
+      const framed = encodePaste(text, true);
+      store.send(framed);
+      expect(store.input.pendingPaste).toMatchObject({ lineCount: 3 });
+      expect(session.sent).toEqual([]);
+      store.input.confirmPaste();
+      expect(session.sent).toEqual([framed]);
       await store.leave();
     });
 

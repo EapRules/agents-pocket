@@ -1,8 +1,16 @@
 import type { ComponentType } from 'react';
+import { Platform } from 'react-native';
 import { PlainTerminal } from './PlainTerminal';
 import type { TerminalViewProps } from './terminalTypes';
 
 export type { TerminalHandle, TerminalViewProps } from './terminalTypes';
+
+/**
+ * Whether the native view asks before it sends a bracketed paste. On Android its Paste (menu and
+ * accessory bar) shows its own dialog for multi-line text and is the only source of bracketed
+ * input; IME commits arrive unbracketed. On iOS a paste is sent without asking.
+ */
+export const terminalViewReviewsBracketedPaste = Platform.OS === 'android';
 
 let native: ComponentType<TerminalViewProps> | null | undefined;
 
