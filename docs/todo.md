@@ -194,11 +194,8 @@ so no program-specific branches.
   after pairing a first Host, the system prompt after it, and a push arriving without visiting Settings.
 - [ ] **What a simulator cannot do:** a push with the app closed, Approve from a notification, the Live
   Activity, for Codex and OpenCode (`docs/guides/device-test-codex-opencode.md`).
-- [ ] Cloudflare Web Analytics is injected on the zone (site and relay /privacy); turn it off in the
-  dashboard.
-
-## 6. Later (each needs a decision record first)
-
+- [x] Cloudflare Web Analytics turned off for the zone (2026-11-15): the site and the relay's /privacy no
+  longer carry the injected beacon, checked from outside with a browser user agent.
 - [ ] **Host addresses that heal themselves.** Each encrypted notification carries the Host's current
   addresses and the app updates that Host's routes; the pinned host key still decides which machine is
   trusted. Changes the notification envelope.
