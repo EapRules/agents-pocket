@@ -1,14 +1,34 @@
 // Builds dist/ for openagentspocket.com: the pages in src/ wearing the app's Índigo (dark) and Papel
-// (light) colors from packages/ui/tokens, the app icon, /privacy redirected to the relay's policy (one
+// (light) colors from packages/ui/tokens, the app icon, the hero scene (src/hero, with three.js and the
+// latin fonts vendored from node_modules: the site makes no third-party request), /privacy redirected to the relay's policy (one
 // source: packages/relay/src/privacy.js), and the Host installer from packages/plugin/install once it no
 // longer points at a placeholder repository. Usage: node scripts/build.mjs
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ORIGIN = 'https://openagentspocket.com';
 export const PRIVACY_URL = 'https://relay.openagentspocket.com/privacy';
 const INSTALLERS = ['install.sh', 'install.ps1'];
+export const THREE_FILE = 'vendor/three-0.170.0.module.min.js'; // the import map in index.html points here
+const IMMUTABLE = 'Cache-Control: public, max-age=31536000, immutable';
+// The latin woff2 files the page's @font-face rules name, as [package, file].
+const FONTS = [
+  ['instrument-serif', 'instrument-serif-latin-400-normal.woff2'],
+  ['instrument-serif', 'instrument-serif-latin-400-italic.woff2'],
+  ['instrument-sans', 'instrument-sans-latin-400-normal.woff2'],
+  ['instrument-sans', 'instrument-sans-latin-500-normal.woff2'],
+  ['jetbrains-mono', 'jetbrains-mono-latin-400-normal.woff2'],
+  ['jetbrains-mono', 'jetbrains-mono-latin-600-normal.woff2'],
+];
 
 const root = join(import.meta.dirname, '..');
 const repo = join(root, '..', '..');
@@ -57,13 +77,24 @@ export function build({
     copyFileSync(join(repo, 'apps/mobile/assets/images', image), join(out, image));
   }
   writeFileSync(join(out, '_redirects'), `/privacy ${PRIVACY_URL} 302\n`);
+  cpSync(join(root, 'src/hero'), join(out, 'hero'), { recursive: true });
+  mkdirSync(join(out, 'vendor'), { recursive: true });
+  copyFileSync(join(root, 'node_modules/three/build/three.module.min.js'), join(out, THREE_FILE));
+  mkdirSync(join(out, 'fonts'), { recursive: true });
+  for (const [pkg, file] of FONTS) {
+    copyFileSync(
+      join(root, 'node_modules/@fontsource', pkg, 'files', file),
+      join(out, 'fonts', file),
+    );
+  }
+  const headers = [`/vendor/*\n  ${IMMUTABLE}\n`, `/fonts/*\n  ${IMMUTABLE}\n`];
   if (installer) {
     for (const file of installer) copyFileSync(file, join(out, file.split('/').pop()));
-    const headers = INSTALLERS.map(
-      (name) => `/${name}\n  Content-Type: text/plain; charset=utf-8\n`,
+    headers.unshift(
+      ...INSTALLERS.map((name) => `/${name}\n  Content-Type: text/plain; charset=utf-8\n`),
     );
-    writeFileSync(join(out, '_headers'), headers.join(''));
   }
+  writeFileSync(join(out, '_headers'), headers.join(''));
   return { installer: installer !== null };
 }
 

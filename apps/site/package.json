@@ -12,5 +12,11 @@
     "build": "node scripts/build.mjs",
     "test": "node --test",
     "deploy": "node scripts/build.mjs && npx wrangler deploy"
+  },
+  "devDependencies": {
+    "@fontsource/instrument-sans": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "three": "0.170.0"
   }
 }
