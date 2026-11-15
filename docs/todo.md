@@ -168,8 +168,9 @@ so no program-specific branches.
   (2026-11-14). Since 2026-11-15 (ADR 0028, "internal channel and staged rollout"): an internal channel,
   a production rollout (start 10%, `rollout`, `stop`, `revert`), one command (`pnpm ota`), and CI that
   holds no secret and prints an OTA verdict per push (`sourceFingerprint` in `docs/releases/builds.json`).
-- [ ] **Owner decides the privacy clause** for the update request (the install id and the channel), then
-  merge `internal-channel-app` (TestFlight installs ask for `internal`).
+- [x] Privacy clause added (the request says whether the install is from TestFlight; owner, 2026-11-15)
+  and the app-side change merged: TestFlight installs ask for `internal`. It reaches a phone with the
+  next update or store build.
 - [ ] **On a real iPhone:** a TestFlight install asks for `internal` and an App Store install does not
   (detection reads the StoreKit receipt name; unverified).
 - [ ] **On a device:** a `revert` (the device on the bad update takes the re-signed previous one), the

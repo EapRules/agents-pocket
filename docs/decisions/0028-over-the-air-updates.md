@@ -388,10 +388,9 @@ Two channels again, neither one chosen by the user. This supersedes "one channel
 - **Risk accepted.** An internal update is signed with the same key and would be valid on any build. What
   keeps it off store installs is the server's channel pointer, so a compromised server could serve it to
   everyone. The signature still stops unsigned code.
-- **Open.** The app-side change that makes TestFlight installs ask for `internal` is on branch
-  `internal-channel-app`, not merged: the privacy policy's list of what an update request carries needs one
-  added clause first (owner's decision). Detection reads the StoreKit receipt name and is unverified on a
-  device.
+- **App side.** Merged 2026-11-15, after the owner approved one added clause in the privacy policy (the
+  update request says whether the install is from TestFlight). Detection reads the StoreKit receipt name
+  and is unverified on a device; a wrong answer leaves a test install on production, never the reverse.
 
 ## Not verified
 

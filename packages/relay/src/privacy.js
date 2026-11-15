@@ -3,7 +3,7 @@
 // source of truth: change the policy here. The contact address comes from
 // the PRIVACY_CONTACT var, so it is set at deploy time, not committed.
 
-const UPDATED = "2026-11-14";
+const UPDATED = "2026-11-15";
 const APP_NAME = "Agents Pocket";
 
 /** @param {string} contact */
@@ -44,8 +44,9 @@ from the update server the developer runs on Cloudflare. At each launch the
 app asks that server whether an update exists. The request carries your IP
 address, the platform, the app's version identifiers, the identifier of the
 update the app is running, a random identifier the update library creates when
-the app is installed and, if an update failed or the app crashed since the last
-check, a summary of the error. The server uses this only to answer the request
+the app is installed, whether the app was installed from TestFlight (test
+installs receive updates before everyone else) and, if an update failed or the
+app crashed since the last check, a summary of the error. The server uses this only to answer the request
 and does not log or store any of it. Updates are signed by the developer and the
 app refuses any update that is not. They carry fixes and polish to features
 already in the app, not new data flows. No content from your Hosts, sessions or
@@ -100,8 +101,10 @@ corre en Cloudflare. En cada inicio, la app le pregunta a ese servidor si hay
 una actualización. El pedido incluye tu dirección IP, la plataforma, los
 identificadores de versión de la app, el identificador de la actualización que
 está corriendo, un identificador aleatorio que la biblioteca de actualizaciones
-crea al instalar la app y, si una actualización falló o la app se cerró por un
-error desde la última consulta, un resumen del error. El servidor lo usa solo
+crea al instalar la app, si la app se instaló desde TestFlight (las
+instalaciones de prueba reciben las actualizaciones antes que el resto) y, si
+una actualización falló o la app se cerró por un error desde la última
+consulta, un resumen del error. El servidor lo usa solo
 para responder el pedido y no registra ni guarda nada de eso. Las
 actualizaciones están firmadas por el desarrollador y la app rechaza cualquiera
 que no lo esté. Traen correcciones y mejoras de funciones que la app ya tiene,

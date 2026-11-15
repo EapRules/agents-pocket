@@ -9,6 +9,9 @@ describe("privacy policy", () => {
     assert.match(html, /<h2>Actualizaciones de la app<\/h2>/);
     assert.match(html, /does not log or store any of it/);
     assert.match(html, /no registra ni guarda nada/);
-    assert.match(html, /Last updated 2026-11-14/);
+    // The request also says a test install is one (the internal update channel, ADR 0028).
+    assert.match(html, /installed from TestFlight/);
+    assert.match(html, /instaló desde TestFlight/);
+    assert.match(html, /Last updated 2026-11-15/);
   });
 });
