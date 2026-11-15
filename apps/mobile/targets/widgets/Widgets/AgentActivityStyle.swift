@@ -49,9 +49,12 @@ enum AgentActivityMetrics {
     static let islandRowGlyph: CGFloat = 15
     static let tokenGlyph: CGFloat = 15
     static let cornerMark: CGFloat = 15
-    static let compactMark: CGFloat = 20
+    /// With its badge 23.5 x 21.5 pt, well inside a compact side (about
+    /// 52 x 36.67 pt on a 393 pt phone, inset from the island's edge).
+    static let compactMark: CGFloat = 19
+    /// With its badge 26.5 x 25.5 pt; the badge stays inside the 36.67 pt circle.
     static let minimalMark: CGFloat = 22
-    /// The limited-width island is a 28 pt circle.
+    /// The limited-width island is a 28 pt circle; 22.5 x 21.5 pt with the badge.
     static let limitedWidthMark: CGFloat = 18
     static let rowHeight: CGFloat = 28
     static let islandRowHeight: CGFloat = 24

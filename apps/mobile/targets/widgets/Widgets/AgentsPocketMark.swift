@@ -144,18 +144,39 @@ struct AgentActivityCornerMark: View {
 /// The mockup's "Es el estado" placement: the mark tinted by a status, with
 /// the status glyph as a corner badge so the state reads without color
 /// (exclamation mark, check mark, open ring, dashed ring).
+///
+/// The badge hangs past the mark's bottom-right corner, and the view's frame
+/// includes it: the island clips compact and minimal views at the size they
+/// report, so a badge drawn outside the frame was cut at the camera.
 struct AgentActivityStateMark: View {
     let status: String
     let size: CGFloat
 
+    /// The black ring that separates the badge from the mark.
+    private static let badgeRing: CGFloat = 1.5
+
+    static func badgeSize(for size: CGFloat) -> CGFloat {
+        max(9, (size * 0.48).rounded())
+    }
+
+    /// The mark plus the part of the badge (and its ring) past the mark's edges.
+    static func footprint(for size: CGFloat) -> CGSize {
+        let badge = badgeSize(for: size)
+        return CGSize(
+            width: size + (badge * 0.3).rounded() + badgeRing,
+            height: size + (badge * 0.15).rounded() + badgeRing)
+    }
+
     var body: some View {
-        let badge = max(9, (size * 0.48).rounded())
-        AgentsPocketMark(size: size, color: AgentActivityStatusStyle.ink(for: status))
-            .overlay(alignment: .bottomTrailing) {
-                AgentActivityStatusGlyph(status: status, size: badge)
-                    .background(Circle().fill(Color.black).padding(-1.5))
-                    .offset(x: (badge * 0.3).rounded(), y: (badge * 0.15).rounded())
-            }
-            .accessibilityHidden(true)
+        let footprint = Self.footprint(for: size)
+        ZStack(alignment: .bottomTrailing) {
+            AgentsPocketMark(size: size, color: AgentActivityStatusStyle.ink(for: status))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            AgentActivityStatusGlyph(status: status, size: Self.badgeSize(for: size))
+                .background(Circle().fill(Color.black).padding(-Self.badgeRing))
+                .padding(Self.badgeRing)
+        }
+        .frame(width: footprint.width, height: footprint.height)
+        .accessibilityHidden(true)
     }
 }
