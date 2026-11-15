@@ -32,6 +32,7 @@ import { deviceStorage } from '@/settings/deviceStorage';
 import { SettingsProvider, useSettings } from '@/settings/SettingsProvider';
 import { useResolvedThemeId } from '@/settings/useSettingsContext';
 import { deviceUpdates } from '@/updates/deviceUpdates';
+import { UpdateChannelSync } from '@/updates/UpdateChannelSync';
 import { useWidgetSync } from '@/widgets/useWidgetSync';
 
 recordUncaughtErrors();
@@ -118,6 +119,7 @@ export default function RootLayout() {
         authenticator={deviceAuthenticator}
         updates={deviceUpdates}
       >
+        <UpdateChannelSync />
         <SettingsTheme>
           <RootCanvas>
             <ThemedStatusBar />

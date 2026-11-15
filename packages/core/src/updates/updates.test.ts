@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { runningUpdateReportText, summarizeRunningUpdate } from './index';
+import {
+  runningUpdateReportText,
+  summarizeRunningUpdate,
+  UPDATE_CHANNEL_PARAM,
+  updateChannel,
+} from './index';
+
+describe('update channel', () => {
+  it('a TestFlight install (sandboxReceipt) asks for internal', () => {
+    expect(UPDATE_CHANNEL_PARAM).toBe('channel');
+    expect(updateChannel({ storeReceiptName: 'sandboxReceipt' })).toBe('internal');
+  });
+
+  it('an App Store install, an unknown receipt or none asks for no channel', () => {
+    expect(updateChannel({ storeReceiptName: 'receipt' })).toBeNull();
+    expect(updateChannel({ storeReceiptName: 'Sandboxreceipt' })).toBeNull();
+    expect(updateChannel({ storeReceiptName: '' })).toBeNull();
+    expect(updateChannel({ storeReceiptName: null })).toBeNull();
+  });
+});
 
 describe('running update', () => {
   const id = '0f6a2b3c-1d2e-4f50-8a9b-0c1d2e3f4a5b';

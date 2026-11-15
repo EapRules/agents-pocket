@@ -1,8 +1,20 @@
 /**
- * Over-the-air updates, the pure part (docs/decisions/0028-over-the-air-updates.md). There is one
- * channel: every official build asks the update server for the same updates and the app sends no
- * channel at all.
+ * Over-the-air updates, the pure part (docs/decisions/0028-over-the-air-updates.md). Every official
+ * build asks the update server for updates; a TestFlight build also names the `internal` channel
+ * (its testers get an update first), an App Store build names none. Nothing is a setting.
  */
+export type UpdateChannel = 'internal';
+
+/** The extra param the server reads the channel from. */
+export const UPDATE_CHANNEL_PARAM = 'channel';
+
+/** The name of the StoreKit receipt file TestFlight installs carry (App Store installs: `receipt`). */
+export const TESTFLIGHT_RECEIPT_NAME = 'sandboxReceipt';
+
+/** The channel an install asks for: `internal` for TestFlight, null (no param) for everything else. */
+export function updateChannel(install: { storeReceiptName: string | null }): UpdateChannel | null {
+  return install.storeReceiptName === TESTFLIGHT_RECEIPT_NAME ? 'internal' : null;
+}
 
 /** What the app runs: the JS inside the binary, or a downloaded update. */
 export interface RunningUpdate {
