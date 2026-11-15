@@ -142,9 +142,23 @@ so no program-specific branches.
   disclosure chevrons, and `check-reuse.mjs` now covers every ui folder; the generic card's reasons say
   what the card offers. Three screen goldens (`omp-34`, `opencode-25`, `opencode-42`) carry the new reason
   text by hand: regenerating them from Swift would bring the old sentence back.
-- [ ] **For the owner to decide:** `packages/ui/src/diff/DiffView.tsx` has no screen calling it (connect it
-  or delete it); a paste into the Shell terminal is not reviewed, unlike the Agent's terminal
-  (`PlainTerminalInput`; no Review Paste sheet there).
+- [x] **A paste is reviewed in both terminals, however it arrives** (owner: "make them equal", 2026-11-14).
+  The Shell uses the Agent's `TerminalInputController` and the shared `TerminalPasteReview`. A paste the
+  terminal view delivers as input (the system Paste, the accessory bar, Cmd+V, an IME commit with line
+  breaks) is recognized in `incoming-paste.ts`: bracketed-paste markers, or a line break inside text; typing
+  passes byte for byte. A refused paste shows a toast. On Android a bracketed paste is left to the native
+  dialog.
+- [ ] **Before any update or build carries the paste change: on a real iPhone**, in an Agent's terminal and
+  in a Shell, with a program that turns bracketed paste on (zsh, an agent's TUI) and one that does not:
+  type with the iOS keyboard on the terminal (every key must arrive, Enter included), paste one word, paste
+  several lines (the sheet opens; confirm sends them once; cancel sends nothing), paste something long. The
+  simulator cannot put the system keyboard on the terminal view, so none of this is checked. Not known: a
+  very long paste delivered in pieces.
+- [ ] **For the owner to decide:** `packages/ui/src/diff/DiffView.tsx` has no screen calling it. Proposed:
+  a "Side by Side" switch on the file diff, as one more layout of the diff the Chat and Changes already use,
+  and delete the loose component (Moshi's viewer is side by side; ours is unified, as GitHub and Gerrit do
+  on narrow screens). Ideas seen in competitors, not built: a "last turn only" scope and jumping between
+  hunks.
 - [ ] **Waiting for the next store build** (branch `encryption-declaration`): the encryption declaration
   and the system permission texts saying "Agents Pocket". Both change the runtime fingerprint.
 - [ ] **Over-the-air JS updates** (ADR 0028, accepted by the owner 2026-11-14). Done: the update server,
