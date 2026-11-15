@@ -79,7 +79,7 @@ export interface PluginNotice {
   readonly reenableNotifications: boolean;
   /**
    * null when the user has to act on the Host: an install over a plugin that
-   * is not a GitHub install of this repository, or a change of plugin id.
+   * is not a GitHub install of this repository (or a legacy one), or a change of plugin id.
    */
   readonly action: PluginNoticeAction | null;
 }

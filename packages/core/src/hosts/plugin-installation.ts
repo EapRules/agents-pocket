@@ -17,7 +17,9 @@ export const KNOWN_PLUGIN_IDS: readonly string[] = [AGENTICO_PLUGIN_ID, ...LEGAC
 /**
  * The GitHub repository `herdr plugin install` fetches.
  */
-export const PLUGIN_REPOSITORY = 'openagentspocket/openagentspocket';
+export const PLUGIN_REPOSITORY = 'EapRules/agents-pocket';
+/** Repositories the plugin shipped from before, newest first. GitHub redirects them here. */
+export const LEGACY_PLUGIN_REPOSITORIES: readonly string[] = ['openagentspocket/openagentspocket'];
 /** Where the installer scripts (`packages/plugin/install`) are served from. */
 export const INSTALLER_BASE_URL = 'https://openagentspocket.com';
 /** The generated branch the plugin ships from. */
@@ -203,11 +205,33 @@ export function isLegacyPluginId(installation: PluginInstallation): boolean {
   return installation.pluginId !== AGENTICO_PLUGIN_ID;
 }
 
+/** GitHub `owner/repo` names compare case-insensitively. */
+function sameRepository(a: string | null, b: string): boolean {
+  return a?.toLowerCase() === b.toLowerCase();
+}
+
+/**
+ * A GitHub install from a repository the plugin shipped from before. It is ours,
+ * not a fork: a plain install moves it to `PLUGIN_REPOSITORY` (herdr replaces the
+ * same plugin id from another repository, config dir kept). Only for the default
+ * repository; a custom one matches exactly.
+ */
+export function isFromLegacyRepository(
+  installation: PluginInstallation,
+  repository: string = PLUGIN_REPOSITORY,
+): boolean {
+  return (
+    installation.source === 'github' &&
+    sameRepository(repository, PLUGIN_REPOSITORY) &&
+    LEGACY_PLUGIN_REPOSITORIES.some((legacy) => sameRepository(installation.repository, legacy))
+  );
+}
+
 /**
  * Whether an install may replace this plugin: a GitHub install of `repository`
- * whose version herdr read from the manifest itself. A fork's install would
- * quietly move to this repository, and after a manifest warning the version may
- * be stale, so a downgrade could not be ruled out.
+ * (or of a legacy one) whose version herdr read from the manifest itself. A
+ * fork's install would quietly move to this repository, and after a manifest
+ * warning the version may be stale, so a downgrade could not be ruled out.
  */
 export function isReplaceableByInstall(
   installation: PluginInstallation,
@@ -215,7 +239,8 @@ export function isReplaceableByInstall(
 ): boolean {
   return (
     installation.source === 'github' &&
-    installation.repository?.toLowerCase() === repository.toLowerCase() &&
+    (sameRepository(installation.repository, repository) ||
+      isFromLegacyRepository(installation, repository)) &&
     !installation.hasManifestWarning &&
     parsePluginVersion(installation.version) !== null
   );

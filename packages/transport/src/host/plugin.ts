@@ -135,7 +135,7 @@ export type PluginInstallOutcome = 'installed' | 'upgraded' | 'current';
  * The install/upgrade flow behind the plugin notice's action. An absent plugin is installed. A
  * present one is replaced only when it is this repository's GitHub install with a fresh version
  * (the gate: a linked checkout, a fork or a stale registry entry could be downgraded or moved);
- * one already at `target` is left alone.
+ * one already at `target` is left alone. A legacy repository's install moves on upgrade.
  */
 export async function installOrUpgradePlugin(
   transport: SshTransport,

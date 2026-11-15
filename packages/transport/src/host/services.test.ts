@@ -45,7 +45,7 @@ function plugins(entries: JsonObject[]) {
   };
 }
 
-const github = (version: string, repo = 'openagentspocket/openagentspocket'): JsonObject => {
+const github = (version: string, repo = 'EapRules/agents-pocket'): JsonObject => {
   const [owner, name] = repo.split('/');
   return {
     plugin_id: 'agentico',
@@ -139,26 +139,19 @@ describe('plugin', () => {
     const { transport } = await connected(plugins([github('0.6.0')]));
     const installation = await readPlugin(transport);
     expect(installation?.version).toBe('0.6.0');
-    expect(installation?.repository).toBe('openagentspocket/openagentspocket');
+    expect(installation?.repository).toBe('EapRules/agents-pocket');
     const none = await connected(plugins([]));
     expect(await readPlugin(none.transport)).toBeNull();
   });
 
   it('builds step commands: bare, with the node probe, session-scoped, and via a launcher', () => {
-    const install = [
-      'plugin',
-      'install',
-      'openagentspocket/openagentspocket',
-      '--ref',
-      'plugin',
-      '--yes',
-    ];
+    const install = ['plugin', 'install', 'EapRules/agents-pocket', '--ref', 'plugin', '--yes'];
     const command = pluginStepCommand(install, { session: '', endpoint: null, findsNode: true });
     expect(
       command.startsWith(`/bin/sh -c '${HERDR_PATH_EXPORT}; __h_herdr=$(command -v herdr)`),
     ).toBe(true);
     expect(command).toContain(
-      String.raw`exec "$__h_herdr" plugin install '\''openagentspocket/openagentspocket'\'' --ref plugin --yes`,
+      String.raw`exec "$__h_herdr" plugin install '\''EapRules/agents-pocket'\'' --ref plugin --yes`,
     );
     expect(
       pluginStepCommand(['plugin', 'uninstall', 'herdr-mobile.pairing'], {
@@ -250,7 +243,7 @@ describe('plugin', () => {
     const command = pluginBranchManifestCommand();
     expect(command).toContain('export GIT_TERMINAL_PROMPT=0');
     expect(command).toContain(
-      'fetch -q --depth 1 https://github.com/openagentspocket/openagentspocket.git plugin',
+      'fetch -q --depth 1 https://github.com/EapRules/agents-pocket.git plugin',
     );
     expect(command).toContain('git show FETCH_HEAD:herdr-plugin.toml');
     expect(command.slice("/bin/sh -c '".length, -1)).not.toContain("'");
@@ -268,14 +261,7 @@ describe('plugin', () => {
   });
 
   it('installs when absent, upgrades an older own install, leaves a current or foreign one', async () => {
-    const installArgs = [
-      'plugin',
-      'install',
-      'openagentspocket/openagentspocket',
-      '--ref',
-      'plugin',
-      '--yes',
-    ];
+    const installArgs = ['plugin', 'install', 'EapRules/agents-pocket', '--ref', 'plugin', '--yes'];
     const command = cLocale(
       pluginStepCommand(installArgs, { session: '', endpoint: null, findsNode: true }),
     );
@@ -288,11 +274,15 @@ describe('plugin', () => {
       );
       const spy = vi.spyOn(ssh.sessions[0] as FakeSession, 'exec');
       const outcome = await installOrUpgradePlugin(transport, target).catch((e: unknown) => e);
-      return { outcome, installs: spy.mock.calls.length };
+      const ran = spy.mock.calls.map(([sent]) => (sent === command ? 'install' : sent));
+      return { outcome, installs: ran.length, ran };
     };
-    expect(await run([])).toEqual({ outcome: 'installed', installs: 1 });
-    expect(await run([github('0.5.0')])).toEqual({ outcome: 'upgraded', installs: 1 });
-    expect(await run([github('0.6.0')])).toEqual({ outcome: 'current', installs: 0 });
+    expect(await run([])).toMatchObject({ outcome: 'installed', ran: ['install'] });
+    expect(await run([github('0.5.0')])).toMatchObject({ outcome: 'upgraded', ran: ['install'] });
+    expect(await run([github('0.6.0')])).toMatchObject({ outcome: 'current', installs: 0 });
+    // The repository the plugin shipped from before moves here with the same one install.
+    const moved = await run([github('0.5.0', 'OpenAgentsPocket/openagentspocket')]);
+    expect(moved).toMatchObject({ outcome: 'upgraded', ran: ['install'] });
     const fork = await run([github('0.5.0', 'someone/Agentico')]);
     expect(fork.outcome).toBeInstanceOf(PluginNotReplaceableError);
     expect(fork.installs).toBe(0);

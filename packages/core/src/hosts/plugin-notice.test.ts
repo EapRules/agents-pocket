@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { makeHerdrEndpoint } from './herdr-endpoint';
 import {
+  LEGACY_PLUGIN_REPOSITORIES,
+  PLUGIN_REPOSITORY,
   type PluginInstallation,
   type PluginStatus,
   type PluginStep,
@@ -299,5 +301,23 @@ describe('plugin notice actions', () => {
     expect(
       action({ version: '0.5.0', isEnabled: false, repository: 'someone/Agentico' }),
     ).toBeNull();
+  });
+
+  it('moves a legacy repository install with one install from the current one', () => {
+    const legacy = LEGACY_PLUGIN_REPOSITORIES[0] as string;
+    const status = installed({ version: '0.5.0', repository: legacy });
+    const moved = noticeOf(status, { repository: undefined });
+    expect(moved.action).toEqual({ title: 'update', steps: [{ kind: 'install' }] });
+    expect(moved.commands).toEqual([
+      `herdr plugin install ${PLUGIN_REPOSITORY} --ref plugin --yes`,
+    ]);
+    expect(moved.reenableNotifications).toBe(false);
+    const disabled = installed({ version: '0.5.0', repository: legacy, isEnabled: false });
+    expect(noticeOf(disabled, { repository: undefined }).action?.steps).toEqual([
+      { kind: 'install' },
+      enable,
+    ]);
+    // Against a custom repository the legacy one is just another repository.
+    expect(action({ version: '0.5.0', repository: legacy })).toBeNull();
   });
 });

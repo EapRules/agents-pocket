@@ -4,9 +4,14 @@ import {
   INSTALLER_BASE_URL,
   installationFromList,
   installerCommand,
+  isFromLegacyRepository,
   isLegacyPluginId,
+  isReplaceableByInstall,
+  LEGACY_PLUGIN_REPOSITORIES,
+  PLUGIN_REPOSITORY,
   type PluginListEntry,
   parsePluginList,
+  pluginInstallArguments,
   pluginInstallation,
   pluginStatusFromRead,
   pluginStepArguments,
@@ -186,6 +191,45 @@ describe('plugin status reads', () => {
       'herdr-mobile.pairing',
     ]);
     expect(pluginStepArguments({ kind: 'enable', pluginId: 'agentico' })).toBeNull();
+  });
+});
+
+describe('plugin repository', () => {
+  const legacy = LEGACY_PLUGIN_REPOSITORIES[0] as string;
+  const from = (repository: string | null) => pluginInstallation({ version: '0.5.0', repository });
+
+  it('installs from the current repository by default', () => {
+    expect(pluginInstallArguments()).toContain(PLUGIN_REPOSITORY);
+    expect(pluginStepArguments({ kind: 'install' })).toEqual(pluginInstallArguments());
+    expect(LEGACY_PLUGIN_REPOSITORIES).not.toContain(PLUGIN_REPOSITORY);
+  });
+
+  it('replaces an install of the current or a legacy repository, in any case', () => {
+    expect(isReplaceableByInstall(from(PLUGIN_REPOSITORY.toUpperCase()))).toBe(true);
+    expect(isReplaceableByInstall(from(legacy))).toBe(true);
+    expect(isReplaceableByInstall(from(legacy.toUpperCase()))).toBe(true);
+    expect(isFromLegacyRepository(from(legacy))).toBe(true);
+    expect(isFromLegacyRepository(from(PLUGIN_REPOSITORY))).toBe(false);
+  });
+
+  it('leaves an unrelated repository, a linked legacy checkout and a stale legacy entry alone', () => {
+    expect(isReplaceableByInstall(from('someone/agents-pocket'))).toBe(false);
+    expect(isReplaceableByInstall(from(null))).toBe(false);
+    const linked = pluginInstallation({ version: '0.5.0', repository: legacy, source: 'local' });
+    expect(isFromLegacyRepository(linked)).toBe(false);
+    expect(isReplaceableByInstall(linked)).toBe(false);
+    const stale = pluginInstallation({
+      version: '0.5.0',
+      repository: legacy,
+      hasManifestWarning: true,
+    });
+    expect(isReplaceableByInstall(stale)).toBe(false);
+  });
+
+  it('keeps an exact match for a custom repository', () => {
+    expect(isReplaceableByInstall(from('example/agentico'), 'Example/Agentico')).toBe(true);
+    expect(isReplaceableByInstall(from(legacy), 'example/agentico')).toBe(false);
+    expect(isFromLegacyRepository(from(legacy), 'example/agentico')).toBe(false);
   });
 });
 
