@@ -2,6 +2,8 @@
 // the changed files. Run before every report and commit; the pre-commit hook calls it.
 //   pnpm verify-fast                 changes since HEAD (staged, unstaged, untracked)
 //   pnpm verify-fast --base main     changes since the merge base with main: a branch or merge check
+//   pnpm verify-fast --static        only the static checks, which cover the whole tree (CI runs the
+//                                    tests as a separate step)
 // The report names every test suite that ran and every one that did not, with the reason.
 // A green run without --base stamps the tree it checked; the pre-commit hook skips its own run
 // when the commit records exactly that tree (scripts/verify/stamp.mjs).
@@ -11,6 +13,7 @@ import { CODE, changedFiles, isData, readersOf } from './verify/changes.mjs';
 import { pluginTests } from './verify/plugin-tests.mjs';
 import { clearStamp, workingTree, writeStamp } from './verify/stamp.mjs';
 
+const staticOnly = process.argv.includes('--static');
 const baseAt = process.argv.indexOf('--base');
 const base = baseAt === -1 ? undefined : process.argv[baseAt + 1];
 if (baseAt !== -1 && !base) {
@@ -70,6 +73,13 @@ const checks = [
   run('progress current', 'node', ['scripts/progress.mjs', '--check']),
   run('ux catalog', 'node', ['scripts/ux-catalog.mjs', '--check']),
 ];
+
+// CI: the static checks above already cover the whole tree; the full test run is a separate step.
+if (staticOnly) {
+  const ok = (await Promise.all(checks)).every(Boolean);
+  console.log(ok ? 'verify-fast: static checks green' : 'verify-fast: FAILED');
+  process.exit(ok ? 0 : 1);
+}
 
 // Every test suite lands in one of these, so the report says what ran and what did not.
 const ran = [];
