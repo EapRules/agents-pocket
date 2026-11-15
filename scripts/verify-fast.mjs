@@ -66,6 +66,7 @@ const checks = [
   run('theme literals', 'node', ['scripts/check-theme-literals.mjs']),
   run('raw pressable', 'node', ['scripts/check-raw-pressable.mjs']),
   run('link opener', 'node', ['scripts/check-link-opener.mjs']),
+  run('brand', 'node', ['scripts/check-brand.mjs']),
   run('reuse', 'node', ['scripts/check-reuse.mjs']),
   run('ui duplicates', 'node', ['scripts/check-ui-duplicates.mjs']),
   run('spacing literals', 'node', ['scripts/check-spacing-literals.mjs']),
@@ -187,9 +188,10 @@ for (const { dir, cmd, codeOnly } of WHOLE) {
   else skip(dir, codeOnly ? `no changed code under ${dir}` : nothingUnder(dir));
 }
 
-// The release and update-publish helpers: their suite runs when they or their callers change.
+// The release and update-publish helpers and the brand check: their suite runs when they or their
+// callers change.
 const releaseScripts = changed.filter((f) =>
-  /^scripts\/(lib\/|release-ios\.mjs$|publish-update\.mjs$)/.test(f),
+  /^scripts\/(lib\/|release-ios\.mjs$|publish-update\.mjs$|check-brand\.mjs$)/.test(f),
 );
 if (releaseScripts.length)
   suite(
@@ -197,7 +199,7 @@ if (releaseScripts.length)
     `whole suite, ${releaseScripts.length} changed files`,
     run('scripts/lib tests', 'node', ['--test', 'scripts/lib/*.test.mjs']),
   );
-else skip('scripts/lib', 'no change to scripts/lib or the release scripts');
+else skip('scripts/lib', 'no change to scripts/lib, the release scripts or check-brand');
 
 if (codeIn('packages/core/').length)
   skip(
