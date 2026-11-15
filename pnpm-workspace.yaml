@@ -19,3 +19,11 @@ allowBuilds:
 # it, and sweeps leftovers once per process (they piled up in the app's tmp folder).
 patchedDependencies:
   expo-libghostty@0.8.1: patches/expo-libghostty@0.8.1.patch
+
+# Dependencies a package uses but does not declare. @bacons/apple-targets requires
+# @expo/plist at prebuild and lists it only as a devDependency; it resolved by hoisting
+# until a dependency update stopped hoisting it.
+packageExtensions:
+  "@bacons/apple-targets@5.0.0":
+    dependencies:
+      "@expo/plist": ^0.10.2
