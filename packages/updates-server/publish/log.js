@@ -12,10 +12,16 @@ import { join } from 'node:path';
 export const LOG_FILE = join('docs', 'releases', 'updates.jsonl');
 
 /**
+ * Only production uploads are logged: the log is what store installs can get. Internal-channel
+ * uploads (TestFlight, on every push) never are.
+ *
  * @typedef {{kind: 'manifest' | 'directive', id: string, platform: string, runtimeVersion: string,
  *   createdAt: string, commit: string, bodySha256: string, signature: string,
- *   channel?: string, uploadedAt?: string}} LogEntry
+ *   channel?: string, uploadedAt?: string, previous?: {kind: string, id: string} | null,
+ *   revertOf?: string}} LogEntry
  *   channel: only on lines written before the one channel (see isRetiredChannelEntry).
+ *   previous: what installs outside its rollout are served (the pointer it replaced; null for a
+ *     revert); lines from before rollouts have none. revertOf: the update a revert undid.
  */
 
 /** @returns {LogEntry[]} */

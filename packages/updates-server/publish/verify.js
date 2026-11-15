@@ -139,10 +139,13 @@ export async function verifyBundle(dir, { certificate, keyId, builds, log }) {
 
 /**
  * The headers expo-updates sends on an update check (SDK 58 FileDownloader), minus the per-install
- * ones. No Expo-Extra-Params: the server ignores it (one channel).
+ * ones unless asked: `clientId` (a synthetic EAS-Client-ID, to land in or out of a rollout) and
+ * `channel: 'internal'` (Expo-Extra-Params as a TestFlight install sends it).
  */
-export function clientHeaders({ platform, runtimeVersion, keyId = 'main' }) {
+export function clientHeaders({ platform, runtimeVersion, keyId = 'main', clientId, channel }) {
   return {
+    ...(clientId ? { 'eas-client-id': clientId } : {}),
+    ...(channel === 'internal' ? { 'expo-extra-params': 'channel="internal"' } : {}),
     accept: 'multipart/mixed,application/expo+json,application/json',
     'expo-platform': platform,
     'expo-protocol-version': '1',
@@ -157,7 +160,8 @@ export function clientHeaders({ platform, runtimeVersion, keyId = 'main' }) {
 /**
  * Ask a server for an update as the app does and verify what comes back. The served update must
  * be one the public log records for that platform and runtime version, byte for byte
- * (`requireLogged`), and newer than every other one it records.
+ * (`requireLogged`), and newer than every other one it records, except one case: during a rollout
+ * the newest entry's `previous` (what installs outside it get) may be served instead.
  */
 export async function verifyRemote({
   manifestUrl,
@@ -168,10 +172,12 @@ export async function verifyRemote({
   builds,
   log,
   requireLogged = true,
+  clientId,
+  channel,
   fetchImpl = fetch,
 }) {
   const res = await fetchImpl(manifestUrl, {
-    headers: clientHeaders({ platform, runtimeVersion, keyId }),
+    headers: clientHeaders({ platform, runtimeVersion, keyId, clientId, channel }),
   });
   if (res.status === 204) return { problems: [], served: null };
   if (res.status !== 200) return { problems: [`the server answered ${res.status}`], served: null };
@@ -191,6 +197,8 @@ export async function verifyRemote({
   const published = previousEntries(log, { platform, runtimeVersion });
   const bodySha256 = sha256Hex(part.body);
   const logged = published.find((e) => e.bodySha256 === bodySha256);
+  const newest = published.at(-1);
+  const outsideRollout = Boolean(logged && newest !== logged && newest.previous?.id === logged.id);
   const result = await verifyUpdate({
     kind,
     bytes: part.body,
@@ -200,7 +208,7 @@ export async function verifyRemote({
     platform,
     runtimeVersion,
     builds,
-    previous: published.filter((e) => e !== logged),
+    previous: published.filter((e) => e !== logged && !(outsideRollout && e === newest)),
     getAsset: async (asset) => {
       const r = await fetchImpl(asset.url);
       if (!r.ok) return null;
@@ -212,5 +220,5 @@ export async function verifyRemote({
   });
   problems.push(...result.problems);
   if (requireLogged && !logged) problems.push('the served update is not in the public log');
-  return { problems, served: { kind, bodySha256, logged: Boolean(logged) } };
+  return { problems, served: { kind, bodySha256, logged: Boolean(logged), outsideRollout } };
 }

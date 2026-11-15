@@ -115,6 +115,17 @@ export function buildManifest({
 }
 
 /**
+ * A published manifest's content as a new update: the same launch asset, assets, metadata and
+ * extra (so the same code and commit), with a new id and createdAt so that every device, including
+ * one already on a newer update, takes it (expo-updates loads only a strictly newer commitTime).
+ */
+export function revertManifest(previous, { id, createdAt }) {
+  const { launchAsset, assets, metadata, extra, runtimeVersion } = previous;
+  const manifest = { id, createdAt, runtimeVersion, launchAsset, assets, metadata, extra };
+  return { manifest, bytes: encodeJson(manifest) };
+}
+
+/**
  * A rollBackToEmbedded directive: the client goes back to the update inside the binary when
  * commitTime is newer than the update it runs (expo-updates UpdateResponse.swift,
  * LoaderSelectionPolicyFilterAware.swift).

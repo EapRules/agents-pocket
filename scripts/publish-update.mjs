@@ -13,18 +13,29 @@
 //   node scripts/publish-update.mjs rollback --key <path> [--cert] [--keyid] [--runtime <rt>]
 //     The same, for a signed rollBackToEmbedded directive (the emergency tool; prefer republishing
 //     the last good commit).
-//   node scripts/publish-update.mjs --upload <bundle-dir> --target local|r2 [--base-url <url>]
-//       [--dry-run]
+//   node scripts/publish-update.mjs --upload <bundle-dir> --target local|r2
+//       [--channel internal|production] [--rollout <percent>] [--base-url <url>] [--dry-run]
 //     Verifies the bundle again and uploads it: assets, body and signature, read back, then the
-//     pointer last (publish/upload.js). There is one channel: every official build gets it. `local`
-//     writes the local R2 bucket `wrangler dev` serves; `r2` the real bucket through
-//     `wrangler r2 object --remote`, with the owner's wrangler login or CLOUDFLARE_API_TOKEN. With
-//     --base-url the deployed Worker is checked as the app would, and a failed check puts the
-//     pointer back. --dry-run prints every object and the pointer change and touches nothing
-//     remote. A real r2 upload appends the entry to docs/releases/updates.jsonl and prints the git
-//     commands to publish it.
+//     pointer last (publish/upload.js). `production` (default) is what store installs get; its
+//     pointer records the percent (--rollout, default 100) and the pointer it replaces, and a new
+//     one is refused while the current is below 100%. `internal` is what TestFlight installs get
+//     (no rollout, never logged). `local` writes the local R2 bucket `wrangler dev` serves; `r2`
+//     the real bucket through `wrangler r2 object --remote`, with the owner's wrangler login or
+//     CLOUDFLARE_API_TOKEN. With --base-url the deployed Worker is checked as the app would, and a
+//     failed check puts the pointer back. --dry-run prints every object and the pointer change and
+//     touches nothing remote. A real r2 production upload appends the entry to
+//     docs/releases/updates.jsonl and prints the git commands to publish it.
+//   node scripts/publish-update.mjs rollout <percent> --target local|r2 [--runtime <rt>] [--dry-run]
+//     Changes only the production pointer's percent (0 stops it, 100 finishes it). No key.
+//   node scripts/publish-update.mjs revert --target local|r2 --key <path> [--base-url <url>]
+//       [--runtime <rt>] [--dry-run]
+//     Back to the previous production update for everyone, including devices already on the
+//     current one: re-signs the previous update's content as a new, newer update (or, with no
+//     previous, a rollBackToEmbedded directive) and uploads it at 100% (publish/revert.js).
+//     --dry-run reads the pointer, needs no key, signs and writes nothing.
 //   node scripts/publish-update.mjs verify <bundle-dir> [--cert] [--keyid]
 //   node scripts/publish-update.mjs verify --url <manifest-url> [--runtime <rt>] [--allow-unlogged]
+//       [--channel internal]
 //     Checks a bundle, or what a server serves, the way the app would.
 //
 // The key is read only into memory, never printed or copied, never taken from the environment or
@@ -40,7 +51,9 @@ import {
 } from '../packages/updates-server/publish/create.js';
 import { LOG_FILE, readLog, servedNow } from '../packages/updates-server/publish/log.js';
 import { normalizeBaseUrl, readExport } from '../packages/updates-server/publish/manifest.js';
+import { parsePercent, runRollout } from '../packages/updates-server/publish/pointers.js';
 import { runUpload } from '../packages/updates-server/publish/publish-upload.js';
+import { runRevert } from '../packages/updates-server/publish/revert.js';
 import { loadCertificate, loadPrivateKey } from '../packages/updates-server/publish/signing.js';
 import {
   accountEnv,
@@ -223,36 +236,84 @@ function report(problems, ok) {
   console.log(ok);
 }
 
-async function upload() {
+// The bucket a command works on, with a scratch folder for wrangler's files, removed afterwards.
+async function withTarget(task) {
   const target = option('--target');
+  if (!['local', 'r2'].includes(target)) fail('--target local|r2 is required');
   const scratch = mkdtempSync(join(tmpdir(), 'publish-update-'));
+  const makeStore = () =>
+    target === 'local'
+      ? wranglerLocalStore({ scratchDir: scratch })
+      : r2Store({ scratchDir: scratch, env: accountEnv() });
   try {
-    await runUpload({
-      dir: resolve(option('--upload')),
-      target,
-      makeStore: () =>
-        target === 'local'
-          ? wranglerLocalStore({ scratchDir: scratch })
-          : r2Store({ scratchDir: scratch, env: accountEnv() }),
-      log: log(),
-      logFile: join(ROOT, LOG_FILE),
-      certificate: certificate(),
-      keyId: keyId(),
-      builds: builds({ released: target === 'r2' }),
-      baseUrl: option('--base-url'),
-      dryRun: flag('--dry-run'),
-    });
+    await task({ target, makeStore, real: target === 'r2' });
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
 }
 
+const runtime = () =>
+  option('--runtime') ?? computeRuntimeVersion({ mobileDir: MOBILE, platform: PLATFORM });
+
+const upload = () =>
+  withTarget(({ target, makeStore, real }) =>
+    runUpload({
+      dir: resolve(option('--upload')),
+      target,
+      channel: option('--channel') ?? 'production',
+      rollout: flag('--rollout') ? parsePercent(option('--rollout')) : undefined,
+      makeStore,
+      log: log(),
+      logFile: join(ROOT, LOG_FILE),
+      certificate: certificate(),
+      keyId: keyId(),
+      builds: builds({ released: real }),
+      baseUrl: option('--base-url'),
+      dryRun: flag('--dry-run'),
+    }),
+  );
+
+const rollout = () =>
+  withTarget(({ makeStore, real }) => {
+    const runtimeVersion = runtime();
+    return runRollout({
+      percent: parsePercent(args[1]),
+      store: makeStore(),
+      platform: PLATFORM,
+      runtimeVersion,
+      logged: real ? servedNow(log(), { platform: PLATFORM, runtimeVersion }) : undefined,
+      dryRun: flag('--dry-run'),
+    });
+  });
+
+const revert = () =>
+  withTarget(({ target, makeStore, real }) =>
+    runRevert({
+      target,
+      store: makeStore(),
+      platform: PLATFORM,
+      runtimeVersion: runtime(),
+      log: log(),
+      logFile: join(ROOT, LOG_FILE),
+      certificate: certificate(),
+      keyId: keyId(),
+      builds: builds({ released: real }),
+      privateKey: flag('--dry-run')
+        ? undefined
+        : loadPrivateKey(option('--key'), { repoRoot: ROOT }),
+      commit: headCommit(ROOT),
+      outRoot: join(ROOT, 'build/updates'),
+      baseUrl: option('--base-url'),
+      dryRun: flag('--dry-run'),
+    }),
+  );
+
 async function verify() {
   const cert = certificate();
   if (option('--url')) {
-    const runtimeVersion =
-      option('--runtime') ?? computeRuntimeVersion({ mobileDir: MOBILE, platform: PLATFORM });
+    const runtimeVersion = runtime();
     const { problems, served } = await verifyRemote({
+      channel: option('--channel'),
       manifestUrl: option('--url'),
       platform: PLATFORM,
       runtimeVersion,
@@ -260,12 +321,13 @@ async function verify() {
       keyId: keyId(),
       builds: builds(),
       log: log(),
-      requireLogged: !flag('--allow-unlogged'),
+      // Internal uploads are never logged; what an internal install gets is checked unlogged.
+      requireLogged: !flag('--allow-unlogged') && option('--channel') !== 'internal',
     });
     return report(
       problems,
       served
-        ? `ok: ${served.kind} sha256 ${served.bodySha256}${served.logged ? ', in the public log' : ''}`
+        ? `ok: ${served.kind} sha256 ${served.bodySha256}${served.logged ? ', in the public log' : ''}${served.outsideRollout ? ' (what installs outside the rollout get)' : ''}`
         : 'ok: nothing published (204)',
     );
   }
@@ -280,14 +342,17 @@ async function verify() {
   report(problems, `ok: ${entry.kind} ${entry.id} would be applied`);
 }
 
-// The beta channel was retired (2026-11-14): one channel, no beta-first rule. A flag given by habit
-// stops here instead of being ignored.
-const retired = ['--channel', '--skip-beta'].find(flag);
-if (retired) fail(`${retired} is gone: there is one channel now, and every upload goes to it`);
+// The beta channel was retired (2026-11-14), and with it the beta-first rule. A flag given by habit
+// stops here instead of being ignored; `--channel beta` is refused by the upload itself.
+if (flag('--skip-beta')) fail('--skip-beta is gone: there is no beta channel');
+if (flag('--channel') && option('--channel') !== 'internal' && option('--channel') !== 'production')
+  fail('--channel is internal or production');
 
 try {
   if (args[0] === 'verify') await verify();
   else if (args[0] === 'rollback') await rollback();
+  else if (args[0] === 'rollout') await rollout();
+  else if (args[0] === 'revert') await revert();
   else if (flag('--upload')) await upload();
   else await publish();
 } catch (error) {

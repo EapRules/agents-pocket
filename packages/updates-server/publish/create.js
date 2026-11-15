@@ -4,7 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { writeBundle } from './bundle.js';
-import { buildManifest, buildRollBackDirective, sha256Hex } from './manifest.js';
+import { buildManifest, buildRollBackDirective, revertManifest, sha256Hex } from './manifest.js';
 import { keyMatchesCertificate, signatureProblem, signBytes } from './signing.js';
 import { verifyBundle } from './verify.js';
 
@@ -76,7 +76,14 @@ export async function createUpdateBundle(input) {
   return { entry, manifest, bytes };
 }
 
-/** A signed rollBackToEmbedded directive for one runtime version (the emergency tool; prefer republishing). */
+// A bundle made by `revert` names the update it undoes; the upload refuses it if production has
+// moved on since.
+const revertMark = ({ revertOf }) => (revertOf ? { revertOf } : {});
+
+/**
+ * A signed rollBackToEmbedded directive for one runtime version (the emergency tool; prefer
+ * republishing). With `revertOf`, what `revert` publishes when there is no previous update.
+ */
 export async function createRollbackBundle(input) {
   preflight(input);
   const { now = new Date(), id = randomUUID(), platform, runtimeVersion, commit } = input;
@@ -94,7 +101,29 @@ export async function createRollbackBundle(input) {
       createdAt: commitTime,
       commit,
       ...localMark(input),
+      ...revertMark(input),
     },
   });
   return { entry, bytes };
+}
+
+/**
+ * `revert`: a published manifest's content re-signed as a new update (revertManifest). `previous`
+ * is its parsed body, `files` its assets as read back from the bucket, `revertOf` the update it
+ * replaces.
+ */
+export async function createRevertBundle(input) {
+  preflight(input);
+  const { now = new Date(), id = randomUUID(), platform, runtimeVersion, previous } = input;
+  const createdAt = now.toISOString();
+  const { manifest, bytes } = revertManifest(previous, { id, createdAt });
+  const commit = String(previous.extra?.commit ?? '');
+  const entry = await seal({
+    ...input,
+    kind: 'manifest',
+    bytes,
+    files: input.files,
+    entryFields: { id, platform, runtimeVersion, createdAt, commit, ...revertMark(input) },
+  });
+  return { entry, manifest, bytes };
 }

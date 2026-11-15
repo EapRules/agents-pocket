@@ -16,12 +16,23 @@ export { configuredBucketName, memoryStore, r2Store, wranglerLocalStore } from '
 
 const decode = (bytes) => new TextDecoder().decode(bytes);
 
+/** A pointer as one line: `manifest <id>`, plus `(30% rollout, else manifest <id>)`. */
+export function describePointer(pointer) {
+  if (!pointer) return 'nothing published';
+  const base = `${pointer.kind} ${pointer.id}`;
+  const r = pointer.rollout;
+  if (!r) return base;
+  const rest = r.previous ? `${r.previous.kind} ${r.previous.id}` : 'nothing';
+  return `${base} (${r.percent}% rollout, else ${rest})`;
+}
+
 /**
  * Every object the upload writes, in order, and the pointer it moves last.
  *
  * @param {ReturnType<import('./bundle.js').readBundle>} bundle
+ * @param {{channel?: 'production' | 'internal'}} [options]
  */
-export function planUpload(bundle) {
+export function planUpload(bundle, { channel = 'production' } = {}) {
   const { entry } = bundle;
   const signature = new TextEncoder().encode(bundle.signature);
   const assets = bundle.assets.map((asset) => {
@@ -47,23 +58,25 @@ export function planUpload(bundle) {
     asset: false,
   }));
   const pointer = {
-    key: storageKeys.pointer(entry.platform, entry.runtimeVersion),
-    bytes: encodeJson({ kind: entry.kind, id: entry.id }),
+    key: storageKeys.pointer(entry.platform, entry.runtimeVersion, channel),
     contentType: 'application/json',
   };
   return { assets, update, pointer, entry };
 }
 
-/** What a dry run prints: every object, then the pointer change (`previous` from the public log). */
-export function describeUpload(plan, { previous }) {
+/**
+ * What a dry run prints: every object, then the pointer change. `before` is what the caller knows
+ * of the pointer now (a string, or a pointer); `after` the pointer it would write.
+ */
+export function describeUpload(plan, { before, after }) {
   const line = (o) => `  ${o.key}  ${o.contentType}  ${o.size} bytes`;
-  const from = previous ? `${previous.kind} ${previous.id}` : 'nothing published';
+  const from = typeof before === 'string' ? before : describePointer(before);
   return [
     'Would write, in this order (an object already present with the same bytes is skipped, with other bytes refused):',
     ...plan.assets.map(line),
     ...plan.update.map(line),
     'Then read every written object back and compare its SHA-256, and only then move the pointer:',
-    `  ${plan.pointer.key}: ${from} -> ${plan.entry.kind} ${plan.entry.id}`,
+    `  ${plan.pointer.key}: ${from} -> ${describePointer(after)}`,
   ];
 }
 
@@ -83,23 +96,26 @@ const NOT_MOVED = 'the pointer was not moved';
 
 /**
  * @param {ReturnType<import('./bundle.js').readBundle>} bundle
- * @param {{store: import('./stores.js').Store,
+ * @param {{store: import('./stores.js').Store, channel?: 'production' | 'internal',
  *   expectedPointer?: {kind: string, id: string} | null,
+ *   pointerFor?: (current: ReturnType<typeof parsePointer>) => object,
  *   readAsset?: (sha256: string) => Promise<{bytes: Uint8Array, contentType?: string} | null>,
  *   afterPointer?: () => Promise<string[]>,
  *   onProgress?: (line: string) => void}} options
  *   expectedPointer: what the public log says the server serves now; when given, a bucket that
- *     disagrees is refused before anything is written. readAsset: read assets back over HTTP from
- *     the deployed Worker instead of the store. afterPointer: checks once the pointer moved; any
- *     problem puts the previous pointer back (or removes it when there was none).
+ *     disagrees is refused before anything is written. pointerFor: the pointer to write, given the
+ *     current one (default `{kind, id}`); it may throw to refuse, before anything is written.
+ *     readAsset: read assets back over HTTP from the deployed Worker instead of the store.
+ *     afterPointer: checks once the pointer moved; any problem puts the previous pointer back (or
+ *     removes it when there was none).
  */
 export async function uploadBundle(bundle, options) {
   const { store, readAsset, afterPointer, onProgress = () => {} } = options;
   store.ready();
-  const plan = planUpload(bundle);
+  const plan = planUpload(bundle, { channel: options.channel });
   const current = await store.get(plan.pointer.key);
+  const now = current ? parsePointer(decode(current)) : null;
   if (options.expectedPointer !== undefined) {
-    const now = current ? parsePointer(decode(current)) : null;
     const expected = options.expectedPointer;
     if ((now?.id ?? null) !== (expected?.id ?? null))
       throw new Error(
@@ -107,6 +123,9 @@ export async function uploadBundle(bundle, options) {
           'an upload was not logged, or the log is behind. Reconcile docs/releases/updates.jsonl first; nothing was written.',
       );
   }
+  const { kind, id } = plan.entry;
+  const next = options.pointerFor ? options.pointerFor(now) : { kind, id };
+  const pointerBytes = encodeJson(next);
 
   const written = [];
   const skipped = [];
@@ -148,8 +167,8 @@ export async function uploadBundle(bundle, options) {
   });
   onProgress(`read back ${written.length} written object(s); ${skipped.length} already present`);
 
-  await store.put(plan.pointer.key, { bytes: plan.pointer.bytes }, plan.pointer.contentType);
-  onProgress(`moved ${plan.pointer.key} to ${plan.entry.kind} ${plan.entry.id}`);
+  await store.put(plan.pointer.key, { bytes: pointerBytes }, plan.pointer.contentType);
+  onProgress(`moved ${plan.pointer.key} to ${describePointer(next)}`);
   const problems = afterPointer ? await afterPointer() : [];
   if (problems.length) {
     // Back to what was served before: the previous pointer, or none at all.
@@ -159,9 +178,5 @@ export async function uploadBundle(bundle, options) {
       `after the pointer moved, the server check failed (${problems.join('; ')}); the pointer was put back to ${current ? 'its previous value' : 'nothing'}`,
     );
   }
-  return {
-    written: written.map((o) => o.key),
-    skipped,
-    previous: current ? parsePointer(decode(current)) : null,
-  };
+  return { written: written.map((o) => o.key), skipped, previous: now, pointer: next };
 }
