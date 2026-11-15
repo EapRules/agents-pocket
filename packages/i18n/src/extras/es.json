@@ -16,6 +16,8 @@
   "Accept Edits": "Aceptar ediciones",
   "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.": "Agregá otra forma de llegar a este Host, como su dirección de LAN en casa y una red overlay o un Jump Host en otro lado.",
   "Agent view": "Vista del Agent",
+  "Agents Pocket can't read Hermes Agent's input box here.": "Agents Pocket no puede leer el cuadro de entrada de Hermes Agent acá.",
+  "Agents Pocket can't read %@'s input box yet.": "Agents Pocket todavía no puede leer el cuadro de entrada de {0}.",
   "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "Agents Pocket no puede leer esta pregunta en la pantalla del Agente. Respondela en la terminal.",
   "Agentico couldn't find Hermes Agent's database at %@.": "Agents Pocket no encontró la base de datos de Hermes Agent en {0}.",
   "Always Approve": "Aprobar siempre",

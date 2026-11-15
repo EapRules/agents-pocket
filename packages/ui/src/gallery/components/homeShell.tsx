@@ -151,7 +151,7 @@ export const homeShellEntries: readonly CatalogEntry[] = [
         id: 'default',
         render: () => (
           <LargeTitleBar
-            title="Agentico"
+            title="Agents Pocket"
             actions={[
               { node: <UsageRing percent={48} />, label: 'Usage', onPress: noop },
               { icon: 'settings', label: 'Settings', onPress: noop },

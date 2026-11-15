@@ -1,4 +1,4 @@
-# OpenAgentsPocket installer for Windows PowerShell:  irm <base>/install.ps1 | iex
+# Agents Pocket installer for Windows PowerShell:  irm <base>/install.ps1 | iex
 #
 # Native Windows has no Pairing Code (the plugin is macOS and Linux only), so this checks what
 # the app needs to connect, prints the next step for anything missing, and says how to add the

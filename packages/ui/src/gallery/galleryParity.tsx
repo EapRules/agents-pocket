@@ -72,7 +72,7 @@ function ParityScreen() {
         <Icon name="settings" />
         <ActionMenuButton items={MENU} accessibilityLabel="More" title="Agent" native={false} />
       </GlassCapsule>
-      <Text variant="title">Agentico</Text>
+      <Text variant="title">Agents Pocket</Text>
       <View>
         <SectionHeader
           title="Needs you"

@@ -133,7 +133,7 @@ suite("forwarding to APNs", () => {
 
     const payload = JSON.parse(call.init.body);
     assert.equal(payload.aps["mutable-content"], 1);
-    assert.equal(payload.aps.alert.title, "Agentico");
+    assert.equal(payload.aps.alert.title, "Agents Pocket");
     assert.equal(payload.aps.alert.body, "Agent update");
     assert.equal(payload.aps.sound, "default");
     assert.equal(payload.envelope, goodBody.envelope);
@@ -631,7 +631,7 @@ suite("alert path compatibility", () => {
     assert.equal(call.init.method, "POST");
     assert.equal(
       call.init.body,
-      '{"aps":{"alert":{"title":"Agentico","body":"Agent update"},"sound":"default","mutable-content":1},"envelope":"{\\"v\\":1,\\"kid\\":\\"5-CJJlt5uLU\\",\\"n\\":\\"AAECAwQFBgcICQoL\\",\\"ct\\":\\"opaque\\"}"}',
+      '{"aps":{"alert":{"title":"Agents Pocket","body":"Agent update"},"sound":"default","mutable-content":1},"envelope":"{\\"v\\":1,\\"kid\\":\\"5-CJJlt5uLU\\",\\"n\\":\\"AAECAwQFBgcICQoL\\",\\"ct\\":\\"opaque\\"}"}',
     );
 
     const headers = { ...call.init.headers };

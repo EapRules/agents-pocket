@@ -21,9 +21,9 @@ const COUNT_MAX = 999;
 
 // The extension rewrites title and body after decrypting; this generic text
 // is what iOS shows if that fails, so it must never look alarming.
-const FALLBACK_ALERT = { title: "Agentico", body: "Agent update" };
+const FALLBACK_ALERT = { title: "Agents Pocket", body: "Agent update" };
 // iOS plays nothing for an alert without a sound, and offers no switch to
-// turn one on. With the default sound, Settings > Notifications > Agentico can
+// turn one on. With the default sound, Settings > Notifications > Agents Pocket can
 // still turn it off. The extension sets the same sound after decrypting.
 const ALERT_SOUND = "default";
 

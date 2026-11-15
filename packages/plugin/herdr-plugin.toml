@@ -2,7 +2,7 @@ id = "agentico"
 name = "agentico"
 version = "0.15.0"
 min_herdr_version = "0.7.5"
-description = "Pair an Agentico device by scanning a QR Pairing Code"
+description = "Pair an Agents Pocket device by scanning a QR Pairing Code"
 platforms = ["linux", "macos"]
 
 [[build]]
@@ -14,14 +14,14 @@ command = ["node", "src/sidebar-hook.js"]
 [[actions]]
 id = "pair"
 title = "Pair a mobile device"
-description = "Show a Pairing Code QR for the Agentico app"
+description = "Show a Pairing Code QR for the Agents Pocket app"
 contexts = ["global"]
 command = ["node", "src/pair-action.js"]
 
 [[actions]]
 id = "usage-claude-limits"
 title = "Read Claude Code Usage Limits"
-description = "Used by Agentico: reads Claude Code's plan limits in herdr's session"
+description = "Used by Agents Pocket: reads Claude Code's plan limits in herdr's session"
 contexts = ["global"]
 platforms = ["macos"]
 command = ["node", "src/usage-claude-action.js"]

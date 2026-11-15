@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { type AnsiScreen, makeRow, makeScreen, PLAIN_STYLE } from '../../blocked/screen';
+import { appTable } from '../../errors/catalog.testkit';
 import { hermesID } from '../model/session-ids';
 import { hermesSendPolicy, hermesStopGuard, readHermesInputBox } from './send-policy';
 
@@ -58,6 +59,18 @@ describe('Hermes input box', () => {
     // An empty first line of a draft with more below it.
     expect(readHermesInputBox(screenOf(RULE, '❯ ', 'second line', RULE)).kind).toBe('unknown');
   });
+
+  it.each(['en', 'es'] as const)(
+    "says why in the catalog's words, with the app's name (%s)",
+    (locale) => {
+      const state = readHermesInputBox(screenOf('plain output'));
+      const reason = state.kind === 'unknown' ? state.reason : undefined;
+      const key = typeof reason === 'object' && 'key' in reason ? reason.key : undefined;
+      const shown = key === undefined ? undefined : appTable(locale)[key];
+      expect(shown).toBeDefined();
+      expect(shown).not.toMatch(/\bAgentico\b/);
+    },
+  );
 
   it('never reads an approval prompt over an old echo as sendable', () => {
     const screen = screenOf('❯ an earlier message', RULE, '⚠ ❯ ', RULE);

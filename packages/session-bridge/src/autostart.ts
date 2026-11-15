@@ -45,7 +45,7 @@ export function autostartFor(options: {
       path: join(home, '.config', 'systemd', 'user', UNIT),
       content: [
         '[Unit]',
-        'Description=OpenAgentsPocket session bridge',
+        'Description=Agents Pocket session bridge',
         '',
         '[Service]',
         `ExecStart="${launcher}" serve`,

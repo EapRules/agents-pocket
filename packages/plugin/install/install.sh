@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenAgentsPocket installer for macOS and Linux:  curl -fsSL <base>/install.sh | sh
+# Agents Pocket installer for macOS and Linux:  curl -fsSL <base>/install.sh | sh
 #
 # Checks herdr, Node.js and SSH, installs or updates the plugin with herdr's own
 # commands, then opens the Pairing Code. It never installs system software on its own:

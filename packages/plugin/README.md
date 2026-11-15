@@ -1,7 +1,7 @@
-# agentico
+# agentico: the Agents Pocket plugin for herdr
 
 A [herdr plugin](https://herdr.dev/docs/plugins/) that renders a **Pairing Code**
-QR so the Agentico app can add this machine as a Host by scanning it
+QR so the Agents Pocket app can add this machine as a Host by scanning it
 (ADR 0007). The `pair` action opens a popup pane: confirm which of the
 machine's addresses go into the code, then scan the QR with the app.
 
@@ -19,7 +19,7 @@ device that has registered a Live Activity token. See
 [Notify hook](#notify-hook) and [Activity hook](#activity-hook).
 
 Starting with plugin 0.4.0, a startup hook also exports the Host's herdr
-sidebar layout for Agentico. Both event hooks refresh it before their notification
+sidebar layout for Agents Pocket. Both event hooks refresh it before their notification
 gates. See [Sidebar layout snapshot (v1)](#sidebar-layout-snapshot-v1).
 
 The plugin also collects Claude Code and Codex [Usage](#usage) on the Host
@@ -83,10 +83,10 @@ herdr plugin action invoke agentico.pair
 The QR, and any reason pairing cannot start, appear in a Herdr popup window,
 not in the terminal that ran invoke.
 
-Scan the code in Agentico to add this machine as a Host, or press `c` on the
+Scan the code in Agents Pocket to add this machine as a Host, or press `c` on the
 QR screen to copy the Pairing Code and paste it in the app (macOS uses
 `pbcopy`; elsewhere the code is printed for manual selection). Then open the
-Agentico settings, enable Agent Notifications, grant the iOS notification
+Agents Pocket settings, enable Agent Notifications, grant the iOS notification
 permission, and enable Notifications for this Host. Leave **Custom Push
 Relay** empty to use the hosted relay at
 `https://relay.openagentspocket.com`.
@@ -704,13 +704,13 @@ the app's update notice installs from that branch. See
 
 - Plugin 0.8.0 counts [Claude Code Accounts](#usage). When herdr's
   environment sets `CLAUDE_CONFIG_DIR`, `~/.claude` no longer counts toward
-  that Host's Claude Code usage; Agentico suggests it as an Account to add.
+  that Host's Claude Code usage; Agents Pocket suggests it as an Account to add.
   Without `CLAUDE_CONFIG_DIR`, the totals stay as before.
 - The first refresh after the update reads the Transcripts again to
   attribute them to Accounts and reads Claude Code limits anew. Without
   `CLAUDE_CONFIG_DIR`, Usage shows the previous totals meanwhile; with it,
   the totals start over and grow as the refresh reads.
-- Older plugins ignore `usage-accounts.json`: Accounts added in Agentico count
+- Older plugins ignore `usage-accounts.json`: Accounts added in Agents Pocket count
   only once the Host runs 0.8.0.
 
 ### Updating to 0.9.0
@@ -781,23 +781,23 @@ the app's update notice installs from that branch. See
 ## Usage
 
 Plugin 0.7.0 adds Usage for Claude Code and Codex on Linux and macOS Hosts.
-Open the Host's Usage section in Agentico, then **View Usage Details** for
+Open the Host's Usage section in Agents Pocket, then **View Usage Details** for
 today, 7-day and 30-day Token Usage, a daily chart, per-model totals and the
 top 10 working directories. Usage Limits show the account's windows and
 reset times; Codex shows only its default limit group.
 
 The plugin reads Transcripts locally. Transcript contents stay on the Host;
-only aggregated usage, model names and directory paths reach Agentico over
+only aggregated usage, model names and directory paths reach Agents Pocket over
 SSH. Token Usage makes no network requests. For Usage Limits, the plugin
 asks the installed programs, which handle their own sign-in and service
-requests. Neither the plugin nor Agentico reads or receives their credentials.
+requests. Neither the plugin nor Agents Pocket reads or receives their credentials.
 
 The plugin learns its runtime from herdr the first time any Agent changes
 status, or when herdr starts or restarts. Installing or updating the plugin
 does not run a startup hook. If Usage asks for a runtime, use any Agent on
 the Host once, then refresh Usage; restarting herdr also records it. Queries
 return cached aggregates immediately and start a background refresh when
-needed. Agentico re-queries while that refresh runs.
+needed. Agents Pocket re-queries while that refresh runs.
 
 **Claude Code limits** is off by default and saved per Host on the device.
 The toggle is available in both the Host's Usage section and the full Usage
@@ -816,7 +816,7 @@ Current terms remain a pre-release check in the
 Host runs several, each from its own config directory (for example an Agent
 started with `CLAUDE_CONFIG_DIR=~/.claude-2`). The Default Account is the
 directory Claude Code uses in herdr's environment, `CLAUDE_CONFIG_DIR` or
-else `~/.claude`, with the legacy `~/.config/claude` folded in. Agentico adds up
+else `~/.claude`, with the legacy `~/.config/claude` folded in. Agents Pocket adds up
 to three more and writes the list over SFTP to `usage-accounts.json` in the
 plugin's config directory, beside `runtime.json`; the plugin only reads it,
 so every device and Host entry that reaches that directory shares it. Each
@@ -825,7 +825,7 @@ Usage Limits; the Host total adds them up. An Account whose directory is
 gone, or that resolves to a directory already counted, stays listed and
 adds nothing.
 
-Agentico suggests directories to add, and counts none until the user adds it:
+Agents Pocket suggests directories to add, and counts none until the user adds it:
 
 - the `CLAUDE_CONFIG_DIR` a running Claude Code Agent was started with. On
   that Agent's status changes, the activity hook asks herdr for the pane's
@@ -952,7 +952,7 @@ authority on whether herdr accepts a file.
 | `source.path` | string | Resolved herdr config path. |
 | `source.found` | boolean | Whether the source was found. Missing source is `false`; a source that can be statted but cannot be read is `true` with a diagnostic. |
 | `source.mtime_ms` | number or null | Source `mtimeMs`, including fractional milliseconds; `null` when the source cannot be statted. |
-| `agent_panel_sort` | string | `spaces` (default) or `priority`; the input alias `workspaces` normalizes to `spaces`. Independent of Agentico's flat / by-Host grouping. |
+| `agent_panel_sort` | string | `spaces` (default) or `priority`; the input alias `workspaces` normalizes to `spaces`. Independent of Agents Pocket's flat / by-Host grouping. |
 | `sidebar.agents.row_gap` | integer | `0..65535`, default `0`. herdr's blank terminal rows between Agent entries, not between lines of one entry. |
 | `sidebar.agents.rows` | token[][] | Whole default layout, at most 16 rows and 16 tokens per row. Empty layouts and rows are valid. |
 | `sidebar.agents.rows_by_agent` | object | Canonical Agent id to whole replacement rows; default `{}`. Unlisted Agents use `rows`. |
@@ -985,7 +985,7 @@ The snapshot exports each rule with only the fields it gave, in the order
 `dim`, `hide`. Thresholds are JSON numbers, so `gt = 80` exports `80`. A
 token with `rules = []` exports no `rules` field. The snapshot version stays
 `1`: Swift readers ignore `rules`, so a rule never restyles or hides a token
-in Agentico.
+in Agents Pocket.
 
 `rows_by_agent` accepts the 24 canonical ids verified against herdr v0.9.4:
 `pi`, `claude`, `codex`, `gemini`, `cursor`, `devin`, `agy`, `cline`, `omp`,
@@ -1003,7 +1003,7 @@ Missing files or fields use the snapshot defaults: sort `spaces`, `row_gap: 0`,
 `rows: [[{"token":"state_icon"},{"token":"workspace"},{"token":"tab"}],
 [{"token":"agent"}]]`, and `rows_by_agent: {}`. These are not herdr 0.9's
 defaults: herdr 0.9.0 and later put `machine` after `state_icon` in the
-first row, which Agentico does not render, and the snapshot defaults leave it
+first row, which Agents Pocket does not render, and the snapshot defaults leave it
 out. TOML parse errors, invalid tokens, or invalid schema revert the
 **entire layout and sort** to those defaults with a diagnostic. Read errors
 also produce defaults with a diagnostic and are retried at the next
@@ -1025,17 +1025,17 @@ server start. The snapshot reflects the file on disk, not any live TUI
 `agent.view.set` sort override. It is this Host's own herdr configuration: a
 herdr client elsewhere that has this Host as a saved machine renders its
 sidebar from that client's own settings, as herdr's configuration docs
-describe. Agentico updates this plugin only when the user asks on the Host's
+describe. Agents Pocket updates this plugin only when the user asks on the Host's
 page; older installations have no `sidebar.json`, which the app treats as nil
 without a version gate.
 
 Swift readers ignore unknown fields and drop individual unknown token names,
 such as `machine`. The app resolves whole layouts in this order: the Host's
-saved user layout, the Host's plugin snapshot, Agentico default. There is no
+saved user layout, the Host's plugin snapshot, the Agents Pocket default. There is no
 global user layout, and the default is never offered as a choice. Rows are
 never merged across sources. Its renderer skips `state_icon` and
 `state_text` because the status column already shows Agent Status; `$name`
-resolves as plain text from `AgentInfo.tokens["name"]`. Agentico's Pin is
+resolves as plain text from `AgentInfo.tokens["name"]`. Agents Pocket's Pin is
 independent. Styles are retained in the Swift model; rendering may ignore
 them (color is ignored by default).
 

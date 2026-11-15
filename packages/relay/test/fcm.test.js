@@ -267,7 +267,7 @@ suite("per-platform configuration", () => {
 suite("APNs path with FCM configured", () => {
   const iosBody = { token: "ab".repeat(32), env: "production", envelope: ENVELOPE, collapse: "%5" };
   const exactApnsBody =
-    '{"aps":{"alert":{"title":"Agentico","body":"Agent update"},"sound":"default","mutable-content":1},"envelope":"{\\"v\\":1,\\"kid\\":\\"5-CJJlt5uLU\\",\\"n\\":\\"AAECAwQFBgcICQoL\\",\\"ct\\":\\"opaque\\"}"}';
+    '{"aps":{"alert":{"title":"Agents Pocket","body":"Agent update"},"sound":"default","mutable-content":1},"envelope":"{\\"v\\":1,\\"kid\\":\\"5-CJJlt5uLU\\",\\"n\\":\\"AAECAwQFBgcICQoL\\",\\"ct\\":\\"opaque\\"}"}';
 
   for (const [name, body] of [["without platform", iosBody], ["with platform ios", { ...iosBody, platform: "ios" }]]) {
     test(`an alert ${name} produces the exact APNs request bytes`, async (t) => {

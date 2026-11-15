@@ -13,7 +13,8 @@ appId: com.openagentspocket.app
 - tapOn:
     id: settings.general.demoMode
 - openLink: openagentspocket:///
-- assertVisible: "OpenAgentsPocket"
+- assertVisible:
+    id: home-scroll
 - assertVisible: "NEEDS YOU.*"
 - assertVisible: "WORKING.*"
 - assertVisible: "DONE.*"

@@ -1,9 +1,11 @@
 // Regenerates apps/mobile/src/settings/notices.generated.ts from the Swift app's Notices folder.
 //   node scripts/gen-notices.mjs --swift <path to the Swift checkout>   (or AGENTICO_SWIFT_DIR)
-// Only the components this app bundles (themes, icons, fonts, SSH) are kept.
+// Only the components this app bundles (themes, icons, fonts, SSH) are kept, and the product name
+// is rewritten with the catalogs' `brand`.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { brand } from '../packages/i18n/scripts/xcstrings.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const flag = process.argv.indexOf('--swift');
@@ -45,7 +47,8 @@ const rows = inventory.components
     version: c.version ?? '',
     spdx: c.spdx,
     source: SOURCES[c.id] ?? c.source.split(' (')[0],
-    text: readFileSync(join(notices, c.notice), 'utf8').trim(),
+    // The Swift app's own notes name it; this app says its own name, as the catalogs do.
+    text: brand(readFileSync(join(notices, c.notice), 'utf8').trim()),
   }));
 
 const body = rows.map((row) => `  ${JSON.stringify(row)},`).join('\n');

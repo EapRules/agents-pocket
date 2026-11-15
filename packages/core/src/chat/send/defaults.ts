@@ -25,7 +25,7 @@ export function conservativeSendPolicy(
     mayRefillInputBoxAfterSend: false,
     readInputBox: () => ({
       kind: 'unknown',
-      reason: `Agentico can't read ${chatName}'s input box yet.`,
+      reason: message("Agents Pocket can't read %@'s input box yet.", chatName),
     }),
     textHoldReason: message(
       "The Agent's input box already has text. Send or clear it in the terminal first.",

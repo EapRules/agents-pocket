@@ -16,6 +16,8 @@
   "Accept Edits": "Accept Edits",
   "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.": "Add another way to reach this Host, such as its LAN address at home and an overlay network or Jump Host elsewhere.",
   "Agent view": "Agent view",
+  "Agents Pocket can't read Hermes Agent's input box here.": "Agents Pocket can't read Hermes Agent's input box here.",
+  "Agents Pocket can't read %@'s input box yet.": "Agents Pocket can't read {0}'s input box yet.",
   "Agentico can't read this question on the Agent's screen. Answer it in the terminal.": "Agents Pocket can't read this question on the Agent's screen. Answer it in the terminal.",
   "Agentico couldn't find Hermes Agent's database at %@.": "Agents Pocket couldn't find Hermes Agent's database at {0}.",
   "Always Approve": "Always Approve",

@@ -18,7 +18,10 @@ const refuse = (reason: Text): StopVerdict => ({ kind: 'refuse', reason });
 export function readHermesInputBox(screen: AnsiScreen): InputBoxState {
   const prompt = readHermesPrompt(screen);
   if (prompt === null) {
-    return { kind: 'unknown', reason: "Agentico can't read Hermes Agent's input box here." };
+    return {
+      kind: 'unknown',
+      reason: message("Agents Pocket can't read Hermes Agent's input box here."),
+    };
   }
   if (prompt.draft !== '') return { kind: 'text', text: prompt.draft };
   if (prompt.isWorking) {
