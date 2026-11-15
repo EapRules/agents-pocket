@@ -3,10 +3,15 @@
 // Two routes. GET /manifest answers the Expo Updates protocol v1 request: it picks what is published
 // for (expo-platform, expo-runtime-version) and returns the STORED body (manifest or directive) with
 // the STORED expo-signature, byte for byte, in a multipart/mixed response; with nothing published
-// it answers 204, the protocol's no-op. There is one channel: every official build gets the same
-// update, and the Expo-Extra-Params header (an older app still sends `channel="beta"`) is never
-// read, so no value of it, malformed or not, changes the answer. GET /assets/<sha256> serves
-// immutable, content-addressed asset bytes.
+// it answers 204, the protocol's no-op. GET /assets/<sha256> serves immutable, content-addressed
+// asset bytes.
+//
+// Two channels. A request whose Expo-Extra-Params is exactly `channel="internal"` (TestFlight
+// installs) gets the internal pointer while one exists and is complete. Every other request (no
+// header, `channel="beta"` from older installs, anything malformed) gets production, where an
+// optional staged rollout serves the new update to a stable bucket of installs (derived from
+// EAS-Client-ID per request) and the previous one to the rest. Any doubt falls back to production;
+// a production pointer without a rollout is served exactly as before rollouts existed.
 //
 // The Worker holds no secret and never signs: the publish script signs on the owner's machine
 // (scripts/publish-update.mjs). It keeps nothing about a request and writes nothing to any log; the
@@ -21,6 +26,8 @@ import {
   multipartBody,
   PROTOCOL_VERSION,
   parsePointer,
+  requestsInternalChannel,
+  rolloutChoice,
   SFV_VERSION,
   storageKeys,
 } from './protocol.js';
@@ -63,18 +70,36 @@ async function handleManifest(request, bucket) {
   const runtimeVersion = headers.get('expo-runtime-version');
   if (!isRuntimeVersion(runtimeVersion)) return error(400, 'bad_runtime_version');
 
-  const noUpdate = () => new Response(null, { status: 204, headers: PROTOCOL_HEADERS });
+  const internal = requestsInternalChannel(headers.get('expo-extra-params'));
+  if (internal) {
+    // Served only when the internal pointer exists and its update is complete; any doubt about it
+    // is the production answer.
+    const object = await bucket.get(storageKeys.pointer(platform, runtimeVersion, 'internal'));
+    const pointer = object && parsePointer(await object.text());
+    const answer = pointer && (await serve(pointer, headers, bucket));
+    if (answer && answer.status !== 500) return answer;
+  }
+
   const pointerObject = await bucket.get(storageKeys.pointer(platform, runtimeVersion));
   if (!pointerObject) return noUpdate();
   const pointer = parsePointer(await pointerObject.text());
   if (!pointer) return error(500, 'bad_pointer');
+  // An internal request that reaches production gets its newest update whatever the percent.
+  // EAS-Client-ID is read here and nowhere else, only to compute the bucket.
+  const chosen = internal ? pointer : await rolloutChoice(pointer, headers.get('eas-client-id'));
+  return chosen ? serve(chosen, headers, bucket) : noUpdate();
+}
+
+const noUpdate = () => new Response(null, { status: 204, headers: PROTOCOL_HEADERS });
+
+async function serve(update, headers, bucket) {
   // The device already runs it: nothing to send. The header is read here and nowhere else.
-  if (pointer.kind === 'manifest' && headers.get('expo-current-update-id') === pointer.id)
+  if (update.kind === 'manifest' && headers.get('expo-current-update-id') === update.id)
     return noUpdate();
 
   const [body, signature] = await Promise.all([
-    bucket.get(storageKeys.body(pointer.id)),
-    bucket.get(storageKeys.signature(pointer.id)),
+    bucket.get(storageKeys.body(update.id)),
+    bucket.get(storageKeys.signature(update.id)),
   ]);
   if (!body || !signature) return error(500, 'incomplete_update');
   const signatureValue = (await signature.text()).trim();
@@ -82,7 +107,7 @@ async function handleManifest(request, bucket) {
 
   const { boundary, body: multipart } = multipartBody([
     {
-      name: pointer.kind,
+      name: update.kind,
       contentType: 'application/json',
       headers: { 'expo-signature': signatureValue },
       body: new Uint8Array(await body.arrayBuffer()),

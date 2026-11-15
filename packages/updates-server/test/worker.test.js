@@ -111,7 +111,7 @@ suite('manifest response', () => {
     assert.equal(storageKeys.pointer('ios', RUNTIME), `channels/ios/${RUNTIME}/production`);
   });
 
-  test('ignores Expo-Extra-Params: an old app asking for beta, or a malformed value, gets the same', async () => {
+  test('with no internal pointer, any Expo-Extra-Params (old beta installs, internal, malformed) gets the same', async () => {
     const answer = async (headers) => {
       const res = await get('/manifest', headers);
       const [part] = await parts(res);
@@ -122,6 +122,7 @@ suite('manifest response', () => {
     for (const value of [
       'channel="beta"',
       'channel="production"',
+      'channel="internal"',
       'channel="staging"',
       'other="x", channel="beta"',
       'channel=',

@@ -25,6 +25,14 @@ export const isPlatform = (value) => PLATFORMS.includes(value);
 
 // --- Storage layout (README "Storage layout") ----------------------------------------------------
 
+/**
+ * The pointer channels. `production` is what every request gets; `internal` is served only to a
+ * request whose Expo-Extra-Params is exactly `channel="internal"` (TestFlight installs), and only
+ * while its pointer exists (requestsInternalChannel). The retired `beta` channel's pointer at
+ * `.../beta` is read by nothing.
+ */
+export const CHANNELS = ['production', 'internal'];
+
 export const storageKeys = {
   /** Immutable asset bytes, addressed by the lowercase hex SHA-256 of their content. */
   asset: (sha256Hex) => `assets/${sha256Hex}`,
@@ -33,17 +41,31 @@ export const storageKeys = {
   /** The complete expo-signature value for those bytes, as the publish script produced it. */
   signature: (id) => `updates/${id}/signature`,
   /**
-   * What a (platform, runtime version) is served now: `{ "kind", "id" }`. Written last. There is one
-   * channel; the path keeps the `channels/` prefix and the fixed last segment `production` for
-   * compatibility with the objects already in the bucket (a pointer the retired `beta` channel left
-   * at `.../beta` is read by nothing).
+   * What a (platform, runtime version, channel) is served now (parsePointer). Written last. The
+   * production path is the one the bucket has always used.
    */
-  pointer: (platform, runtimeVersion) => `channels/${platform}/${runtimeVersion}/production`,
+  pointer: (platform, runtimeVersion, channel = 'production') => {
+    if (!CHANNELS.includes(channel)) throw new Error(`unknown channel ${channel}`);
+    return `channels/${platform}/${runtimeVersion}/${channel}`;
+  },
 };
 
 export const POINTER_KINDS = ['manifest', 'directive'];
 
-/** @returns {{kind: 'manifest' | 'directive', id: string} | null} */
+function plainPointer(value) {
+  if (!value || !POINTER_KINDS.includes(value.kind) || !isUpdateId(value.id)) return null;
+  return { kind: value.kind, id: value.id };
+}
+
+/**
+ * A pointer: `{ "kind", "id" }`, and on production optionally
+ * `"rollout": { "percent": 0..100, "previous": { "kind", "id" } | null }`. No `rollout` means 100%
+ * (every pointer written before rollouts existed). A `rollout` that is present but malformed makes
+ * the whole pointer malformed (null): it is never read as "everyone".
+ *
+ * @returns {{kind: 'manifest' | 'directive', id: string,
+ *   rollout?: {percent: number, previous: {kind: string, id: string} | null}} | null}
+ */
 export function parsePointer(text) {
   let value;
   try {
@@ -51,8 +73,60 @@ export function parsePointer(text) {
   } catch {
     return null;
   }
-  if (!value || !POINTER_KINDS.includes(value.kind) || !isUpdateId(value.id)) return null;
-  return { kind: value.kind, id: value.id };
+  const pointer = plainPointer(value);
+  if (!pointer || !('rollout' in value)) return pointer;
+  const rollout = value.rollout;
+  if (!rollout || typeof rollout !== 'object' || !('previous' in rollout)) return null;
+  const { percent } = rollout;
+  if (!Number.isInteger(percent) || percent < 0 || percent > 100) return null;
+  const previous = rollout.previous === null ? null : plainPointer(rollout.previous);
+  if (rollout.previous !== null && !previous) return null;
+  return { ...pointer, rollout: { percent, previous } };
+}
+
+// --- Channel and rollout selection ---------------------------------------------------------------
+
+/** Longer Expo-Extra-Params values are not parsed at all (production). */
+export const MAX_EXTRA_PARAMS_LENGTH = 512;
+
+/**
+ * Whether Expo-Extra-Params asks for the internal channel: a well-formed SFV dictionary whose only
+ * `channel` member is the string "internal". Anything else (absent, `beta` from old installs, a
+ * token instead of a string, a duplicated key, malformed, oversized) is production.
+ */
+export function requestsInternalChannel(header) {
+  if (typeof header !== 'string' || header.length > MAX_EXTRA_PARAMS_LENGTH) return false;
+  const channel = (sfvMembers(header) ?? []).filter(([key]) => key === 'channel');
+  return (
+    channel.length === 1 && channel[0][1].type === 'string' && channel[0][1].value === 'internal'
+  );
+}
+
+// EAS-Client-ID: a random per-install UUID (iOS sends it uppercase).
+const CLIENT_ID_PATTERN = /^[0-9A-Fa-f]{8}-(?:[0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}$/;
+
+/**
+ * The stable rollout bucket, 0..99, of one install for one update: the first four bytes of
+ * SHA-256(clientId + updateId), big-endian, modulo 100. Null for a missing or malformed client id
+ * (outside every rollout). Computed per request and kept nowhere.
+ */
+export async function rolloutBucket(clientId, updateId) {
+  if (typeof clientId !== 'string' || !CLIENT_ID_PATTERN.test(clientId)) return null;
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(`${clientId}${updateId}`));
+  return new DataView(digest).getUint32(0) % 100;
+}
+
+/**
+ * What a production pointer serves one request: its update when the request is inside the rollout
+ * (no rollout, or 100%, is everyone; otherwise bucket < percent), else `previous` (null: a 204).
+ *
+ * @returns {Promise<{kind: string, id: string} | null>}
+ */
+export async function rolloutChoice(pointer, clientId) {
+  const update = { kind: pointer.kind, id: pointer.id };
+  if (!pointer.rollout || pointer.rollout.percent >= 100) return update;
+  const bucket = await rolloutBucket(clientId, pointer.id);
+  return bucket !== null && bucket < pointer.rollout.percent ? update : pointer.rollout.previous;
 }
 
 // --- Asset content types -------------------------------------------------------------------------
@@ -89,37 +163,49 @@ const KEY = /^[a-z*][a-z0-9_\-.*]*/;
 const TOKEN = /^[A-Za-z*][A-Za-z0-9:/!#$%&'*+\-.^_`|~]*/;
 
 /**
- * Parse an SFV dictionary of strings, tokens and booleans (all the protocol sends). A member with
- * no value is `true`. Returns null on anything malformed, so a caller can answer 400.
+ * The members of an SFV dictionary of strings, tokens and booleans (all the protocol sends), in
+ * order and with duplicates kept: `[key, {value, type}]`. A member with no value is `true`. Null on
+ * anything malformed.
  *
- * @returns {Record<string, string | boolean> | null}
+ * @returns {[string, {value: string | boolean, type: 'string' | 'token' | 'boolean'}][] | null}
  */
-export function parseSfvDictionary(input) {
+export function sfvMembers(input) {
   if (typeof input !== 'string') return null;
-  const result = {};
+  const members = [];
   let rest = input.trim();
-  if (rest === '') return result;
+  if (rest === '') return members;
   while (rest.length) {
     const key = KEY.exec(rest)?.[0];
     if (!key) return null;
     rest = rest.slice(key.length);
-    let value = true;
+    let item = { value: true, type: 'boolean' };
     if (rest.startsWith('=')) {
       rest = rest.slice(1);
-      const item = parseItem(rest);
-      if (!item) return null;
-      value = item.value;
-      rest = rest.slice(item.length);
+      const parsed = parseItem(rest);
+      if (!parsed) return null;
+      item = { value: parsed.value, type: parsed.type };
+      rest = rest.slice(parsed.length);
     }
     // Parameters on a member (";a=b") are not used by the protocol: refuse them.
-    result[key] = value;
+    members.push([key, item]);
     rest = rest.replace(/^[ \t]*/, '');
     if (!rest.length) break;
     if (!rest.startsWith(',')) return null;
     rest = rest.slice(1).replace(/^[ \t]*/, '');
     if (!rest.length) return null;
   }
-  return result;
+  return members;
+}
+
+/**
+ * Parse an SFV dictionary (sfvMembers; a later duplicate wins, as RFC 8941 says). Returns null on
+ * anything malformed, so a caller can answer 400.
+ *
+ * @returns {Record<string, string | boolean> | null}
+ */
+export function parseSfvDictionary(input) {
+  const members = sfvMembers(input);
+  return members && Object.fromEntries(members.map(([key, item]) => [key, item.value]));
 }
 
 function parseItem(text) {
@@ -133,7 +219,7 @@ function parseItem(text) {
         value += next;
         i += 1;
       } else if (c === '"') {
-        return { value, length: i + 1 };
+        return { value, length: i + 1, type: 'string' };
       } else {
         const code = c.charCodeAt(0);
         if (code < 0x20 || code > 0x7e) return null;
@@ -142,10 +228,10 @@ function parseItem(text) {
     }
     return null;
   }
-  if (text.startsWith('?1')) return { value: true, length: 2 };
-  if (text.startsWith('?0')) return { value: false, length: 2 };
+  if (text.startsWith('?1')) return { value: true, length: 2, type: 'boolean' };
+  if (text.startsWith('?0')) return { value: false, length: 2, type: 'boolean' };
   const token = TOKEN.exec(text)?.[0];
-  return token ? { value: token, length: token.length } : null;
+  return token ? { value: token, length: token.length, type: 'token' } : null;
 }
 
 /** Serialize a string as an SFV string item. */
