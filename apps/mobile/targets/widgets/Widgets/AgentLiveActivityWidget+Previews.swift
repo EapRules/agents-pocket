@@ -5,359 +5,223 @@ import WidgetKit
 
 // MARK: - Previews
 
-/// Style gallery: every lock-screen state without a device, a push, or a
-/// live agent. Open this file's canvas in Xcode to review the banner.
+/// Style gallery: every drawn state (one working, several, Blocked, all
+/// done, stale) on the Lock Screen and in the compact, minimal and expanded
+/// island, without a device, a push, or a live Agent. Open this file's
+/// canvas in Xcode.
 #if DEBUG
-    private func previewAgent(
-        _ status: String, kind: String, workspace: String? = "Agentico", name: String? = nil,
-        pane: String, title: String? = nil
+    private let previewHostID = "6D8EC348-4DAF-455C-BA8F-5FCC41799C0E"
+
+    private func agent(
+        _ status: String, kind: String, name: String? = nil, workspace: String? = nil,
+        pane: String, title: String? = nil, ask: ActivityApprovalAsk? = nil
     ) -> AgentActivityDetails.AgentDetail {
         AgentActivityDetails.AgentDetail(
-            paneID: pane, kind: kind, name: name, workspace: workspace, status: status,
-            title: title)
+            paneID: pane, kind: kind, name: name, workspace: workspace, status: status, title: title,
+            ask: ask)
     }
 
-    private enum AgentActivityPreviewFixtures {
-        static let longGraphemeTitle = String(repeating: "锁", count: 80)
-        static let longGraphemeName = String(repeating: "屏", count: 80)
+    private enum PreviewFixtures {
+        static let ask = ActivityApprovalAsk(
+            episodeID: "preview-episode", prompt: "Bash wants to run: pnpm test settings",
+            options: ["Yes", "No"], timestamp: 1_763_200_000)
 
-        static var configuredFields: AgentActivityPresentation {
-            let agents = (1...4).map { index in
+        /// Near the notification body's 120-character cut: the prompt box's worst case.
+        static let longAsk = ActivityApprovalAsk(
+            episodeID: "preview-long", prompt: "Bash wants to run: pnpm --filter @openagentspocket/core test -- --run src/live-activity/coordinator.test.ts",
+            options: ["Yes", "No, and tell Claude what to do differently"], timestamp: 1_763_200_000)
+
+        static let codex = agent(
+            "working", kind: "codex", name: "codex", workspace: "storefront", pane: "w1:p1",
+            title: "Running pnpm test settings")
+        static let claude = agent(
+            "working", kind: "claude", name: "claude", workspace: "api", pane: "w1:p2",
+            title: "Editing schema.prisma")
+        static let opencode = agent(
+            "working", kind: "opencode", name: "opencode", workspace: "docs", pane: "w1:p3",
+            title: "Writing CHANGELOG.md")
+
+        static func with(_ base: AgentActivityDetails.AgentDetail, status: String, ask: ActivityApprovalAsk? = nil)
+            -> AgentActivityDetails.AgentDetail
+        {
+            var copy = base
+            copy.status = status
+            copy.ask = ask
+            return copy
+        }
+
+        static func detailed(
+            _ agents: [AgentActivityDetails.AgentDetail], working: Int, blocked: Int, done: Int
+        ) -> AgentActivityPresentation {
+            .detailed(
+                details: .init(hostName: "demo", agents: agents),
+                counts: .init(working: working, blocked: blocked, done: done))
+        }
+
+        static let oneWorking = detailed([codex], working: 1, blocked: 0, done: 0)
+        static let several = detailed(
+            [with(codex, status: "blocked"), claude, opencode], working: 2, blocked: 1, done: 0)
+        static let blocked = detailed(
+            [with(codex, status: "blocked", ask: ask), claude, opencode], working: 2, blocked: 1, done: 0)
+        static let blockedLongPrompt = detailed(
+            [with(codex, status: "blocked", ask: longAsk), claude, opencode], working: 2, blocked: 1, done: 0)
+        static let allDone = detailed(
+            [with(codex, status: "done"), with(claude, status: "done"), with(opencode, status: "done")],
+            working: 0, blocked: 0, done: 3)
+        static let oneBlockedNoPrompt = detailed([with(codex, status: "blocked")], working: 0, blocked: 1, done: 0)
+        static let unnamed = detailed(
+            [agent("working", kind: "claude", pane: "w1:p1")], working: 1, blocked: 0, done: 0)
+        static let overflow = detailed(
+            [
+                claude, with(opencode, status: "done"), with(codex, status: "blocked"),
+                agent("working", kind: "grok", pane: "w1:p4", title: "Research ActivityKit budgets"),
+                agent("working", kind: "droid", workspace: "web", pane: "w1:p5"),
+            ], working: 4, blocked: 1, done: 1)
+        static let longNames = detailed(
+            [
+                agent(
+                    "blocked", kind: "claude", name: String(repeating: "屏", count: 80),
+                    workspace: String(repeating: "锁", count: 80), pane: "w1:p1"),
+                claude,
+            ], working: 1, blocked: 1, done: 0)
+        static let configuredFields = detailed(
+            (1...3).map { index in
                 AgentActivityDetails.AgentDetail(
                     paneID: "w1:p\(index)", kind: "claude", workspace: "Agentico",
                     status: index == 1 ? "blocked" : "working", title: nil,
                     rows: [
                         [.init(text: "Agentico"), .init(text: " · "), .init(text: "Claude", dim: true)],
+                        [.init(text: "~/Projects/Agentico", fg: "#8ab4ff")],
                         [.init(text: "Review sidebar fields")],
-                        [.init(text: "~/Projects/Agentico", dim: true)],
                     ])
-            }
-            return .detailed(details: .init(hostName: "mbp", agents: agents),
-                counts: .init(working: 3, blocked: 1, done: 0))
-        }
+            }, working: 2, blocked: 1, done: 0)
+        static let countsOnly = AgentActivityPresentation.countsOnly(
+            counts: .init(working: 2, blocked: 1, done: 0))
 
-        static var mixedOverflow: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "blocked", kind: "claude", name: "reviewer", pane: "w1:p1",
-                            title: "Approve the transport refactor plan"),
-                        previewAgent(
-                            "done", kind: "droid", name: "doc-writer", pane: "w1:p2",
-                            title: "API reference draft finished"),
-                        previewAgent(
-                            "working", kind: "grok", name: "la-demo", pane: "w1:p3",
-                            title: "Research ActivityKit budgets"),
-                        previewAgent(
-                            "working", kind: "codex", name: "fixer", pane: "w1:p4",
-                            title: "Chase the flaky pairing test"),
-                        previewAgent(
-                            "working", kind: "claude", pane: "w1:p5",
-                            title: "Refactor the transport queue"),
-                    ]),
-                counts: .init(working: 4, blocked: 1, done: 1))
-        }
-
-        static var singleUnnamedIdentityOnly: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [previewAgent("working", kind: "claude", pane: "w1:p1")]),
-                counts: .init(working: 1, blocked: 0, done: 0))
-        }
-
-        static var fourRows: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "blocked", kind: "claude", name: "reviewer", pane: "w1:p1",
-                            title: "Approve the transport refactor plan"),
-                        previewAgent(
-                            "working", kind: "claude", pane: "w1:p2",
-                            title: "Refactor the transport queue"),
-                        previewAgent(
-                            "working", kind: "grok", name: "la-demo", pane: "w1:p3",
-                            title: "Write the landing copy"),
-                        previewAgent(
-                            "working", kind: "codex", name: "fixer", pane: "w1:p4",
-                            title: "Chase the flaky pairing test"),
-                    ]),
-                counts: .init(working: 3, blocked: 1, done: 0))
-        }
-
-        static var countsOnly: AgentActivityPresentation {
-            .countsOnly(counts: .init(working: 2, blocked: 1, done: 0))
-        }
-
-        static var longTitle: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "blocked", kind: "claude", name: "reviewer", pane: "w1:p1",
-                            title: longGraphemeTitle),
-                        previewAgent("working", kind: "grok", pane: "w1:p2", title: "Second row"),
-                    ]),
-                counts: .init(working: 1, blocked: 1, done: 1))
-        }
-
-        static var longNameWithTitle: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "blocked", kind: "claude", name: longGraphemeName, pane: "w1:p1",
-                            title: "Approve the transport refactor plan"),
-                    ]),
-                counts: .init(working: 0, blocked: 1, done: 0))
-        }
-
-        static var longNameNoTitle: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "working", kind: "claude", name: longGraphemeName, pane: "w1:p1"),
-                    ]),
-                counts: .init(working: 1, blocked: 0, done: 0))
-        }
-
-        static var staleMaxHeight: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent("blocked", kind: "claude", pane: "w1:p1", title: "First"),
-                        previewAgent("done", kind: "droid", pane: "w1:p2", title: "Second"),
-                        previewAgent("working", kind: "grok", pane: "w1:p3", title: "Third"),
-                        previewAgent("working", kind: "codex", pane: "w1:p4", title: "Fourth"),
-                        previewAgent("working", kind: "claude", pane: "w1:p5", title: "Fifth"),
-                    ]),
-                counts: .init(working: 3, blocked: 1, done: 1))
-        }
-
-        static var staleThreeRows: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent("blocked", kind: "claude", pane: "w1:p1", title: "First"),
-                        previewAgent("done", kind: "droid", pane: "w1:p2", title: "Second"),
-                        previewAgent("working", kind: "grok", pane: "w1:p3", title: "Third"),
-                    ]),
-                counts: .init(working: 1, blocked: 1, done: 1))
-        }
-
-        static var expandedMixed: AgentActivityPresentation {
-            .detailed(
-                details: AgentActivityDetails(
-                    hostName: "mbp",
-                    agents: [
-                        previewAgent(
-                            "blocked", kind: "claude", name: "reviewer", pane: "w1:p1",
-                            title: "Approve the transport refactor plan"),
-                        previewAgent(
-                            "done", kind: "droid", name: "doc-writer", pane: "w1:p2",
-                            title: "API reference draft finished"),
-                        previewAgent(
-                            "working", kind: "grok", name: "la-demo", pane: "w1:p3",
-                            title: "Research ActivityKit budgets"),
-                    ]),
-                counts: .init(working: 1, blocked: 1, done: 1))
+        static func approval(_ presentation: AgentActivityPresentation, isStale: Bool = false)
+            -> AgentActivityApproval?
+        {
+            AgentActivityApproval.make(
+                presentation: presentation, hostID: previewHostID, isStale: isStale, isOptedIn: { _ in true })
         }
     }
 
-    private func previewLockScreenBanner(
-        _ presentation: AgentActivityPresentation,
-        colorScheme: ColorScheme,
-        isStale: Bool = false
+    /// A busy wallpaper behind the card, like the mockup's legibility test.
+    private var previewWallpaper: some View {
+        LinearGradient(
+            colors: [.pink, .orange, .yellow, .green, .blue, .purple], startPoint: .topLeading,
+            endPoint: .bottomTrailing)
+    }
+
+    private func lockScreen(
+        _ presentation: AgentActivityPresentation, isStale: Bool = false, approves: Bool = false
     ) -> some View {
         AgentActivityLockScreenView(
-            presentation: presentation,
-            hostID: "6D8EC348-4DAF-455C-BA8F-5FCC41799C0E",
-            isStale: isStale
-        )
-        .background(
-            colorScheme == .light
-                ? Color(white: 0.97)
-                : Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255),
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-        )
-        .environment(\.colorScheme, colorScheme)
-        .padding()
+            presentation: presentation, hostID: previewHostID, isStale: isStale,
+            approval: approves ? PreviewFixtures.approval(presentation, isStale: isStale) : nil)
+            .frame(width: 371)
+            .frame(minHeight: 84)
+            .fixedSize(horizontal: false, vertical: true)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .padding()
+            .background(previewWallpaper)
     }
 
-    private func previewIslandCompact(
-        counts: AgentActivityAttributes.ContentState.Counts,
-        colorScheme: ColorScheme = .light
-    ) -> some View {
-        HStack(spacing: 0) {
-            AgentActivityCompactLeading(counts: counts)
+    private func islandParts(_ presentation: AgentActivityPresentation, approves: Bool)
+        -> (scene: AgentActivityScene, lead: String)
+    {
+        let scene = AgentActivityScene.make(
+            presentation: presentation, approval: approves ? PreviewFixtures.approval(presentation) : nil,
+            isStale: false)
+        return (scene, scene.leadStatus(counts: presentation.counts))
+    }
+
+    private func compact(_ presentation: AgentActivityPresentation, approves: Bool = false) -> some View {
+        let lead = islandParts(presentation, approves: approves).lead
+        return HStack(spacing: 0) {
+            AgentActivityCompact(slot: .leading, status: lead, counts: presentation.counts)
+                .frame(width: 52.33)
             // Stands in for the camera housing between the two sides.
             Color.clear.frame(width: 126)
-            AgentActivityCompactTrailing(counts: counts)
+            AgentActivityCompact(slot: .trailing, status: lead, counts: presentation.counts)
+                .frame(width: 52.33)
         }
-        .padding(.horizontal, 11)
-        .frame(height: 37)
+        .frame(height: 36.67)
         .background(Color.black, in: Capsule())
-        .environment(\.colorScheme, colorScheme)
+        .overlay(Capsule().stroke(AgentActivityChrome.keyline(for: lead), lineWidth: 1))
         .padding()
     }
 
-    private func previewIslandMinimal(
-        counts: AgentActivityAttributes.ContentState.Counts,
-        colorScheme: ColorScheme = .light
-    ) -> some View {
-        AgentActivityMinimal(counts: counts)
-            .frame(width: 37, height: 37)
+    private func minimal(_ presentation: AgentActivityPresentation, approves: Bool = false) -> some View {
+        let lead = islandParts(presentation, approves: approves).lead
+        return AgentActivityMinimal(status: lead, counts: presentation.counts)
+            .frame(width: 36.67, height: 36.67)
             .background(Color.black, in: Circle())
-            .environment(\.colorScheme, colorScheme)
+            .overlay(Circle().stroke(AgentActivityChrome.keyline(for: lead), lineWidth: 1))
             .padding()
     }
 
-    private func previewIslandExpanded(
-        _ presentation: AgentActivityPresentation,
-        colorScheme: ColorScheme = .light
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func expanded(_ presentation: AgentActivityPresentation, approves: Bool = false) -> some View {
+        let (scene, lead) = islandParts(presentation, approves: approves)
+        return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 0) {
-                AgentActivityIslandHeadline(counts: presentation.counts)
-                AgentActivityIslandTrailingTokens(counts: presentation.counts)
+                AgentActivityIslandLeading(scene: scene, counts: presentation.counts)
+                AgentActivityIslandTrailing(scene: scene, presentation: presentation)
             }
-            AgentActivityIslandRows(
-                presentation: presentation, hostID: "6D8EC348-4DAF-455C-BA8F-5FCC41799C0E")
+            AgentActivityIslandBottom(scene: scene, presentation: presentation, hostID: previewHostID)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.horizontal, AgentActivityIslandMetrics.expandedSideMargin)
+        .padding(.top, 13)
+        .padding(.bottom, 18)
         .frame(width: 371)
-        .background(Color.black, in: RoundedRectangle(cornerRadius: 40, style: .continuous))
-        .environment(\.colorScheme, colorScheme)
+        .foregroundStyle(AgentActivityChrome.primary)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 44, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 44, style: .continuous)
+                .stroke(AgentActivityChrome.keyline(for: lead), lineWidth: 1))
+        .environment(\.colorScheme, .dark)
         .padding()
     }
 
-    #Preview("Configured fields (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.configuredFields, colorScheme: .light)
-    }
+    // MARK: Lock Screen, one per drawn state
 
-    #Preview("Configured fields (Dark, stale)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.configuredFields, colorScheme: .dark, isStale: true)
-    }
+    #Preview("Lock · One working") { lockScreen(PreviewFixtures.oneWorking) }
+    #Preview("Lock · Several") { lockScreen(PreviewFixtures.several) }
+    #Preview("Lock · Blocked") { lockScreen(PreviewFixtures.blocked, approves: true) }
+    #Preview("Lock · Blocked, stale") { lockScreen(PreviewFixtures.blocked, isStale: true, approves: true) }
+    #Preview("Lock · All done") { lockScreen(PreviewFixtures.allDone) }
+    #Preview("Lock · Stale") { lockScreen(PreviewFixtures.several, isStale: true) }
 
-    #Preview("Configured fields (Expanded island)") {
-        previewIslandExpanded(AgentActivityPreviewFixtures.configuredFields)
-    }
+    // MARK: Lock Screen, edge cases
 
-    #Preview("P1 Mixed + overflow (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.mixedOverflow, colorScheme: .light)
-    }
+    #Preview("Lock · Blocked, long prompt") { lockScreen(PreviewFixtures.blockedLongPrompt, approves: true) }
+    #Preview("Lock · One blocked, no prompt") { lockScreen(PreviewFixtures.oneBlockedNoPrompt) }
+    #Preview("Lock · Unnamed Agent") { lockScreen(PreviewFixtures.unnamed) }
+    #Preview("Lock · Overflow") { lockScreen(PreviewFixtures.overflow) }
+    #Preview("Lock · Long names") { lockScreen(PreviewFixtures.longNames) }
+    #Preview("Lock · Configured fields") { lockScreen(PreviewFixtures.configuredFields) }
+    #Preview("Lock · Counts only") { lockScreen(PreviewFixtures.countsOnly) }
 
-    #Preview("P1 Mixed + overflow (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.mixedOverflow, colorScheme: .dark)
-    }
+    // MARK: Compact
 
-    #Preview("P2 Unnamed identity only (Light)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.singleUnnamedIdentityOnly, colorScheme: .light)
-    }
+    #Preview("Compact · Working") { compact(PreviewFixtures.oneWorking) }
+    #Preview("Compact · Several") { compact(PreviewFixtures.several) }
+    #Preview("Compact · Blocked") { compact(PreviewFixtures.blocked, approves: true) }
+    #Preview("Compact · All done") { compact(PreviewFixtures.allDone) }
 
-    #Preview("P2 Unnamed identity only (Dark)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.singleUnnamedIdentityOnly, colorScheme: .dark)
-    }
+    // MARK: Minimal
 
-    #Preview("P3 Four rows (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.fourRows, colorScheme: .light)
-    }
+    #Preview("Minimal · Working") { minimal(PreviewFixtures.oneWorking) }
+    #Preview("Minimal · Several") { minimal(PreviewFixtures.several) }
+    #Preview("Minimal · Blocked") { minimal(PreviewFixtures.blocked, approves: true) }
+    #Preview("Minimal · All done") { minimal(PreviewFixtures.allDone) }
 
-    #Preview("P3 Four rows (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.fourRows, colorScheme: .dark)
-    }
+    // MARK: Expanded
 
-    #Preview("P4 Counts only (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.countsOnly, colorScheme: .light)
-    }
-
-    #Preview("P4 Counts only (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.countsOnly, colorScheme: .dark)
-    }
-
-    #Preview("P5 Long title (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longTitle, colorScheme: .light)
-    }
-
-    #Preview("P5 Long title (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longTitle, colorScheme: .dark)
-    }
-
-    #Preview("P5a Long name with title (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longNameWithTitle, colorScheme: .light)
-    }
-
-    #Preview("P5a Long name with title (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longNameWithTitle, colorScheme: .dark)
-    }
-
-    #Preview("P5b Long name, no title (Light)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longNameNoTitle, colorScheme: .light)
-    }
-
-    #Preview("P5b Long name, no title (Dark)") {
-        previewLockScreenBanner(AgentActivityPreviewFixtures.longNameNoTitle, colorScheme: .dark)
-    }
-
-    #Preview("P6 Stale max height (Light)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.staleMaxHeight, colorScheme: .light, isStale: true)
-    }
-
-    #Preview("P6 Stale max height (Dark)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.staleMaxHeight, colorScheme: .dark, isStale: true)
-    }
-
-    #Preview("P6b Stale three rows (Light)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.staleThreeRows, colorScheme: .light, isStale: true)
-    }
-
-    #Preview("P6b Stale three rows (Dark)") {
-        previewLockScreenBanner(
-            AgentActivityPreviewFixtures.staleThreeRows, colorScheme: .dark, isStale: true)
-    }
-
-    #Preview("P7 Compact blocked (Light island)") {
-        previewIslandCompact(counts: .init(working: 2, blocked: 1, done: 0))
-    }
-
-    #Preview("P8 Compact done + working") {
-        previewIslandCompact(counts: .init(working: 2, blocked: 0, done: 1))
-    }
-
-    #Preview("P9 Compact working only") {
-        previewIslandCompact(counts: .init(working: 3, blocked: 0, done: 0))
-    }
-
-    #Preview("P9b Compact all three statuses") {
-        previewIslandCompact(counts: .init(working: 3, blocked: 1, done: 1))
-    }
-
-    #Preview("P10 Minimal blocked (Light island)") {
-        previewIslandMinimal(counts: .init(working: 2, blocked: 1, done: 0))
-    }
-
-    #Preview("P10b Minimal working only") {
-        previewIslandMinimal(counts: .init(working: 2, blocked: 0, done: 0))
-    }
-
-    #Preview("P11 Expanded mixed (Light island)") {
-        previewIslandExpanded(AgentActivityPreviewFixtures.expandedMixed)
-    }
+    #Preview("Expanded · Working") { expanded(PreviewFixtures.oneWorking) }
+    #Preview("Expanded · Several") { expanded(PreviewFixtures.several) }
+    #Preview("Expanded · Blocked") { expanded(PreviewFixtures.blocked, approves: true) }
+    #Preview("Expanded · Blocked, long prompt") { expanded(PreviewFixtures.blockedLongPrompt, approves: true) }
+    #Preview("Expanded · All done") { expanded(PreviewFixtures.allDone) }
+    #Preview("Expanded · Overflow") { expanded(PreviewFixtures.overflow) }
 #endif

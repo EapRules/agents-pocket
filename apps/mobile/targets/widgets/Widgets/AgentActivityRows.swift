@@ -5,40 +5,12 @@ import WidgetKit
 
 // MARK: - Shared pieces
 
-enum AgentActivityRowMetrics {
-    /// Apple's default iOS control size when the presentation has room.
-    static let comfortableMinimumHeight: CGFloat = 44
-    /// Apple's documented minimum iOS control size for dense layouts.
-    static let denseMinimumHeight: CGFloat = 28
-
-    static func lockScreenMinimumHeight(agentCount: Int) -> CGFloat {
-        agentCount <= 3 ? comfortableMinimumHeight : denseMinimumHeight
-    }
-
-    /// Three configured rows render at about 43.5 pt (caption + 2 x caption2
-    /// plus the card's vertical padding), so a three-row card is held to the
-    /// comfortable 44 pt target; two rows or fewer fit the dense target.
-    static let threeRowMinimumHeight: CGFloat = comfortableMinimumHeight
-
-    /// Vertical padding of the whole lock-screen banner.
-    static let lockScreenBannerVerticalPadding: CGFloat = 6
-    /// Rendered height of the trailing caption2 line (overflow / stale).
-    static let lockScreenCaptionHeight: CGFloat = 14
-    /// ActivityKit's lock-screen presentation height limit.
-    static let lockScreenHeightBudget: CGFloat = 160
-
-    static func minimumHeight(for agent: AgentActivityDetails.AgentDetail) -> CGFloat {
-        AgentActivityFields.rows(for: agent).count > 2 ? threeRowMinimumHeight : denseMinimumHeight
-    }
-}
-
-/// Wraps row content in a deep link to that Agent's detail. The outer
-/// widgetURL remains the fallback for taps on the surrounding chrome.
-private struct AgentActivityLinked<Content: View>: View {
+/// Wraps content in a deep link to that Agent's detail. The outer widgetURL
+/// remains the fallback for taps on the surrounding chrome.
+struct AgentActivityAgentLink<Content: View>: View {
     let hostID: String
     let agent: AgentActivityDetails.AgentDetail
-    let surface: AgentActivitySurface
-    let minimumHeight: CGFloat
+    var minimumHeight: CGFloat = 0
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -49,7 +21,7 @@ private struct AgentActivityLinked<Content: View>: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .tint(AgentActivitySemanticStyle.primary(on: surface))
+            .tint(AgentActivityChrome.primary)
             .accessibilityLabel(AgentActivityNarration.rowLabel(for: agent))
             .accessibilityHint("Opens this Agent in Agents Pocket")
         } else {
@@ -59,161 +31,90 @@ private struct AgentActivityLinked<Content: View>: View {
     }
 }
 
-struct AgentActivityLinkedRow: View {
-    let hostID: String
-    let agent: AgentActivityDetails.AgentDetail
-    let surface: AgentActivitySurface
-    let minimumHeight: CGFloat
+/// An Agent's three lines as direction A sets them: the name (semibold),
+/// the detail (workspace or path, monospaced) and the task. Configured Agent
+/// List Fields fill the same three lines, in order, with their own colors.
+struct AgentActivityAgentText {
+    enum Line { case name, detail, task }
 
-    var body: some View {
-        AgentActivityLinked(
-            hostID: hostID,
-            agent: agent,
-            surface: surface,
-            minimumHeight: surface == .island
-                ? minimumHeight
-                : max(minimumHeight, AgentActivityRowMetrics.minimumHeight(for: agent))
-        ) {
-            AgentActivityRowView(agent: agent, surface: surface)
-        }
-    }
-}
+    let name: [AgentActivityDetails.Field]
+    /// The program beside a custom name ("codex · Codex"); nil otherwise.
+    let program: String?
+    let detail: [AgentActivityDetails.Field]?
+    let task: [AgentActivityDetails.Field]?
 
-/// A Blocked Agent's prompt with Deny and Approve (spec F5, R5), or what
-/// the last tap came to. The buttons are links that open the app, which
-/// answers like a notification action (`AgentActivityLink.answerURL`).
-/// Labels are the prompt's own option labels.
-struct AgentActivityApprovalPanel: View {
-    let hostID: String
-    let approval: AgentActivityApproval
-    let surface: AgentActivitySurface
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // The whole prompt the buttons answer: at most the notification
-            // body's 120 characters, and Approve only when that is all of it.
-            Text(approval.ask.displayPrompt)
-                .font(.caption2)
-                .foregroundStyle(AgentActivitySemanticStyle.primary(on: surface))
-                .lineLimit(3)
-                .fixedSize(horizontal: false, vertical: true)
-            // One line of controls: the buttons, then what the last tap
-            // came to, so a result never pushes the banner past its height.
-            HStack(spacing: 8) {
-                if approval.showsButtons {
-                    buttons
-                }
-                if let result = approval.ask.result {
-                    Text(result.message)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AgentActivitySemanticStyle.secondary(on: surface))
-                        .lineLimit(2)
-                }
-            }
-        }
-    }
-
-    private var buttons: some View {
-        Group {
-            if let deny = approval.denyLabel, let url = answerURL(.deny) {
-                Link(destination: url) {
-                    Text(deny).lineLimit(1)
-                }
-                .tint(.red)
-                .accessibilityLabel("Deny: \(deny)")
-            }
-            if let approve = approval.approveLabel, let url = answerURL(.approve) {
-                Link(destination: url) {
-                    Text(approve).lineLimit(1)
-                }
-                .tint(AgentActivityStatusStyle.ink(for: "blocked", on: surface))
-                .accessibilityLabel("Approve: \(approve)")
-            }
-        }
-        .font(.caption.weight(.semibold))
-        .buttonStyle(.bordered)
-        .controlSize(.small)
-        .disabled(!approval.isEnabled)
-    }
-
-    private func answerURL(_ answer: AgentActivityLink.Answer) -> URL? {
-        AgentActivityLink.answerURL(
-            hostID: hostID, paneID: approval.agent.paneID, episodeID: approval.ask.episodeID, answer: answer)
-    }
-}
-
-struct AgentActivityCountChips: View {
-    let counts: AgentActivityAttributes.ContentState.Counts
-    let surface: AgentActivitySurface
-
-    var body: some View {
-        HStack(spacing: 5) {
-            ForEach(counts.chipItems, id: \.status) { @Sendable item in
-                Text(AgentActivityCountText.text(count: item.count, status: item.status))
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(AgentActivityStatusStyle.ink(for: item.status, on: surface))
-                    // Chips never compress or wrap; the row title truncates
-                    // instead when all three statuses are present.
-                    .fixedSize()
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        AgentActivityStatusStyle.wash(for: item.status, on: surface)
-                            .opacity(AgenticoTheme.statusWashOpacity),
-                        in: Capsule())
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            counts.chipItems.map { "\($0.count) \($0.status)" }.joined(separator: ", "))
-    }
-}
-
-/// The same rendered field rows used by the Console, with a status marker
-/// that remains visible even when every configured field is empty.
-enum AgentActivityFields {
-    static func rows(for agent: AgentActivityDetails.AgentDetail) -> [[AgentActivityDetails.Field]] {
-        if let configured = agent.rows { return Array(configured.prefix(3)) }
+    init(_ agent: AgentActivityDetails.AgentDetail) {
         let kind = AgentNotificationIdentity.kindLabel(agent.kind)
-        if let workspace = agent.displayWorkspace {
-            return [[.init(text: workspace)], [.init(text: kind)]]
+        if let rows = agent.rows, let first = rows.first {
+            name = first
+            program = nil
+            detail = rows.count > 1 ? rows[1] : nil
+            task = rows.count > 2 ? rows[2] : nil
+        } else {
+            name = [.init(text: agent.name ?? kind)]
+            program = agent.name == nil ? nil : kind
+            detail = agent.displayWorkspace.map { [.init(text: $0)] }
+            task = agent.title.map { [.init(text: $0)] }
         }
-        return [[.init(text: kind)]]
+    }
+
+    var plainName: String { name.map(\.text).joined() }
+
+    /// Every line as plain text, for VoiceOver.
+    var plainLines: [String] {
+        let first = [plainName, program].compactMap(\.self).joined(separator: " · ")
+        return ([first] + [detail, task].compactMap { $0?.map(\.text).joined() })
+            .filter { !$0.isEmpty }
+    }
+
+    func text(_ line: Line) -> Text? {
+        let fields: [AgentActivityDetails.Field]? = switch line {
+        case .name: name
+        case .detail: detail
+        case .task: task
+        }
+        guard let fields, !fields.isEmpty else { return nil }
+        return Text(AgentActivityFields.attributedText(fields, line: line))
+    }
+}
+
+enum AgentActivityFields {
+    static func font(for line: AgentActivityAgentText.Line) -> Font {
+        switch line {
+        case .name: .subheadline
+        case .detail: .footnote.monospaced()
+        case .task: .subheadline
+        }
     }
 
     static func attributedText(
-        _ fields: [AgentActivityDetails.Field], rowIndex: Int, surface: AgentActivitySurface
+        _ fields: [AgentActivityDetails.Field], line: AgentActivityAgentText.Line
     ) -> AttributedString {
         var result = AttributedString()
         for field in fields {
             var span = AttributedString(field.text)
-            let font: Font = rowIndex == 0 ? .caption : .caption2
             let weight: Font.Weight = if let bold = field.bold {
                 bold ? .bold : .regular
             } else {
-                rowIndex == 0 ? .semibold : .medium
+                line == .name ? .semibold : .medium
             }
-            span.font = font.weight(weight)
-            span.foregroundColor = foreground(for: field, rowIndex: rowIndex, surface: surface)
+            span.font = font(for: line).weight(weight)
+            span.foregroundColor = foreground(for: field, line: line)
             result.append(span)
         }
         return result
     }
 
     static func foreground(
-        for field: AgentActivityDetails.Field, rowIndex: Int, surface: AgentActivitySurface
+        for field: AgentActivityDetails.Field, line: AgentActivityAgentText.Line
     ) -> Color {
         if let hex = field.fg, let color = hexColor(hex) {
             return Color(uiColor: color).opacity(field.dim == true ? 0.6 : 1)
         }
         if field.dim == true {
-            let color: UIColor = rowIndex == 0 ? .secondaryLabel : .tertiaryLabel
-            return Color(uiColor: surface == .island
-                ? color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark)) : color)
+            return line == .name ? AgentActivityChrome.secondary : AgentActivityChrome.tertiary
         }
-        return rowIndex == 0
-            ? AgentActivitySemanticStyle.primary(on: surface)
-            : AgentActivitySemanticStyle.secondary(on: surface)
+        return line == .detail ? AgentActivityChrome.secondary : AgentActivityChrome.primary
     }
 
     private static func hexColor(_ value: String) -> UIColor? {
@@ -231,45 +132,156 @@ enum AgentActivityFields {
     }
 }
 
-struct AgentActivityRowView: View {
+/// One list row: status glyph, name, then the detail line truncating first.
+/// A later stage puts the Agent's timer on the trailing edge.
+struct AgentActivityListRow: View {
+    let hostID: String
     let agent: AgentActivityDetails.AgentDetail
-    let surface: AgentActivitySurface
+    var glyphSize = AgentActivityMetrics.rowGlyph
+    var height = AgentActivityMetrics.rowHeight
+    /// Draws the row as unknown (the stale card) instead of its last status.
+    var statusOverride: String? = nil
 
     var body: some View {
-        HStack(alignment: .top, spacing: 7) {
-            marker
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(
-                    Array(AgentActivityFields.rows(for: agent).enumerated()), id: \.offset
-                ) { @Sendable index, row in
-                    Text(AgentActivityFields.attributedText(row, rowIndex: index, surface: surface))
-                        .lineLimit(1)
+        let text = AgentActivityAgentText(agent)
+        AgentActivityAgentLink(hostID: hostID, agent: agent, minimumHeight: height) {
+            HStack(spacing: 10) {
+                AgentActivityStatusGlyph(status: statusOverride ?? agent.status, size: glyphSize)
+                text.text(.name)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                text.text(.detail)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(height: height)
+        }
+    }
+}
+
+/// The counts as the list header draws them: each status's glyph, then its
+/// count, Blocked first.
+struct AgentActivityCountTokens: View {
+    let counts: AgentActivityAttributes.ContentState.Counts
+    var items: [(status: String, count: Int)]? = nil
+
+    var body: some View {
+        let shown = items ?? counts.chipItems
+        HStack(spacing: 10) {
+            ForEach(shown, id: \.status) { item in
+                HStack(spacing: 4) {
+                    AgentActivityStatusGlyph(status: item.status, size: AgentActivityMetrics.tokenGlyph)
+                    Text("\(item.count)")
+                        .activityNumericTransition(item.count)
                 }
             }
         }
-        .padding(.vertical, agent.rows == nil || surface == .island ? 0 : 1)
-        .layoutPriority(1)
+        .font(.subheadline.weight(.semibold).monospacedDigit())
+        .foregroundStyle(AgentActivityChrome.primary)
+        .fixedSize()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(AgentActivityNarration.rowLabel(for: agent))
+        .accessibilityLabel(AgentActivityNarration.countsLabel(shown))
+    }
+}
+
+// MARK: - Blocked
+
+/// The whole prompt the buttons answer, in a monospaced box: at most the
+/// notification body's 120 characters, so three lines hold it; it shrinks
+/// rather than cut, because Approve answers all of it.
+struct AgentActivityPromptBox: View {
+    let prompt: String
+    var font: Font = .subheadline.monospaced().weight(.medium)
+
+    var body: some View {
+        Text(prompt)
+            .font(font)
+            .foregroundStyle(AgentActivityChrome.primary)
+            .lineLimit(3)
+            .minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                AgentActivityChrome.commandFill,
+                in: RoundedRectangle(cornerRadius: AgentActivityMetrics.commandRadius, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AgentActivityMetrics.commandRadius, style: .continuous)
+                    .strokeBorder(AgentActivityChrome.commandStroke, lineWidth: 1))
+    }
+}
+
+/// Deny (secondary) and Approve (primary, white). Both are links that open
+/// the app, which reads the prompt from the Host again and answers through
+/// the notification's gates (`AgentActivityLink.answerURL`). Labels are the
+/// prompt's own option labels. `stretches` fills the width (the island).
+struct AgentActivityAnswerButtons: View {
+    let hostID: String
+    let approval: AgentActivityApproval
+    var stretches = false
+    var height = AgentActivityMetrics.buttonHeight
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let deny = approval.denyLabel, let url = answerURL(.deny) {
+                Link(destination: url) {
+                    label(deny, fill: AgentActivityChrome.secondaryButtonFill, ink: AgentActivityChrome.primary)
+                }
+                .accessibilityLabel("Deny: \(deny)")
+            }
+            if let approve = approval.approveLabel, let url = answerURL(.approve) {
+                Link(destination: url) {
+                    label(
+                        approve, fill: AgentActivityChrome.primaryButtonFill,
+                        ink: AgentActivityChrome.primaryButtonText)
+                }
+                .accessibilityLabel("Approve: \(approve)")
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(!approval.isEnabled)
+        .opacity(approval.isEnabled ? 1 : 0.45)
     }
 
-    /// A dot on the Lock Screen, where the chips name each status; the
-    /// island's own glyph there, matching the tokens in its header.
-    @ViewBuilder
-    private var marker: some View {
-        switch surface {
-        case .lockScreen:
-            Circle()
-                .fill(AgentActivityStatusStyle.ink(for: agent.status, on: surface))
-                .frame(width: 7, height: 7)
-                .padding(.top, 4)
-                .accessibilityHidden(true)
-        case .island:
-            AgentActivityStatusGlyph(
-                status: agent.status, size: AgentActivityIslandMetrics.rowGlyph
-            )
-            .frame(width: AgentActivityIslandMetrics.markerColumn)
-            .padding(.top, 1.5)
+    private func label(_ text: String, fill: Color, ink: Color) -> some View {
+        Text(text)
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+            .foregroundStyle(ink)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: stretches ? .infinity : nil, minHeight: height, maxHeight: height)
+            .background(fill, in: Capsule())
+    }
+
+    private func answerURL(_ answer: AgentActivityLink.Answer) -> URL? {
+        AgentActivityLink.answerURL(
+            hostID: hostID, paneID: approval.agent.paneID, episodeID: approval.ask.episodeID, answer: answer)
+    }
+}
+
+enum AgentActivityNarration {
+    static func rowLabel(for agent: AgentActivityDetails.AgentDetail) -> String {
+        (AgentActivityAgentText(agent).plainLines + [agent.status]).joined(separator: ", ")
+    }
+
+    static func countsLabel(_ items: [(status: String, count: Int)]) -> String {
+        items.map { AgentActivityCountText.text(count: $0.count, status: $0.status) }
+            .joined(separator: ", ")
+    }
+}
+
+/// "2 blocked" for a label: one whole phrase per status, so a translation
+/// can make the status agree with the count. Unknown wire statuses read as
+/// they arrive.
+enum AgentActivityCountText {
+    static func text(count: Int, status: String) -> String {
+        switch status {
+        case "blocked": String(localized: "\(count) blocked")
+        case "working": String(localized: "\(count) working")
+        case "done": String(localized: "\(count) done")
+        case "idle": String(localized: "\(count) idle")
+        default: "\(count) \(status)"
         }
     }
 }

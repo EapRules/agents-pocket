@@ -38,81 +38,6 @@ enum AgentActivityPresentation: Equatable, Sendable {
     var primaryAgent: AgentActivityDetails.AgentDetail? {
         agents.first
     }
-
-    /// Rows drawn in the expanded Dynamic Island, under its status header:
-    /// as many of the first `rowLimit` Agents as fit, with the overflow
-    /// caption when some are left out, in the height the island leaves them.
-    var expandedAgents: [AgentActivityDetails.AgentDetail] {
-        let metrics = AgentActivityIslandMetrics.self
-        let candidates = Array(agents.prefix(AgentActivityCopy.rowLimit))
-        for shown in stride(from: candidates.count, through: 1, by: -1) {
-            let prefix = Array(candidates.prefix(shown))
-            let rowHeight = prefix.reduce(0) { $0 + metrics.rowHeight(for: $1) }
-            let lines = CGFloat(counts.total > shown ? shown + 1 : shown)
-            let captionHeight = counts.total > shown ? metrics.overflowCaptionHeight : 0
-            let height = rowHeight + captionHeight + (lines - 1) * metrics.rowSpacing
-            if height <= metrics.rowsHeightBudget { return prefix }
-        }
-        return Array(candidates.prefix(1))
-    }
-
-    /// Remaining eligible agents beyond the expanded rows, using the full
-    /// inventory in `counts` (the envelope list is capped at 5). Zero in
-    /// counts-only: there is nothing to overflow from.
-    var overflowCount: Int {
-        let shown = expandedAgents.count
-        guard shown > 0 else { return 0 }
-        return max(0, counts.total - shown)
-    }
-
-    /// Keep configured rows, independent tap targets, padding, and the
-    /// overflow/stale caption within the 160 pt lock-screen budget. The
-    /// estimate mirrors the rendered layout: three three-row cards plus the
-    /// caption fit (about 158 pt), a fourth never does, and four two-row
-    /// cards still fit as before.
-    func lockScreenAgents(isStale: Bool) -> [AgentActivityDetails.AgentDetail] {
-        let total = counts.total
-        guard total > 0 else { return [] }
-        let candidates = Array(agents.prefix(min(total, 4)))
-        guard !candidates.isEmpty else { return [] }
-        for shown in stride(from: candidates.count, through: 1, by: -1) {
-            let prefix = Array(candidates.prefix(shown))
-            let target = AgentActivityRowMetrics.lockScreenMinimumHeight(agentCount: shown)
-            let rowHeight = prefix.reduce(0) {
-                $0 + max(target, AgentActivityRowMetrics.minimumHeight(for: $1))
-            }
-            let captionHeight = isStale || total > shown
-                ? AgentActivityRowMetrics.lockScreenCaptionHeight : 0
-            let padding = AgentActivityRowMetrics.lockScreenBannerVerticalPadding * 2
-            if rowHeight + padding + captionHeight <= AgentActivityRowMetrics.lockScreenHeightBudget {
-                return prefix
-            }
-        }
-        return Array(candidates.prefix(1))
-    }
-
-    /// Inventory beyond the drawn lock-screen rows. Zero in counts-only.
-    func lockScreenOverflowCount(isStale: Bool) -> Int {
-        let shown = lockScreenAgents(isStale: isStale)
-        guard !shown.isEmpty else { return 0 }
-        return max(0, counts.total - shown.count)
-    }
-
-    /// Trailing caption2 on the lock screen: overflow, stale notice, or both.
-    func lockScreenTrailingCaption(isStale: Bool) -> String? {
-        let overflow = lockScreenOverflowCount(isStale: isStale)
-        let staleCaption = String(localized: "May be out of date")
-        if isStale {
-            if overflow > 0 {
-                return "\(String(localized: "+\(overflow) more")) · \(staleCaption)"
-            }
-            return staleCaption
-        }
-        if overflow > 0 {
-            return String(localized: "+\(overflow) more")
-        }
-        return nil
-    }
 }
 
 /// Synchronous render-time helper. Failures degrade to counts-only so a
@@ -220,14 +145,6 @@ struct AgentActivityApproval: Equatable, Sendable {
             agent: agent, ask: ask, approveLabel: approveLabel, denyLabel: denyLabel, isEnabled: !isStale)
     }
 
-    /// The asking Agent as its card draws above the prompt: the first of
-    /// its rows only, so the prompt and buttons keep the height they need.
-    var headlineAgent: AgentActivityDetails.AgentDetail {
-        var headline = agent
-        headline.rows = Array(AgentActivityFields.rows(for: agent).prefix(1))
-        return headline
-    }
-
     /// Whether the buttons show: not while an action runs or after one
     /// that settled the prompt.
     var showsButtons: Bool {
@@ -266,8 +183,7 @@ struct AgentActivityApproval: Equatable, Sendable {
 
 enum AgentActivityCopy {
     static let genericAppName = "Agents Pocket"
-    // Governs the Dynamic Island expanded rows; the lock screen sizes itself
-    // via `lockScreenAgents` instead.
+    /// List rows on the Lock Screen and in the expanded island.
     static let rowLimit = 3
 }
 
