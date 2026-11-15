@@ -1,6 +1,6 @@
 import type { Clock } from '../hosts/cancellation';
 import { type AttachStatus, AttachTerminalStore } from './attach-store';
-import { PlainTerminalInput, type TerminalInputPort } from './input-port';
+import { TerminalInputController } from './input-controller';
 import { TerminalMouseModes } from './mouse-modes';
 import { type RecoveryDecision, TerminalRecoveryGenerationLatch } from './recovery-latch';
 import { TerminalTouchScroll } from './touch-scroll';
@@ -26,7 +26,7 @@ export interface ShellTerminalStoreOptions {
   /** False once the owning screen left; a store off stage never starts or replaces a pipeline. */
   readonly isOnStage: () => boolean;
   readonly runTerminal: TerminalSessionRunner;
-  readonly input?: TerminalInputPort;
+  readonly input?: TerminalInputController;
   readonly clock: Clock;
 }
 
@@ -39,7 +39,8 @@ type Lifecycle = 'active' | 'rejoinRequired' | 'left';
  */
 export class ShellTerminalStore {
   readonly identity: ShellTerminalIdentity;
-  readonly input: TerminalInputPort;
+  /** The same input path as the Agent's terminal: a multi-line paste waits for review. */
+  readonly input: TerminalInputController;
   /** A drag on this shell, for as long as what runs in it tracks the mouse. */
   readonly touchScroll: TerminalTouchScroll;
   private readonly modes = new TerminalMouseModes();
@@ -56,7 +57,9 @@ export class ShellTerminalStore {
 
   constructor(private readonly options: ShellTerminalStoreOptions) {
     this.identity = options.identity;
-    this.input = options.input ?? new PlainTerminalInput(() => this.touchScroll.halt());
+    this.input =
+      options.input ??
+      new TerminalInputController({ observeOutgoing: () => this.touchScroll.halt() });
     this.touchScroll = new TerminalTouchScroll({
       clock: options.clock,
       modes: this.modes,

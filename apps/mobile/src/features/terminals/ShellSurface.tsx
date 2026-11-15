@@ -4,13 +4,17 @@ import { makeStyles, TerminalView, useAttachedTerminal } from '@openagentspocket
 import { useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
+import { TerminalPasteReview } from '@/terminal/TerminalPasteReview';
 import { TerminalStatus } from '@/terminal/TerminalStatus';
 
 const useStyles = makeStyles(() => ({
   fill: { flex: 1 },
 }));
 
-/** The shell's terminal view and its connection overlay. The view is keyed by pipeline surface. */
+/**
+ * The shell's terminal view, its connection overlay and its Review Paste sheet. The view is keyed
+ * by pipeline surface.
+ */
 export function ShellSurface({ entry }: { entry: PoolEntry }) {
   const styles = useStyles();
   const { store } = entry;
@@ -38,6 +42,7 @@ export function ShellSurface({ entry }: { entry: PoolEntry }) {
           { title: t('Take Over'), kind: 'secondary', onPress: () => store.takeOverTerminal() },
         ]}
       />
+      <TerminalPasteReview input={store.input} />
     </View>
   );
 }

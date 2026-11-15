@@ -3,6 +3,7 @@ import { FakeClock } from '../hosts/cancellation';
 import { utf8Encode } from '../pairing/bytes';
 import { eventually, identity, PoolProbe } from './pool.testkit';
 import { ShellTerminalStore } from './shell-store';
+import { encodePaste } from './text-safety';
 
 function make(probe: PoolProbe, generation: number | null = 1) {
   return new ShellTerminalStore({
@@ -81,5 +82,66 @@ describe('ShellTerminalStore', () => {
     await eventually(() => probe.requests.length === 2);
     expect(probe.requests[1]?.takeover).toBe(true);
     await store.leave();
+  });
+
+  describe('paste', () => {
+    async function attached() {
+      const probe = new PoolProbe();
+      const store = make(probe);
+      store.viewDidResize(80, 24);
+      await eventually(() => store.input.hasWriter);
+      const session = probe.sessions[0];
+      if (!session) throw new Error('no session');
+      return { store, session };
+    }
+    const text = 'cd /tmp\nrm -rf build\n';
+
+    it('holds a multi-line paste for review and sends nothing until confirmed', async () => {
+      const { store, session } = await attached();
+      expect(store.input.requestPaste(text).kind).toBe('requiresReview');
+      expect(store.input.pendingPaste).toMatchObject({ lineCount: 3 });
+      expect(session.sent).toEqual([]);
+      expect(store.input.confirmPaste()).toBe(true);
+      expect(session.sent).toEqual([encodePaste(text, false)]);
+      expect(store.input.pendingPaste).toBeNull();
+      await store.leave();
+    });
+
+    it('a cancelled review sends nothing', async () => {
+      const { store, session } = await attached();
+      store.input.requestPaste(text);
+      store.input.cancelPaste();
+      expect(store.input.confirmPaste()).toBe(false);
+      expect(session.sent).toEqual([]);
+      await store.leave();
+    });
+
+    it('keeps typing raw and a single safe line immediate', async () => {
+      const { store, session } = await attached();
+      store.send(utf8Encode('ls\r'));
+      expect(store.input.requestPaste('git status').kind).toBe('inserted');
+      expect(session.sent).toEqual([utf8Encode('ls\r'), utf8Encode('git status')]);
+      await store.leave();
+    });
+
+    it('rejects control characters and keeps a review across a pipeline replacement', async () => {
+      const probe = new PoolProbe();
+      const store = make(probe);
+      store.viewDidResize(80, 24);
+      await eventually(() => store.input.hasWriter);
+      expect(store.input.requestPaste('a\u001b[31m').kind).toBe('rejected');
+      expect(store.input.pasteError).not.toBeNull();
+      store.input.requestPaste(text);
+      const before = store.terminal;
+      store.transportGenerationDidChange(2);
+      await eventually(() => store.terminal !== before);
+      expect(store.input.pendingPaste).not.toBeNull();
+      store.viewDidResize(80, 24);
+      await eventually(() => probe.sessions.length === 2 && store.input.hasWriter);
+      expect(store.input.confirmPaste()).toBe(true);
+      expect(probe.sessions[0]?.sent).toEqual([]);
+      expect(probe.sessions[1]?.sent).toEqual([encodePaste(text, false)]);
+      await store.leave();
+    });
   });
 });
