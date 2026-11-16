@@ -277,6 +277,39 @@ describe('StatusLine', () => {
   });
 });
 
+describe('StatusLine trailing', () => {
+  it('is its own button beside the status, which keeps its testID and open behavior', async () => {
+    const onOpen = jest.fn();
+    const onTrailing = jest.fn();
+    await renderThemed(
+      <StatusLine
+        state="running"
+        text="Idle · 1 running"
+        open={{ onPress: onOpen, label: 'Background work', hint: 'Shows all background work.' }}
+        trailing={{
+          text: 'opus · High',
+          onPress: onTrailing,
+          label: 'Model and Effort',
+          testID: 'chat-status-settings',
+        }}
+      />,
+    );
+    const trailing = screen.getByTestId('chat-status-settings');
+    expect(trailing.props.accessibilityRole).toBe('button');
+    expect(trailing.props.accessibilityValue).toEqual({ text: 'opus · High' });
+    await fireEvent.press(trailing);
+    expect(onTrailing).toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByTestId('chat-status-line'));
+    expect(onOpen).toHaveBeenCalled();
+  });
+
+  it('is absent when not given', async () => {
+    await renderThemed(<StatusLine state="working" text="Working 5s" />);
+    expect(screen.queryByTestId('chat-status-settings')).toBeNull();
+  });
+});
+
 describe('ChatMessageSheet', () => {
   it('names the sender, renders the message and offers Copy and Done', async () => {
     const onCopy = jest.fn();

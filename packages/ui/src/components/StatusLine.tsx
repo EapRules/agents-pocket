@@ -13,6 +13,29 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.md,
   },
   text: { flexShrink: 1, minWidth: 0 },
+  // With a trailing control the line is a row of two siblings; the padding moves to the row.
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.spacing.md,
+    paddingHorizontal: t.spacing.md,
+  },
+  // The status keeps its words: only past the row's own width does it truncate.
+  status: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.spacing.xs,
+    minHeight: t.metrics.minTapSize,
+    flexShrink: 0,
+    maxWidth: '100%',
+  },
+  trailing: {
+    flexShrink: 1,
+    minWidth: 0,
+    marginLeft: 'auto',
+    minHeight: t.metrics.minTapSize,
+    justifyContent: 'center',
+  },
 }));
 
 export interface StatusLineProps {
@@ -26,6 +49,11 @@ export interface StatusLineProps {
    * it the line is plain text, read as its value.
    */
   open?: { onPress: () => void; label: string; hint: string };
+  /**
+   * A quiet control at the line's far end, its own button beside the status (never inside it). It
+   * shrinks first and ends in an ellipsis when the row runs out of room.
+   */
+  trailing?: { text: string; onPress: () => void; label: string; hint?: string; testID?: string };
   testID?: string;
 }
 
@@ -39,6 +67,7 @@ export function StatusLine({
   text,
   accessibilityValue,
   open,
+  trailing,
   testID = 'chat-status-line',
 }: StatusLineProps) {
   const styles = useStyles();
@@ -57,23 +86,42 @@ export function StatusLine({
       </Text>
     </>
   );
-  if (open === undefined)
-    return (
-      <View style={styles.line} accessible accessibilityLabel={spoken} testID={testID}>
+  const style = trailing ? styles.status : styles.line;
+  const status =
+    open === undefined ? (
+      <View style={style} accessible accessibilityLabel={spoken} testID={testID}>
         {body}
       </View>
+    ) : (
+      <Tappable
+        style={style}
+        onPress={open.onPress}
+        accessibilityRole="button"
+        accessibilityLabel={open.label}
+        accessibilityValue={{ text: spoken }}
+        accessibilityHint={open.hint}
+        testID={testID}
+      >
+        {body}
+      </Tappable>
     );
+  if (!trailing) return status;
   return (
-    <Tappable
-      style={styles.line}
-      onPress={open.onPress}
-      accessibilityRole="button"
-      accessibilityLabel={open.label}
-      accessibilityValue={{ text: spoken }}
-      accessibilityHint={open.hint}
-      testID={testID}
-    >
-      {body}
-    </Tappable>
+    <View style={styles.row}>
+      {status}
+      <Tappable
+        style={styles.trailing}
+        onPress={trailing.onPress}
+        accessibilityRole="button"
+        accessibilityLabel={trailing.label}
+        accessibilityValue={{ text: trailing.text }}
+        accessibilityHint={trailing.hint}
+        testID={trailing.testID}
+      >
+        <Text variant="subheadline" tone="tertiary" numberOfLines={1}>
+          {trailing.text}
+        </Text>
+      </Tappable>
+    </View>
   );
 }

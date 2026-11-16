@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useBackgroundWork } from '@/conversations/useBackgroundWork';
 import { useBackgroundWorkAsks, useDetailUi, useLiveTurn } from '../detailUi';
+import { useConversationSettingsEntry } from '../settings/useConversationSettings';
 import { openableItem, statusLineItem } from './workViewModel';
 
 const useStyles = makeStyles((th) => ({
@@ -21,6 +22,8 @@ const useStyles = makeStyles((th) => ({
 interface Props {
   hostId: string;
   paneId: string;
+  /** The Agent's program, for the settings its line shows at the trailing end. */
+  program: string;
   /** herdr's status for the Agent, as the dock shows it. */
   agent: ChatStatusLineInput['agent'];
 }
@@ -31,12 +34,13 @@ interface Props {
  * notices folded into the work they announce. The line counts what the sheet lists, so it never
  * promises a row the sheet lacks; with nothing listed it is plain text.
  */
-export function AgentBackgroundWork({ hostId, paneId, agent }: Props) {
+export function AgentBackgroundWork({ hostId, paneId, program, agent }: Props) {
   const styles = useStyles();
   const turn = useLiveTurn();
   const { sheet: listed, subagentIdOf, now } = useBackgroundWork(hostId, paneId, turn !== null);
   const { openSubagent } = useDetailUi();
   const sheet = useHandoverSheet();
+  const settings = useConversationSettingsEntry(hostId, paneId, program);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   // The sections the user opened or closed, for as long as the sheet stays up.
   const [sections, setSections] = useState<BackgroundWorkSections>({});
@@ -66,6 +70,16 @@ export function AgentBackgroundWork({ hostId, paneId, agent }: Props) {
           empty
             ? undefined
             : { onPress: show, label: t('Background work'), hint: t('Shows all background work.') }
+        }
+        trailing={
+          settings?.summary === undefined
+            ? undefined
+            : {
+                text: settings.summary,
+                onPress: settings.open,
+                label: t('Model and Effort'),
+                testID: 'chat-status-settings',
+              }
         }
       />
       <Sheet

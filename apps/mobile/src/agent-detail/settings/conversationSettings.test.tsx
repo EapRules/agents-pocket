@@ -68,6 +68,15 @@ describe('the conversation settings entry and sheet', () => {
     expect(entry).toHaveTextContent(/High/);
   });
 
+  it("the status line carries the Agent's values at its trailing end and opens the sheet", async () => {
+    await renderDetail('p5');
+    const trailing = await screen.findByTestId('chat-status-settings');
+    expect(trailing.props.accessibilityValue.text).toMatch(/claude-opus-5-5/);
+    expect(screen.getByTestId('chat-status-line')).toBeTruthy();
+    await fireEvent.press(trailing);
+    await screen.findByTestId('conversation-settings-sheet');
+  });
+
   it("lists the program's settings in its order", async () => {
     await renderDetail('p5');
     await openSheet();
@@ -137,7 +146,11 @@ describe('the conversation settings entry and sheet', () => {
     const slot = await screen.findByTestId('terminal-slot');
     await fireEvent(slot, 'layout', { nativeEvent: { layout: { width: 400, height: 300 } } });
     await press('toolbar-more');
-    fireEvent.press(await screen.findByLabelText('Model and Effort'));
+    // The status line's trailing control carries the same name; the menu entry is the other one.
+    const named = await screen.findAllByLabelText('Model and Effort');
+    const entry = named.find((n) => n.props.testID !== 'chat-status-settings');
+    if (!entry) throw new Error('the menu entry is missing');
+    fireEvent.press(entry);
     expect(await screen.findByTestId('setting-effort')).toBeTruthy();
   });
 });

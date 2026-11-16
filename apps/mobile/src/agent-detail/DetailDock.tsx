@@ -40,6 +40,7 @@ export function DetailDock({ row, chat, surface, composer, onToggleSurface }: Pr
         <AgentBackgroundWork
           hostId={row.hostId}
           paneId={row.agent.pane_id}
+          program={program}
           agent={shown === 'blocked' ? 'blocked' : shown === 'working' ? 'working' : 'idle'}
         />
       ) : null}
