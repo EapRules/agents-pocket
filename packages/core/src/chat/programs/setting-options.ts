@@ -11,10 +11,20 @@ export interface ProgramSettingOption {
   readonly recorded?: readonly string[];
   /** Text the program's footer draws in this state, for a `footer` read. */
   readonly drawn?: readonly string[];
+  /** How long this value lasts when it differs from its command's (Claude Code's session-only `max`). */
+  readonly persists?: SettingPersistence;
 }
+
+/** How long a change lasts, per the program's documentation. */
+export type SettingPersistence =
+  /** Saved as the user's default for later sessions too. */
+  | 'default'
+  | 'session'
+  /** The documentation does not say. */
+  | 'unstated';
 
 export const settingOption = (
   value: string,
   title: string,
-  extra: Pick<ProgramSettingOption, 'recorded' | 'drawn'> = {},
+  extra: Pick<ProgramSettingOption, 'recorded' | 'drawn' | 'persists'> = {},
 ): ProgramSettingOption => ({ value, title: message(title), ...extra });

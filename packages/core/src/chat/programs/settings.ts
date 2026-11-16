@@ -10,9 +10,13 @@ import type { ChatRecordedSettings, ChatTranscript } from '../model/types';
 import { footerCovered } from './agent-mode';
 import { findDrawn } from './modes';
 import { programSettings } from './registry';
-import type { ProgramSettingOption } from './setting-options';
+import type { ProgramSettingOption, SettingPersistence } from './setting-options';
 
-export { type ProgramSettingOption, settingOption } from './setting-options';
+export {
+  type ProgramSettingOption,
+  type SettingPersistence,
+  settingOption,
+} from './setting-options';
 
 export type ProgramSettingID = 'model' | 'effort' | 'fast';
 
@@ -26,14 +30,6 @@ export type SettingRead =
   | { readonly from: 'screen'; readonly read: (screen: AnsiScreen) => string | null }
   /** Nothing the app holds says it. */
   | { readonly from: 'none' };
-
-/** How long a change lasts, per the program's documentation. */
-export type SettingPersistence =
-  /** Saved as the user's default for later sessions too. */
-  | 'default'
-  | 'session'
-  /** The documentation does not say. */
-  | 'unstated';
 
 /** How the app may change the setting. */
 export type SettingApply =

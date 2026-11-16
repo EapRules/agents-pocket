@@ -6,6 +6,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { decodeAnsiScreen } from '../../blocked/ansi-decoder';
+import { loadScreen } from '../../blocked/golden-fixtures.testkit';
 import { encodeUtf8 } from '../../events/utf8';
 import { ClaudeTranscriptReducer } from '../claude/reducer';
 import { RolloutBuilder } from '../codex/test-builder';
@@ -21,6 +22,7 @@ import {
 import { row, rowLine } from '../opencode/record-source.testkit';
 import { OpenCodeTranscriptReducer } from '../opencode/reducer';
 import {
+  footerCovered,
   programCommands,
   programSettings,
   readConversationSettings,
@@ -250,6 +252,12 @@ describe('Pi and Oh My Pi read the level their footer draws', () => {
   it('unknown without a screen or a level drawn', () => {
     expect(read('pi', null, null).effort).toBeNull();
     expect(read('pi', null, screen('❯', 'model-x')).effort).toBeNull();
+  });
+
+  it('unknown while a dialog covers the footer', () => {
+    const approval = loadScreen('omp-36-approval-edit-18-12');
+    expect(footerCovered('omp', approval)).toBe(true);
+    expect(read('omp', null, approval).effort).toBeNull();
   });
 });
 

@@ -68,7 +68,8 @@ export const CLAUDE_SETTINGS: readonly ProgramSetting[] = [
       option('medium', 'Medium'),
       option('high', 'High'),
       option('xhigh', 'Extra High'),
-      option('max', 'Max'),
+      option('max', 'Max', { persists: 'session' }),
+      // Clears the saved level: the default changes too.
       option('auto', 'Auto'),
     ],
     { kind: 'command', command: '/effort', whileWorking: 'afterTurn', persists: 'default' },

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ChatAgentActivity } from '../model/types';
+import { emptyBox, type InputBoxState } from '../send/input-box';
 import { sendPolicyFor } from '../send/registry';
+import { syntheticScreen } from '../send/send.testkit';
 import {
   planSettingChange,
   programSettings,
@@ -13,16 +15,20 @@ import {
 } from './index';
 import type { ProgramSettingID } from './settings';
 
+/** A screen with no dialog, whose input box reads as `box`. */
 function plan(
   program: string,
   id: ProgramSettingID,
   value: string | null,
   activity: ChatAgentActivity = 'idle',
+  box: InputBoxState | null = emptyBox(),
 ): SettingChangePlan {
   const setting = programSettings(program).find((s) => s.id === id);
   if (!setting) throw new Error(`${program} lists no ${id}`);
-  const known = program as Parameters<typeof sendPolicyFor>[0];
-  return planSettingChange({ program, setting, value, activity, policy: sendPolicyFor(known) });
+  const real = sendPolicyFor(program as Parameters<typeof sendPolicyFor>[0]);
+  const policy = box ? { ...real, readInputBox: () => box } : real;
+  const screen = box ? syntheticScreen(['output', '']) : null;
+  return planSettingChange({ program, setting, value, activity, policy, screen });
 }
 
 const sent = (result: SettingChangePlan) => {
@@ -98,6 +104,27 @@ describe('the Agent state decides', () => {
       kind: 'commandAwaitsIdle',
       name: 'effort',
     });
+  });
+
+  it('a command goes only into an empty box, never after a draft or unread', () => {
+    const draft = refusal(plan('claude', 'effort', 'high', 'idle', { kind: 'text', text: 'wip' }));
+    expect(draft.kind).toBe('inputNotReady');
+    const dialog = refusal(
+      plan('hermes', 'effort', 'high', 'idle', { kind: 'dialog', title: null }),
+    );
+    expect(dialog.kind).toBe('inputNotReady');
+    expect(refusal(plan('claude', 'fast', 'on', 'idle', null)).kind).toBe('inputNotReady');
+    // A picker only fills the terminal's draft: the user sends it there.
+    expect(plan('claude', 'model', null, 'idle', null).kind).toBe('openTerminal');
+  });
+});
+
+describe('how long a change lasts', () => {
+  it('a Claude level is saved as the default, except its session-only max', () => {
+    expect(sent(plan('claude', 'effort', 'high')).persists).toBe('default');
+    expect(sent(plan('claude', 'effort', 'max')).persists).toBe('session');
+    expect(settingChangeNotes(plan('claude', 'effort', 'max'))).toEqual([]);
+    expect(sent(plan('hermes', 'effort', 'high')).persists).toBe('unstated');
   });
 });
 

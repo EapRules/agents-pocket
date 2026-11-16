@@ -1,9 +1,11 @@
 // Whether and how the app changes one setting of an Agent's conversation: a pure decision over the
-// setting, the value wanted and what herdr reports. A change is typed into the Agent's terminal
-// like any terminal draft, so it goes through the program's own submission (`send/command-shortcut`)
-// and refuses with the Composer's own refusals. Never while the Agent is blocked: a slash command
-// typed over a dialog could answer it.
+// setting, the value wanted, what herdr reports and the Agent's screen. A change is typed into the
+// Agent's terminal like any terminal draft, so it goes through the program's own submission
+// (`send/command-shortcut`) and refuses with the Composer's own refusals. Never while the Agent is
+// blocked, and a command goes only into an input box read as empty (`send/input-box`): a slash
+// command typed over a dialog could answer it, and one typed after a draft would extend it.
 
+import type { AnsiScreen } from '../../blocked/screen';
 import type { ComposerRefusal } from '../../composer/policy';
 import { type Message, message } from '../../errors/text';
 import type { ChatAgentActivity } from '../model/types';
@@ -12,6 +14,8 @@ import {
   type ShortcutDraft,
   terminalCommandWithArguments,
 } from '../send/command-shortcut';
+import { detectInputBox, holdReason } from '../send/detect';
+import { type InputBoxState, preSendCheck } from '../send/input-box';
 import type { ProgramSendPolicy } from '../send/policy';
 import { programCommands } from './registry';
 import type { ProgramSetting, SettingPersistence } from './settings';
@@ -29,10 +33,15 @@ export interface SettingChangeRequest {
   readonly activity: ChatAgentActivity;
   /** The program's send policy; null for one Chat does not send to. */
   readonly policy: ProgramSendPolicy | null;
+  /** The Agent's screen read just now; a command is sent only into a box it shows empty. */
+  readonly screen: AnsiScreen | null;
 }
 
 export type SettingChangePlan =
-  /** Send `draft.text` to the Agent's terminal as typed; the program sets the value. */
+  /**
+   * Send `draft.text` to the Agent's terminal as typed; the program sets the value. The terminal
+   * Composer's delivery re-reads the box before it types, as for any draft.
+   */
   | {
       readonly kind: 'send';
       readonly draft: ShortcutDraft;
@@ -44,32 +53,45 @@ export type SettingChangePlan =
   | { readonly kind: 'openTerminal'; readonly draft: ShortcutDraft }
   | { readonly kind: 'refuse'; readonly refusal: ComposerRefusal };
 
-const unavailable = (key: string): SettingChangePlan => ({
-  kind: 'refuse',
-  refusal: { kind: 'commandUnavailable', reason: message(key) },
-});
+const refuse = (refusal: ComposerRefusal): SettingChangePlan => ({ kind: 'refuse', refusal });
 
-const awaitsIdle = (command: string): SettingChangePlan => ({
-  kind: 'refuse',
-  refusal: { kind: 'commandAwaitsIdle', name: command.replace(/^\//, '') },
-});
+const unavailable = (key: string) => refuse({ kind: 'commandUnavailable', reason: message(key) });
+
+const awaitsIdle = (command: string) =>
+  refuse({ kind: 'commandAwaitsIdle', name: command.replace(/^\//, '') });
+
+const UNREAD_BOX: InputBoxState = {
+  kind: 'unknown',
+  reason: message("Agentico can't find the Agent's input box on screen."),
+};
+
+/** Why the box cannot take a command now; null when it reads as empty. */
+function boxRefusal(request: SettingChangeRequest): SettingChangePlan | null {
+  const { policy, screen, activity } = request;
+  const state = policy && screen ? detectInputBox(screen, policy) : UNREAD_BOX;
+  const decision = preSendCheck(state, activity);
+  if (decision.kind === 'send') return null;
+  if (decision.kind === 'holdBlocked' || !policy) return refuse({ kind: 'agentBlocked' });
+  return refuse({ kind: 'inputNotReady', reason: holdReason(decision.state, policy) });
+}
 
 export function planSettingChange(request: SettingChangeRequest): SettingChangePlan {
   const { setting, value, activity, policy } = request;
   const { apply } = setting;
   if (apply.kind === 'none') return unavailable(SETTING_READ_ONLY_KEY);
-  if (activity === 'blocked') return { kind: 'refuse', refusal: { kind: 'agentBlocked' } };
+  if (activity === 'blocked') return refuse({ kind: 'agentBlocked' });
   if (apply.kind === 'terminal') {
     const shortcut = programCommands(request.program).find((c) => c.command === apply.command);
     if (!shortcut) return unavailable(SETTING_READ_ONLY_KEY);
     return { kind: 'openTerminal', draft: commandShortcutDraft(shortcut, 'terminal', policy) };
   }
-  if (value === null || !setting.options.some((option) => option.value === value)) {
-    return unavailable(SETTING_VALUE_NOT_OFFERED_KEY);
-  }
+  const option = setting.options.find((candidate) => candidate.value === value);
+  if (value === null || !option) return unavailable(SETTING_VALUE_NOT_OFFERED_KEY);
   // An unknown status could be a dialog; a turn the docs say nothing about waits for idle.
   if (activity === 'unknown') return awaitsIdle(apply.command);
   if (activity === 'working' && apply.whileWorking === 'refuse') return awaitsIdle(apply.command);
+  const held = boxRefusal(request);
+  if (held) return held;
   return {
     kind: 'send',
     draft: {
@@ -77,7 +99,7 @@ export function planSettingChange(request: SettingChangeRequest): SettingChangeP
       text: terminalCommandWithArguments(apply.command, value, policy),
     },
     appliesAfterTurn: activity === 'working',
-    persists: apply.persists,
+    persists: option.persists ?? apply.persists,
   };
 }
 
