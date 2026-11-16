@@ -62,6 +62,8 @@ interface DetailUi {
   openSubagent: (agentId: string) => void;
   /** Counts the asks to open the Background Work sheet (a Subagent row with no transcript yet). */
   workSheet: Shared<number>;
+  /** Counts the asks to open the conversation settings sheet (a menu of either surface). */
+  settingsSheet: Shared<number>;
 }
 
 const DetailUiContext = createContext<DetailUi>({
@@ -73,6 +75,7 @@ const DetailUiContext = createContext<DetailUi>({
   setInput: () => undefined,
   openSubagent: () => undefined,
   workSheet: requestSlot(),
+  settingsSheet: requestSlot(),
 });
 
 export const useDetailUi = () => useContext(DetailUiContext);
@@ -104,16 +107,19 @@ export function usePublishLiveTurn(turn: ChatLiveTurn | null): void {
   useEffect(() => () => liveTurn.set(null), [liveTurn]);
 }
 
-/** Asks the dock to open the Background Work sheet. */
-export function useOpenBackgroundWork(): () => void {
-  const { workSheet } = useDetailUi();
-  return useCallback(() => workSheet.set(workSheet.get() + 1), [workSheet]);
+/** The sheets the dock owns and any part of the detail may ask for. */
+type SheetAsks = 'workSheet' | 'settingsSheet';
+
+/** Asks the dock to open one of its sheets. */
+function useAskFor(sheet: SheetAsks): () => void {
+  const asks = useDetailUi()[sheet];
+  return useCallback(() => asks.set(asks.get() + 1), [asks]);
 }
 
 /** Opens the sheet on each ask, for the part that owns it. */
-export function useBackgroundWorkAsks(open: () => void): void {
-  const { workSheet } = useDetailUi();
-  const asked = useSyncExternalStore(workSheet.subscribe, workSheet.get, workSheet.get);
+function useAsks(sheet: SheetAsks, open: () => void): void {
+  const asks = useDetailUi()[sheet];
+  const asked = useSyncExternalStore(asks.subscribe, asks.get, asks.get);
   const seen = useRef(asked);
   useEffect(() => {
     if (asked === seen.current) return;
@@ -121,6 +127,13 @@ export function useBackgroundWorkAsks(open: () => void): void {
     open();
   }, [asked, open]);
 }
+
+/** Asks the dock to open the Background Work sheet. */
+export const useOpenBackgroundWork = () => useAskFor('workSheet');
+export const useBackgroundWorkAsks = (open: () => void) => useAsks('workSheet', open);
+/** Asks the dock to open the conversation settings sheet (model, effort, fast mode). */
+export const useOpenConversationSettings = () => useAskFor('settingsSheet');
+export const useConversationSettingsAsks = (open: () => void) => useAsks('settingsSheet', open);
 
 /** Chat's running turn, as it last handed it over. */
 export function useLiveTurn(): ChatLiveTurn | null {
@@ -214,18 +227,20 @@ export function DetailUiProvider({
   const slot = useRef(dockSlot()).current;
   const liveTurn = useRef(liveTurnSlot()).current;
   const workSheet = useRef(requestSlot()).current;
+  const settingsSheet = useRef(requestSlot()).current;
   const value = useMemo(
     () => ({
       slot,
       liveTurn,
       workSheet,
+      settingsSheet,
       composing,
       setComposing,
       input,
       setInput,
       openSubagent: setAgentId,
     }),
-    [slot, liveTurn, workSheet, composing, input, setInput],
+    [slot, liveTurn, workSheet, settingsSheet, composing, input, setInput],
   );
   return (
     <DetailUiContext.Provider value={value}>

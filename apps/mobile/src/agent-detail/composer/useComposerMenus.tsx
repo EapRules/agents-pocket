@@ -26,6 +26,7 @@ import { useNewAgentServices } from '@/features/new-agent/services';
 import { ExpoLocalFiles } from '@/files/expoLocalFiles';
 import { pickDocument, pickPhoto } from '@/files/pickers';
 import { hrefs } from '@/navigation/hrefs';
+import { useConversationSettingsEntry } from '../settings/useConversationSettings';
 import type { Surface } from '../surface';
 import { COMPOSER_MORE_ANCHOR } from './composerAnchors';
 import type { AgentComposer } from './composerContext';
@@ -104,6 +105,7 @@ export function useComposerMenus({
   // The route's own check: Worktree Details exist only for an Agent in a linked worktree.
   const services = useNewAgentServices();
   const inWorktree = services.worktreeDetail(hostId, paneId) !== undefined;
+  const settings = useConversationSettingsEntry(hostId, paneId, program);
 
   const items = useMemo(() => {
     const directory = row ? rowDirectory(row) : undefined;
@@ -129,6 +131,7 @@ export function useComposerMenus({
       newAgent: () => router.push(hrefs.newAgent({ hostId, workspaceId, cwd: directory })),
       showSkills: () => setSheet('skills'),
       manageSnippets: () => setSheet('snippets'),
+      conversationSettings: settings,
       showWorktreeDetails: inWorktree
         ? () => router.push(hrefs.worktree(hostId, paneId))
         : undefined,
@@ -157,6 +160,7 @@ export function useComposerMenus({
     actions,
     rename.open,
     inWorktree,
+    settings,
   ]);
 
   const sheets = (

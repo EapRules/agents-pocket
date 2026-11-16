@@ -308,5 +308,10 @@
   "The app can only show this setting.": "La app solo puede mostrar este ajuste.",
   "The program doesn't offer this value.": "El programa no ofrece este valor.",
   "Applies after this turn.": "Se aplica cuando termine este turno.",
-  "Also becomes the default for new sessions.": "También queda como predeterminado para las sesiones nuevas."
+  "Also becomes the default for new sessions.": "También queda como predeterminado para las sesiones nuevas.",
+  "Fast mode uses usage credits.": "El modo rápido usa créditos de uso.",
+  "Model and Effort": "Modelo y esfuerzo",
+  "Change in Terminal": "Cambiar en la terminal",
+  "Apply": "Aplicar",
+  "Sends this to the Agent's terminal:": "Esto se envía a la terminal del Agente:"
 }

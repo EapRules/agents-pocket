@@ -24,7 +24,7 @@
 import { message } from '../../errors/text';
 import { grokScreenModel } from '../grok/screen-model';
 import { OMP_LEVELS, PI_LEVELS } from './mode-lists';
-import { settingOption as option } from './setting-options';
+import { settingOption as option, SETTING_USAGE_CREDITS_KEY } from './setting-options';
 import type { ProgramSetting, SettingApply, SettingRead } from './settings';
 
 const records = (field: 'model' | 'effort' | 'speed'): SettingRead => ({ from: 'records', field });
@@ -54,8 +54,8 @@ const effort = (
   apply,
 });
 
-const onOff = (onRecorded: string[], offRecorded: string[]) => [
-  option('on', 'On', { recorded: onRecorded }),
+const onOff = (onRecorded: string[], offRecorded: string[], onNotes: string[] = []) => [
+  option('on', 'On', { recorded: onRecorded, notes: onNotes }),
   option('off', 'Off', { recorded: offRecorded }),
 ];
 
@@ -78,7 +78,7 @@ export const CLAUDE_SETTINGS: readonly ProgramSetting[] = [
     id: 'fast',
     title: message('Fast Mode'),
     kind: 'toggle',
-    options: onOff(['fast'], ['standard']),
+    options: onOff(['fast'], ['standard'], [SETTING_USAGE_CREDITS_KEY]),
     read: records('speed'),
     apply: { kind: 'command', command: '/fast', whileWorking: 'afterTurn', persists: 'default' },
   },

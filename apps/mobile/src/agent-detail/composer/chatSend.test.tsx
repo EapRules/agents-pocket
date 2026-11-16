@@ -2,42 +2,12 @@ import { ComposerRegistry, FakeClock, MemoryStorage } from '@openagentspocket/co
 import { t } from '@openagentspocket/i18n';
 import { ThemeProvider } from '@openagentspocket/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { createDemoConsoleStore, DemoConsoleTransport } from '@/console/demo';
+import { createDemoConsoleStore } from '@/console/demo';
 import { ConsoleStoreProvider } from '@/console/hooks';
+import { goldenScreen, PaneTransport } from '@/console/paneTransport.testkit';
 import { TestSettings } from '@/settings/TestSettings';
 import { AgentDetailScreen } from '../AgentDetailScreen';
 import { ComposerRegistryProvider } from './composerContext';
-
-// Jest runs in node; the app's tsconfig carries no node typings.
-declare const __dirname: string;
-const { readFileSync } = require('node:fs') as {
-  readFileSync(path: string, encoding: 'utf8'): string;
-};
-const goldenScreen = (stem: string, program: string) =>
-  readFileSync(
-    `${__dirname}/../../../../../packages/core/goldens/${program}/screens/${stem}.ansi`,
-    'utf8',
-  );
-
-/** A Host whose panes can be read and answered, with what each call was given. */
-class PaneTransport extends DemoConsoleTransport {
-  prompts: { target: string; text: string }[] = [];
-  keys: { target: string; keys: string[] }[] = [];
-  reads = 0;
-  text = '';
-
-  async readAgent(): Promise<{ text: string }> {
-    this.reads += 1;
-    return { text: this.text };
-  }
-  async sendAgentKeys(params: { target: string; keys: string[] }): Promise<void> {
-    this.keys.push(params);
-  }
-  async sendPaneInput(): Promise<void> {}
-  async promptAgent(params: { target: string; text: string }): Promise<void> {
-    this.prompts.push(params);
-  }
-}
 
 function renderDetail(paneId: string, transport: PaneTransport) {
   const storage = new MemoryStorage();

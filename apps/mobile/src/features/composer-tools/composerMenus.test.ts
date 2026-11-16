@@ -1,4 +1,4 @@
-import { composerAddItems, composerMoreItems } from './composerMenus';
+import { composerAddItems, composerMoreItems, conversationSettingsItems } from './composerMenus';
 
 const noop = () => {};
 
@@ -55,5 +55,16 @@ describe('composer menus', () => {
       (item) => item.key === 'open-terminal',
     );
     expect(open?.disabled).toBe(true);
+  });
+
+  it('offers the conversation settings only where the program lists some, with their values', () => {
+    expect(composerMoreItems({}).some((item) => item.key === 'conversation-settings')).toBe(false);
+    expect(conversationSettingsItems(undefined)).toEqual([]);
+    const settings = { open: noop, summary: 'model-a · High' };
+    const item = composerMoreItems({ conversationSettings: settings }).find(
+      (candidate) => candidate.key === 'conversation-settings',
+    );
+    expect(item?.subtitle).toBe('model-a · High');
+    expect(conversationSettingsItems(settings)[0]?.subtitle).toBe('model-a · High');
   });
 });

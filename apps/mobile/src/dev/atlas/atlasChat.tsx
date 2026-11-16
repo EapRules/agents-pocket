@@ -1,5 +1,6 @@
 import {
   type ChatEntry,
+  type ChatRecordedSettings,
   type ConversationState,
   type ConversationStore,
   divider,
@@ -277,7 +278,27 @@ const idleWorkRegistry = registryFor(idleWorkState);
 const lookingRegistry = registryFor(lookingState);
 const messageRegistry = registryFor(withAgentMessage(state));
 
-export type AtlasBackground = 'list' | 'long' | 'blocked' | 'idleWork' | 'command' | 'message';
+/** The conversation as its records name what it runs with (the settings sheet's values). */
+const withSettings = (recordedSettings: ChatRecordedSettings): ConversationState => ({
+  ...state,
+  snapshot: { ...state.snapshot, transcript: { ...state.snapshot.transcript, recordedSettings } },
+});
+const claudeSettingsRegistry = registryFor(
+  withSettings({ model: 'claude-opus-5-5', effort: 'high', speed: 'standard' }),
+);
+const codexSettingsRegistry = registryFor(
+  withSettings({ model: 'gpt-6-luna', effort: 'xhigh', speed: null }),
+);
+
+export type AtlasBackground =
+  | 'list'
+  | 'long'
+  | 'blocked'
+  | 'idleWork'
+  | 'command'
+  | 'message'
+  | 'claudeSettings'
+  | 'codexSettings';
 
 const BACKGROUND_REGISTRIES: Record<AtlasBackground, ConversationRegistry> = {
   list: workRegistry,
@@ -286,6 +307,8 @@ const BACKGROUND_REGISTRIES: Record<AtlasBackground, ConversationRegistry> = {
   idleWork: idleWorkRegistry,
   command: commandRegistry,
   message: messageRegistry,
+  claudeSettings: claudeSettingsRegistry,
+  codexSettings: codexSettingsRegistry,
 };
 
 /** Gives the atlas a scripted conversation, so Chat renders as it does mid-session. */

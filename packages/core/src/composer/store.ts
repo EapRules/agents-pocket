@@ -28,6 +28,7 @@ import type {
 } from './store-types';
 
 export type { ComposerDelivery, ComposerMessage, ComposerProgress } from './progress';
+
 export type { Selection } from './selection';
 export type {
   ComposerAttachInput,
@@ -177,6 +178,23 @@ export class ComposerStore {
   async send(policy: ComposerDeliveryPolicy = terminalPolicy): Promise<ComposerSendResult> {
     const revision = this.statusRevision;
     return this.noting(await this.sendDraft(policy), policy.route, revision);
+  }
+
+  /** `text` as a message of its own, the draft untouched; a refusal after the echo drafts it. */
+  async sendText(text: string, policy: ComposerDeliveryPolicy): Promise<ComposerSendResult> {
+    const revision = this.statusRevision;
+    const blocked = this.status === 'blocked';
+    const refusal = blocked ? ({ kind: 'agentBlocked' } as const) : policy.validate(text);
+    if (refusal) return this.noting({ kind: 'refused', refusal }, policy.route, revision);
+    const id = `m${this.nextId++}`;
+    this.track(id, true);
+    this.messages = [
+      ...this.messages,
+      { id, text, route: policy.route, state: { kind: 'sending' } },
+    ];
+    this.stop.holdAfterSend();
+    this.changed();
+    return this.noting(await this.preflightThenDeliver(id, text, policy), policy.route, revision);
   }
 
   /** Sends a failed message again; the policy should be the one for the message's own route. */

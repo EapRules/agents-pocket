@@ -13,6 +13,8 @@ export interface ProgramSettingOption {
   readonly drawn?: readonly string[];
   /** How long this value lasts when it differs from its command's (Claude Code's session-only `max`). */
   readonly persists?: SettingPersistence;
+  /** Keys of what choosing this value also means, shown before it is applied. */
+  readonly notes?: readonly string[];
 }
 
 /** How long a change lasts, per the program's documentation. */
@@ -23,8 +25,11 @@ export type SettingPersistence =
   /** The documentation does not say. */
   | 'unstated';
 
+/** Claude Code's fast mode draws on usage credits (code.claude.com/docs/en/fast-mode). */
+export const SETTING_USAGE_CREDITS_KEY = 'Fast mode uses usage credits.';
+
 export const settingOption = (
   value: string,
   title: string,
-  extra: Pick<ProgramSettingOption, 'recorded' | 'drawn' | 'persists'> = {},
+  extra: Pick<ProgramSettingOption, 'recorded' | 'drawn' | 'persists' | 'notes'> = {},
 ): ProgramSettingOption => ({ value, title: message(title), ...extra });

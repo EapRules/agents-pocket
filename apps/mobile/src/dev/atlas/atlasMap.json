@@ -562,6 +562,21 @@
     "note": "opened after focusing the input (the folded composer shows no \"...\"); Worktree Details and Rename Workspace have no RN action yet"
   },
   {
+    "id": "rn.conversation-settings-claude",
+    "rn": "ConversationSettingsSheet (Section, ListRow, ToggleRow)",
+    "note": "RN-only state: Model and Effort from Chat's \"...\" menu on a Claude Code Agent; model changed in its terminal picker, effort levels and fast mode applied by command"
+  },
+  {
+    "id": "rn.conversation-settings-claude-pending",
+    "rn": "ConversationSettingsSheet (CommandBlock, ButtonRow)",
+    "note": "RN-only state: Extra High chosen, the exact command and its notes shown, nothing sent until Apply"
+  },
+  {
+    "id": "rn.conversation-settings-codex",
+    "rn": "ConversationSettingsSheet (Section, ListRow)",
+    "note": "RN-only state: a Codex Agent, its model changed in its terminal picker and its effort only shown"
+  },
+  {
     "id": "agent-detail.composer-add-menu",
     "rn": "AgentComposerBar \"+\" (composerAddItems)",
     "note": "Add Image, Add File; opened from the \"+\" circle"

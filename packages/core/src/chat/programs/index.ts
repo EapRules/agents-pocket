@@ -25,6 +25,7 @@ export {
   SETTING_AFTER_TURN_KEY,
   SETTING_READ_ONLY_KEY,
   SETTING_SAVES_DEFAULT_KEY,
+  SETTING_USAGE_CREDITS_KEY,
   SETTING_VALUE_NOT_OFFERED_KEY,
   type SettingChangePlan,
   type SettingChangeRequest,
@@ -32,6 +33,8 @@ export {
 } from './setting-change';
 export {
   type ConversationSetting,
+  conversationSettingsSummary,
+  keepLastKnown,
   type ProgramSetting,
   type ProgramSettingID,
   type ProgramSettingOption,
@@ -42,6 +45,7 @@ export {
   type SettingRead,
   type SettingReadInput,
   type SettingValue,
+  settingValueText,
 } from './settings';
 export {
   COMMON_SHORTCUTS,

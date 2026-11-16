@@ -24,6 +24,8 @@ export interface ComposerMenuActions {
   newAgent?: () => void;
   showSkills?: () => void;
   manageSnippets?: () => void;
+  /** The Agent's model, effort and fast mode; absent for a program that lists none. */
+  conversationSettings?: { open: () => void; summary?: string };
   showWorktreeDetails?: () => void;
   renameAgent?: () => void;
   renameWorkspace?: () => void;
@@ -35,7 +37,7 @@ type Entry = [
   title: string,
   icon: IconName,
   handler: (() => void) | undefined,
-  options?: { destructive?: boolean; disabled?: boolean },
+  options?: { destructive?: boolean; disabled?: boolean; subtitle?: string },
 ];
 
 /** Entries with a handler become items. */
@@ -44,6 +46,22 @@ function items(entries: readonly Entry[]): ActionMenuItem[] {
     onPress === undefined ? [] : [{ key, title, icon, onPress, ...options }],
   );
 }
+
+/** The conversation settings entry, in the "..." menu of either surface: its line names the values. */
+function settingsEntry(settings: ComposerMenuActions['conversationSettings']): Entry {
+  return [
+    'conversation-settings',
+    t('Model and Effort'),
+    'model',
+    settings?.open,
+    { subtitle: settings?.summary },
+  ];
+}
+
+/** The same entry as a menu item, for a menu built elsewhere (the terminal's key toolbar). */
+export const conversationSettingsItems = (
+  settings: ComposerMenuActions['conversationSettings'],
+): ActionMenuItem[] => items([settingsEntry(settings)]);
 
 /** The "+" menu: attachments for the draft. */
 export function composerAddItems(actions: ComposerMenuActions): ActionMenuItem[] {
@@ -76,6 +94,7 @@ export function composerMoreItems(actions: ComposerMenuActions): ActionMenuItem[
       ['new-agent', t('New Agent'), 'add', actions.newAgent],
       ['skills', t('Skills'), 'skills', actions.showSkills],
       ['snippets', t('Snippets'), 'snippets', actions.manageSnippets],
+      settingsEntry(actions.conversationSettings),
     ],
     [
       ['worktree', t('Worktree Details'), 'info', actions.showWorktreeDetails],

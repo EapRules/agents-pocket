@@ -9,7 +9,6 @@ import {
 } from '@openagentspocket/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { statusDot } from '@/console/agentStatus';
 import { AppScreen } from '@/navigation/AppScreen';
 import { BlockedCardProvider } from '../blocked/BlockedCardProvider';
 import { activityOf } from '../blocked/useBlockedCard';
@@ -17,7 +16,6 @@ import { useAgentPhase, useConsole, useConsoleState } from '../console/hooks';
 import { AgentHeader } from './AgentHeader';
 import { AgentSessionDrawer } from './AgentSessionDrawer';
 import { AgentUnavailable } from './AgentUnavailable';
-import { AgentComposerBar } from './composer/AgentComposer';
 import { useAgentComposer } from './composer/composerContext';
 import { DetailDock } from './DetailDock';
 import { DetailSlot } from './DetailSlot';
@@ -73,6 +71,7 @@ export function AgentDetailScreen({
   const [headerHeight, setHeaderHeight] = useState(0);
   useFocusDone(hostId, paneId, row?.agent.agent_status === 'done');
   const composer = useAgentComposer(hostId, paneId, row?.agent.agent_status ?? 'unknown', storage);
+  const toggleSurface = () => setSurface(surface === 'chat' ? 'terminal' : 'chat');
   if (!row) return <AgentUnavailable gone={phase === 'gone'} hostId={hostId} />;
   return (
     <DetailUiProvider hostId={hostId} paneId={paneId} storage={storage}>
@@ -127,16 +126,13 @@ export function AgentDetailScreen({
                 </View>
               </View>
               <View style={[styles.dock, { paddingBottom: chrome.bottom }]}>
-                <DetailDock row={row} chat={shown.chat} surface={surface}>
-                  <AgentComposerBar
-                    composer={composer}
-                    surface={surface}
-                    program={row.agent.agent ?? 'unknown'}
-                    projectRoot={row.agent.cwd ?? undefined}
-                    status={statusDot(row.agent.agent_status)}
-                    onToggleSurface={() => setSurface(surface === 'chat' ? 'terminal' : 'chat')}
-                  />
-                </DetailDock>
+                <DetailDock
+                  row={row}
+                  chat={shown.chat}
+                  surface={surface}
+                  composer={composer}
+                  onToggleSurface={toggleSurface}
+                />
               </View>
             </AppScreen>
           </ComposerRoomProvider>

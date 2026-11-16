@@ -308,5 +308,10 @@
   "The app can only show this setting.": "The app can only show this setting.",
   "The program doesn't offer this value.": "The program doesn't offer this value.",
   "Applies after this turn.": "Applies after this turn.",
-  "Also becomes the default for new sessions.": "Also becomes the default for new sessions."
+  "Also becomes the default for new sessions.": "Also becomes the default for new sessions.",
+  "Fast mode uses usage credits.": "Fast mode uses usage credits.",
+  "Model and Effort": "Model and Effort",
+  "Change in Terminal": "Change in Terminal",
+  "Apply": "Apply",
+  "Sends this to the Agent's terminal:": "Sends this to the Agent's terminal:"
 }

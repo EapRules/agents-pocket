@@ -5,7 +5,7 @@
 
 import type { AnsiScreen } from '../../blocked/screen';
 import { screenText } from '../../blocked/screen';
-import type { Message } from '../../errors/text';
+import type { Message, Text } from '../../errors/text';
 import type { ChatRecordedSettings, ChatTranscript } from '../model/types';
 import { footerCovered } from './agent-mode';
 import { findDrawn } from './modes';
@@ -121,6 +121,37 @@ export function readSetting(setting: ProgramSetting, input: SettingReadInput): S
 export interface ConversationSetting {
   readonly setting: ProgramSetting;
   readonly value: SettingValue;
+}
+
+/**
+ * `next`, where a setting it reads as unknown keeps the value `previous` knew: a read describes the
+ * last reply, and a dialog over the footer hides what it showed, so neither says the value changed.
+ */
+export function keepLastKnown(
+  previous: readonly ConversationSetting[] | null,
+  next: readonly ConversationSetting[],
+): readonly ConversationSetting[] {
+  if (!previous) return next;
+  return next.map((current) => {
+    if (current.value.kind === 'known') return current;
+    const before = previous.find((candidate) => candidate.setting.id === current.setting.id);
+    return before?.value.kind === 'known' ? { ...current, value: before.value } : current;
+  });
+}
+
+/** How a value reads: its option's title, or the program's own words; null when unknown. */
+export function settingValueText(value: SettingValue): Text | null {
+  if (value.kind === 'unknown') return null;
+  return value.option ? value.option.title : value.value;
+}
+
+/** The known values in the program's order (`model · effort`); null when none is known. */
+export function conversationSettingsSummary(settings: readonly ConversationSetting[]): Text | null {
+  const known = settings.flatMap(({ value }) => {
+    const text = settingValueText(value);
+    return text === null ? [] : [text];
+  });
+  return known.length === 0 ? null : { join: known, separator: ' · ' };
 }
 
 /** Every setting the Agent's program lists, each with its current value. */

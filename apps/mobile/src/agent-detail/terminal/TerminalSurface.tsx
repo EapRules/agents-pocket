@@ -14,11 +14,13 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
+import { conversationSettingsItems } from '@/features/composer-tools/composerMenus';
 import { useSettings } from '@/settings/SettingsProvider';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
 import { TerminalPasteReview } from '@/terminal/TerminalPasteReview';
 import { TerminalStatus } from '@/terminal/TerminalStatus';
 import { useDetailUi, useDockSlot } from '../detailUi';
+import { useConversationSettingsEntry } from '../settings/useConversationSettings';
 import type { AgentTerminalSession } from './AgentTerminalSession';
 import { CONTROL_KEYS, FULL_KEYBOARD, type KeyRows, keyLabel } from './keyTables';
 import { TerminalToolbar, type ToolbarAction } from './TerminalToolbar';
@@ -79,6 +81,7 @@ function LiveTerminal({
   onShowChat?: () => void;
 }) {
   const textActions = useTerminalTextActions(hostId, paneId, session, program);
+  const settingsEntry = useConversationSettingsEntry(hostId, paneId, program ?? 'unknown');
   const router = useRouter();
   const settings = useSettings();
   const store = useSyncExternalStore(session.subscribe, session.getStore);
@@ -117,6 +120,7 @@ function LiveTerminal({
     })),
     { key: 'paste', title: t('Paste'), icon: 'copy', onPress: () => void paste() },
     ...textActions.items,
+    ...conversationSettingsItems(settingsEntry),
     {
       key: 'controls',
       title: t('Control Keys'),

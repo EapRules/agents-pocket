@@ -1,5 +1,6 @@
 import {
   type ChatEntry,
+  type ChatRecordedSettings,
   type ConversationState,
   emptyTranscript,
   initialSnapshot,
@@ -13,6 +14,8 @@ interface DemoChat {
   answer: string;
   /** The Agent is mid-turn: the turn has no end yet. */
   working: boolean;
+  /** What its records say it runs with (the settings sheet's values); none by default. */
+  settings?: ChatRecordedSettings;
 }
 
 /** What each demo Agent was asked, by `host/pane`: the transcript the demo Host has no files for. */
@@ -28,6 +31,7 @@ const CHATS: Readonly<Record<string, DemoChat>> = {
     command: 'pnpm test settings',
     answer: 'Appearance and Notifications are split out. I am moving Privacy next.',
     working: true,
+    settings: { model: 'gpt-6-luna', effort: 'xhigh', speed: null },
   },
   'demo/p3': {
     prompt: 'Write the install guide for macOS.',
@@ -46,6 +50,7 @@ const CHATS: Readonly<Record<string, DemoChat>> = {
     command: 'pnpm test theme',
     answer: 'Every settings screen reads its colors from the theme. Nothing to change.',
     working: false,
+    settings: { model: 'claude-opus-5-5', effort: 'high', speed: 'standard' },
   },
   'lab/p1': {
     prompt: 'Warm the render cache before the nightly run.',
@@ -95,6 +100,7 @@ export function demoConversation(
       phase: { type: 'following', path: '/demo/session.jsonl' },
       transcript: {
         ...emptyTranscript(),
+        ...(chat.settings ? { recordedSettings: chat.settings } : {}),
         entries,
         turns: [
           {

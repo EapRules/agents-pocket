@@ -24,6 +24,7 @@ export const SETTING_READ_ONLY_KEY = 'The app can only show this setting.';
 export const SETTING_VALUE_NOT_OFFERED_KEY = "The program doesn't offer this value.";
 export const SETTING_AFTER_TURN_KEY = 'Applies after this turn.';
 export const SETTING_SAVES_DEFAULT_KEY = 'Also becomes the default for new sessions.';
+export { SETTING_USAGE_CREDITS_KEY } from './setting-options';
 
 export interface SettingChangeRequest {
   readonly program: string | null | undefined;
@@ -33,8 +34,11 @@ export interface SettingChangeRequest {
   readonly activity: ChatAgentActivity;
   /** The program's send policy; null for one Chat does not send to. */
   readonly policy: ProgramSendPolicy | null;
-  /** The Agent's screen read just now; a command is sent only into a box it shows empty. */
-  readonly screen: AnsiScreen | null;
+  /**
+   * The Agent's screen read just now; a command is sent only into a box it shows empty. Absent
+   * previews the change (what a row offers before the user applies it): every check but the box.
+   */
+  readonly screen?: AnsiScreen | null;
 }
 
 export type SettingChangePlan =
@@ -48,6 +52,8 @@ export type SettingChangePlan =
       /** The Agent is working: the change takes effect once this turn ends. */
       readonly appliesAfterTurn: boolean;
       readonly persists: SettingPersistence;
+      /** The value's own notes (Claude Code's fast mode bills usage credits). */
+      readonly notes: readonly Message[];
     }
   /** Type the program's own picker into its terminal draft, for the user to choose there. */
   | { readonly kind: 'openTerminal'; readonly draft: ShortcutDraft }
@@ -90,7 +96,7 @@ export function planSettingChange(request: SettingChangeRequest): SettingChangeP
   // An unknown status could be a dialog; a turn the docs say nothing about waits for idle.
   if (activity === 'unknown') return awaitsIdle(apply.command);
   if (activity === 'working' && apply.whileWorking === 'refuse') return awaitsIdle(apply.command);
-  const held = boxRefusal(request);
+  const held = request.screen === undefined ? null : boxRefusal(request);
   if (held) return held;
   return {
     kind: 'send',
@@ -100,6 +106,7 @@ export function planSettingChange(request: SettingChangeRequest): SettingChangeP
     },
     appliesAfterTurn: activity === 'working',
     persists: option.persists ?? apply.persists,
+    notes: (option.notes ?? []).map((key) => message(key)),
   };
 }
 
@@ -109,5 +116,6 @@ export function settingChangeNotes(plan: SettingChangePlan): readonly Message[] 
   return [
     ...(plan.appliesAfterTurn ? [message(SETTING_AFTER_TURN_KEY)] : []),
     ...(plan.persists === 'default' ? [message(SETTING_SAVES_DEFAULT_KEY)] : []),
+    ...plan.notes,
   ];
 }

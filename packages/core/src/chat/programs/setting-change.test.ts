@@ -9,6 +9,7 @@ import {
   SETTING_AFTER_TURN_KEY,
   SETTING_READ_ONLY_KEY,
   SETTING_SAVES_DEFAULT_KEY,
+  SETTING_USAGE_CREDITS_KEY,
   SETTING_VALUE_NOT_OFFERED_KEY,
   type SettingChangePlan,
   settingChangeNotes,
@@ -125,6 +126,27 @@ describe('how long a change lasts', () => {
     expect(sent(plan('claude', 'effort', 'max')).persists).toBe('session');
     expect(settingChangeNotes(plan('claude', 'effort', 'max'))).toEqual([]);
     expect(sent(plan('hermes', 'effort', 'high')).persists).toBe('unstated');
+  });
+
+  it("fast mode on also says it uses usage credits; off says only that it's saved", () => {
+    expect(settingChangeNotes(plan('claude', 'fast', 'on')).map((m) => m.key)).toEqual([
+      SETTING_SAVES_DEFAULT_KEY,
+      SETTING_USAGE_CREDITS_KEY,
+    ]);
+    expect(settingChangeNotes(plan('claude', 'fast', 'off')).map((m) => m.key)).toEqual([
+      SETTING_SAVES_DEFAULT_KEY,
+    ]);
+  });
+});
+
+describe('a preview', () => {
+  it('checks everything but the input box, which only a send reads', () => {
+    const setting = programSettings('claude').find((s) => s.id === 'effort');
+    if (!setting) throw new Error('claude lists no effort');
+    const base = { program: 'claude', setting, value: 'high', policy: sendPolicyFor('claude') };
+    expect(planSettingChange({ ...base, activity: 'idle' }).kind).toBe('send');
+    expect(planSettingChange({ ...base, activity: 'idle', screen: null }).kind).toBe('refuse');
+    expect(planSettingChange({ ...base, activity: 'blocked' }).kind).toBe('refuse');
   });
 });
 

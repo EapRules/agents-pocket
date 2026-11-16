@@ -36,6 +36,9 @@ function withKeyboard(entry: AtlasEntry): AtlasEntry {
   };
 }
 
+/** Chat's "..." menu, then its settings entry. */
+const SETTINGS_SHEET = ['composer-input', 'composer-more', 'composer-more-conversation-settings'];
+
 function detail(
   pane: 'p1' | 'p2' | 'p4' | 'p5',
   surface: 'chat' | 'terminal',
@@ -277,6 +280,32 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
     detail('p4', 'terminal', ['composer-input', 'composer-more']),
   ),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
+  // The settings sheet from Chat's "..." menu: a Claude Code Agent (choices sent by command), the
+  // same with a level chosen and waiting for Apply, and a Codex Agent (shown, changed in its picker).
+  'rn.conversation-settings-claude': detail(
+    'p5',
+    'chat',
+    SETTINGS_SHEET,
+    false,
+    false,
+    'claudeSettings',
+  ),
+  'rn.conversation-settings-claude-pending': detail(
+    'p5',
+    'chat',
+    [...SETTINGS_SHEET, 'setting-effort-xhigh'],
+    false,
+    false,
+    'claudeSettings',
+  ),
+  'rn.conversation-settings-codex': detail(
+    'p2',
+    'chat',
+    SETTINGS_SHEET,
+    false,
+    false,
+    'codexSettings',
+  ),
   'rn.composer-shortcuts-panel': detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
   'rn.composer-shortcuts-keyboard': withKeyboard(
     detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
