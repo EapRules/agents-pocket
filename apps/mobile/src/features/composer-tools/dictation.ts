@@ -27,7 +27,8 @@ export class DictationController {
   constructor(
     private readonly engine: SpeechEngine,
     private readonly insert: (text: string) => void,
-    private readonly onFailure: (reason: DictationFailure) => void = () => {},
+    /** `code` is the recognizer's own word for an unexpected stop, so a report can name it. */
+    private readonly onFailure: (reason: DictationFailure, code?: string) => void = () => {},
   ) {}
 
   get listening(): boolean {
@@ -71,7 +72,7 @@ export class DictationController {
           if (!this.active) return;
           this.set(false);
           const failure = dictationFailure(code);
-          if (failure) this.onFailure(failure);
+          if (failure) this.onFailure(failure, code);
         },
         onEnd: () => this.set(false),
       },

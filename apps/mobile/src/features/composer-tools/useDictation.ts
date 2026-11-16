@@ -25,7 +25,13 @@ export function useDictation(insert: (text: string) => void) {
       ? new DictationController(
           engine,
           (text) => latest.current(text),
-          (reason) => toast({ title: FAILURE_TEXT[reason]() }),
+          // An unexpected stop shows the recognizer's code under the message: without it the cause
+          // of a failure on someone's phone cannot be told from a report.
+          (reason, code) =>
+            toast({
+              title: FAILURE_TEXT[reason](),
+              message: reason === 'stopped' ? code : undefined,
+            }),
         )
       : null;
   }, [settings]);
