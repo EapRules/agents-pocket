@@ -50,7 +50,16 @@ describe('the summary', () => {
       },
       screen: null,
     });
-    expect(renderText(conversationSettingsSummary(claude) ?? '')).toBe('opus · High · On');
+    expect(renderText(conversationSettingsSummary(claude) ?? '')).toBe('opus · High · Fast Mode');
+    const standard = readConversationSettings({
+      program: 'claude',
+      transcript: {
+        ...transcript('opus', 'high'),
+        recordedSettings: { model: 'opus', effort: 'high', speed: 'standard' },
+      },
+      screen: null,
+    });
+    expect(renderText(conversationSettingsSummary(standard) ?? '')).toBe('opus · High');
     expect(conversationSettingsSummary(read(null, null))).toBeNull();
   });
 

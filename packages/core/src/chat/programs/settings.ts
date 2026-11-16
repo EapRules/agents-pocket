@@ -145,13 +145,18 @@ export function settingValueText(value: SettingValue): Text | null {
   return value.option ? value.option.title : value.value;
 }
 
-/** The known values in the program's order (`model · effort`); null when none is known. */
+/**
+ * What reads as the Agent's settings in one line (`model · effort`): a choice contributes its value,
+ * a switch its own title and only while it is on. Null when nothing is worth saying.
+ */
 export function conversationSettingsSummary(settings: readonly ConversationSetting[]): Text | null {
-  const known = settings.flatMap(({ value }) => {
+  const parts = settings.flatMap(({ setting, value }): Text[] => {
+    if (setting.kind === 'toggle')
+      return value.kind === 'known' && value.value === 'on' ? [setting.title] : [];
     const text = settingValueText(value);
     return text === null ? [] : [text];
   });
-  return known.length === 0 ? null : { join: known, separator: ' · ' };
+  return parts.length === 0 ? null : { join: parts, separator: ' · ' };
 }
 
 /** Every setting the Agent's program lists, each with its current value. */
