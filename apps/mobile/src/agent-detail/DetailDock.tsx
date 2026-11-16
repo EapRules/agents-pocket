@@ -4,19 +4,18 @@ import { useShownStatus } from '../blocked/BlockedCardProvider';
 import { BlockedCardSlot } from '../blocked/BlockedCardSlot';
 import { AgentBackgroundWork } from './background/AgentBackgroundWork';
 import { DockSlotView } from './detailUi';
-import type { Surface } from './surface';
 
 interface Props {
   row: ConsoleRow;
-  surface: Surface;
+  /** Chat is on screen (alone, or beside the terminal). */
+  chat: boolean;
 }
 
 /**
  * What sits over the Composer: the status line (Chat: what the Agent does and its Background Work),
  * the Blocked card (Chat), then what the surface hands the dock.
  */
-export function DetailDock({ row, surface }: Props) {
-  const chat = surface === 'chat';
+export function DetailDock({ row, chat }: Props) {
   const shown = useShownStatus(statusDot(row.agent.agent_status));
   return (
     <>

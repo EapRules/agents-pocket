@@ -3,9 +3,9 @@ import {
   type ActionMenuItem,
   airy,
   ComposerRoomProvider,
-  EdgeFade,
   makeStyles,
   useChromeInsets,
+  useLayoutMode,
 } from '@openagentspocket/ui';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -22,11 +22,8 @@ import { useAgentComposer } from './composer/composerContext';
 import { DetailDock } from './DetailDock';
 import { DetailSlot } from './DetailSlot';
 import { DetailUiProvider } from './detailUi';
-import { type Surface, useSurface } from './surface';
+import { type Surface, shownSurfaces, useSurface } from './surface';
 import { useFocusDone } from './useFocusDone';
-
-/** How far past the header the fade runs; the header's own height behind it is solid. */
-const HEADER_FADE = 24;
 
 const useStyles = makeStyles(() => ({
   fill: { flex: 1 },
@@ -71,6 +68,7 @@ export function AgentDetailScreen({
   const rows = useConsole();
   const latency = useConsoleState().hosts.find((host) => host.id === hostId)?.latencyMs;
   const [surface, setSurface] = useSurface(storage, requested, surfaceRequest);
+  const shown = shownSurfaces(surface, useLayoutMode());
   const [drawer, setDrawer] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   useFocusDone(hostId, paneId, row?.agent.agent_status === 'done');
@@ -80,7 +78,7 @@ export function AgentDetailScreen({
     <DetailUiProvider hostId={hostId} paneId={paneId}>
       <BlockedCardProvider
         row={row}
-        active={surface === 'chat'}
+        active={shown.chat}
         onShowTerminal={() => setSurface('terminal')}
       >
         <AgentSessionDrawer
@@ -99,7 +97,7 @@ export function AgentDetailScreen({
                   hostId={hostId}
                   paneId={paneId}
                   program={row.agent.agent}
-                  surface={surface}
+                  shown={shown}
                   activity={activityOf(row)}
                   messages={composer.snapshot.messages}
                   composer={composer.store}
@@ -107,9 +105,6 @@ export function AgentDetailScreen({
                   onShowTerminal={() => setSurface('terminal')}
                   visit={visit}
                 />
-                {surface === 'chat' ? (
-                  <EdgeFade height={headerHeight + HEADER_FADE} solidHeight={headerHeight} />
-                ) : null}
                 <View
                   style={styles.header}
                   pointerEvents="box-none"
@@ -131,7 +126,7 @@ export function AgentDetailScreen({
                 </View>
               </View>
               <View style={[styles.dock, { paddingBottom: chrome.bottom }]}>
-                <DetailDock row={row} surface={surface} />
+                <DetailDock row={row} chat={shown.chat} />
                 <AgentComposerBar
                   composer={composer}
                   surface={surface}

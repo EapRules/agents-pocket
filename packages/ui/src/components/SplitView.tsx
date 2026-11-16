@@ -13,7 +13,7 @@ import { metrics } from '../theme/metrics';
 import { makeStyles } from '../theme/theme';
 
 const useStyles = makeStyles((t) => ({
-  root: { flex: 1, flexDirection: 'row', backgroundColor: t.colors.canvas },
+  root: { flex: 1, flexDirection: 'row' },
   // One pane alone is invisible: no background, no clipping, the whole width.
   single: { flex: 1, flexDirection: 'row' },
   fill: { flex: 1 },
@@ -78,6 +78,8 @@ interface SplitViewProps {
    * keeps its place in the tree, so going from one pane to two and back never remounts it.
    */
   single?: 'list' | 'detail';
+  /** Two halves instead of the fixed list width (Chat beside the Terminal). */
+  even?: boolean;
   testID?: string;
 }
 
@@ -86,12 +88,18 @@ interface SplitViewProps {
  * the pane's width and `useInsets()` (and `Screen`) its share of the safe area, so a screen mounted in
  * a pane lays out for the room it has without knowing it is in one.
  */
-export function SplitView({ list, detail, single, testID = 'split-view' }: SplitViewProps) {
+export function SplitView({
+  list,
+  detail,
+  single,
+  even = false,
+  testID = 'split-view',
+}: SplitViewProps) {
   const styles = useStyles();
   const window = useWindowDimensions().width;
   const [measured, setMeasured] = useState<number | null>(null);
   const total = measured ?? window;
-  const listWidth = splitListWidth(total);
+  const listWidth = even ? Math.floor((total - metrics.hairlineWidth) / 2) : splitListWidth(total);
   const alone = single !== undefined;
   // Fixed slots (list, hairline, detail): a pane that stays keeps its position, the other one leaves.
   return (

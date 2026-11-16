@@ -1,8 +1,23 @@
 import type { KeyValueStorage } from '@openagentspocket/core';
+import type { LayoutMode } from '@openagentspocket/ui';
 import { useCallback, useState } from 'react';
 
 /** What the detail screen shows for an Agent: its conversation or its terminal. */
 export type Surface = 'chat' | 'terminal';
+
+/** What is on screen: the terminal only when it is the surface; Chat too beside it from `regular` up. */
+export interface ShownSurfaces {
+  chat: boolean;
+  terminal: boolean;
+}
+
+/**
+ * The surface in force on screen. Chat alone stays alone at any width: the terminal attaches (and
+ * resizes the Agent's terminal on the Host) only when the user asks for it.
+ */
+export function shownSurfaces(surface: Surface, mode: LayoutMode): ShownSurfaces {
+  return { chat: surface === 'chat' || mode !== 'compact', terminal: surface === 'terminal' };
+}
 
 const STORAGE_KEY = 'agentDetail.surface';
 

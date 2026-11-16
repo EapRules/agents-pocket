@@ -1,6 +1,7 @@
 import { MemoryStorage, SettingsStore } from '@openagentspocket/core';
 import { ThemeProvider } from '@openagentspocket/ui';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { Dimensions } from 'react-native';
 import { TestSettings } from '@/settings/TestSettings';
 import { createDemoConsoleStore } from '../console/demo';
 import { ConsoleStoreProvider } from '../console/hooks';
@@ -190,5 +191,52 @@ describe('AgentDetailScreen', () => {
     expect(parseSurface('terminal')).toBe('terminal');
     expect(parseSurface(['chat'])).toBe('chat');
     expect(parseSurface('other')).toBeUndefined();
+  });
+});
+
+describe('Chat beside the terminal', () => {
+  const window = Dimensions.get('window');
+  const atWidth = (width: number) => Dimensions.set({ window: { ...window, width } });
+  afterEach(async () => {
+    await act(async () => Dimensions.set({ window }));
+  });
+
+  it('shows Chat and the terminal side by side in a wide window on the terminal', async () => {
+    atWidth(1000);
+    renderDetail({ paneId: 'p2', surface: 'terminal' });
+    await waitFor(() => expect(screen.getByTestId('terminal-surface')).toBeTruthy());
+    expect(screen.getByTestId('detail-surfaces-list')).toContainElement(
+      screen.getByTestId('chat-timeline'),
+    );
+    expect(screen.getByTestId('detail-surfaces-detail')).toContainElement(
+      screen.getByTestId('terminal-surface'),
+    );
+  });
+
+  it('keeps Chat alone on Chat at any width: the terminal is not mounted', async () => {
+    atWidth(1000);
+    renderDetail({ paneId: 'p2', surface: 'chat' });
+    await waitFor(() => expect(screen.getByTestId('chat-timeline')).toBeTruthy());
+    expect(screen.queryByTestId('terminal-surface')).toBeNull();
+  });
+
+  it('shows one surface in compact, as before', async () => {
+    atWidth(390);
+    renderDetail({ paneId: 'p2', surface: 'terminal' });
+    await waitFor(() => expect(screen.getByTestId('terminal-surface')).toBeTruthy());
+    expect(screen.queryByTestId('chat-timeline')).toBeNull();
+  });
+
+  it('mounts the terminal only while it is the surface, in a wide window', async () => {
+    atWidth(1000);
+    renderDetail({ paneId: 'p2', surface: 'chat' });
+    await waitFor(() => expect(screen.getByTestId('surface-toggle')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('surface-toggle'));
+    await waitFor(() => expect(screen.getByTestId('terminal-surface')).toBeTruthy());
+    expect(screen.getAllByTestId('terminal-surface')).toHaveLength(1);
+    expect(screen.getByTestId('chat-timeline')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('surface-toggle'));
+    await waitFor(() => expect(screen.queryByTestId('terminal-surface')).toBeNull());
+    expect(screen.getByTestId('chat-timeline')).toBeTruthy();
   });
 });
