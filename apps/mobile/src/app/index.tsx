@@ -9,10 +9,11 @@ import { AppScreen } from '@/navigation/AppScreen';
  */
 export default function Index() {
   const home = useHomeRoute();
-  const mode = useLayoutMode();
-  if (mode === 'compact') return home;
+  // Always the split, one pane alone in compact: Home keeps its state when the window resizes.
+  const compact = useLayoutMode() === 'compact';
   return (
     <SplitView
+      single={compact ? 'list' : undefined}
       list={home}
       detail={
         <AppScreen bare scroll={false} testID="split-empty-detail">

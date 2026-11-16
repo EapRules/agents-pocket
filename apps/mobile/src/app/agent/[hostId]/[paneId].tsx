@@ -29,7 +29,7 @@ export default function AgentRoute() {
     router.setParams({ hostId: next.hostId, paneId: next.agent.pane_id });
   // From `regular` up Home is the list pane beside the Agent (ADR 0029).
   const home = useHomeRoute({ onOpenAgent: swap });
-  const split = useLayoutMode() !== 'compact';
+  const compact = useLayoutMode() === 'compact';
   // A screen left under another stays mounted: each return to it counts as a visit.
   const [visit, setVisit] = useState(0);
   useFocusEffect(useCallback(() => setVisit((count) => count + 1), []));
@@ -57,5 +57,6 @@ export default function AgentRoute() {
       onSwitch={swap}
     />
   );
-  return split ? <SplitView list={home} detail={detail} /> : detail;
+  // Always the split, the Agent alone in compact: opening or closing the device never remounts it.
+  return <SplitView single={compact ? 'detail' : undefined} list={home} detail={detail} />;
 }

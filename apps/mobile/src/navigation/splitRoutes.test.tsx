@@ -50,8 +50,9 @@ describe('the split routes', () => {
 
   it('/ in compact is Home alone, and an Agent is pushed', async () => {
     await renderAt(390, <Index />);
-    expect(screen.getByTestId('home')).toBeTruthy();
-    expect(screen.queryByTestId('split-view')).toBeNull();
+    expect(screen.getByTestId('split-view-list')).toContainElement(screen.getByTestId('home'));
+    expect(screen.queryByTestId('split-view-hairline')).toBeNull();
+    expect(screen.queryByTestId('split-view-detail')).toBeNull();
     openAgent();
     expect(mockRouter.push).toHaveBeenCalledWith(hrefs.agent('h2', 'p2'));
   });
@@ -68,8 +69,11 @@ describe('the split routes', () => {
 
   it('the Agent route in compact is the Agent alone', async () => {
     await renderAt(390, <AgentRoute />);
-    expect(screen.getByTestId('agent-detail')).toBeTruthy();
-    expect(screen.queryByTestId('split-view')).toBeNull();
+    expect(screen.getByTestId('split-view-detail')).toContainElement(
+      screen.getByTestId('agent-detail'),
+    );
+    expect(screen.queryByTestId('split-view-hairline')).toBeNull();
+    expect(screen.queryByTestId('split-view-list')).toBeNull();
     expect(screen.queryByTestId('home')).toBeNull();
   });
 
