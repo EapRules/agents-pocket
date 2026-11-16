@@ -6,6 +6,11 @@ Items are worked from the top of each group; groups are in priority order.
 
 ## 1. In flight
 
+- [ ] **1.0.2 (build 8) on the owner's iPhone, from TestFlight** (uploaded 2026-11-16, tag `ios-1.0.2-8`).
+  It carries the Duo two panes, the terminal's native fix, the one input bar, the Model and Effort sheet.
+  None of it has run on a real iPhone. Done when: he has tried the terminal (typing, paste, Keys/Compose,
+  back to Chat), the Model and Effort sheet on a real Claude Agent, Chat, an approval, the Live Activity and
+  the widgets, and says which build (7 or 8) goes to review in the 1.0.2 draft.
 - [x] **iPhone Duo, stage 1 (closed, open, open-and-rotated).** Done and verified on the iPhone Duo
   simulator overnight 2026-11-16 (pushed, CI green). `SplitView` (`packages/ui`): wider windows show
   Home's list beside the selected Agent (the Agent lives in the route; ADR 0029); opening or closing the
