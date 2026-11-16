@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   type LayoutChangeEvent,
@@ -40,6 +40,12 @@ export type ScreenHeader =
  * How much of the screen's frame lies below the window. A form sheet at a partial detent is as tall as
  * its largest detent but only the top part is on screen, so the bottom of the content (and of the
  * scroll) would sit in a dead block under the edge; the screen pads itself by that amount.
+ *
+ * Only where the frame ends is kept; the window's height is read at render. When the window changes
+ * size, the screen's layout event can arrive before the new size reaches this hook, so an overhang
+ * worked out in the callback compared the new frame with the old window and padded a full-size screen
+ * by the difference for good. A new window size also measures again: it can move a frame that keeps
+ * its size, and then no layout event comes.
  */
 export function useOffscreenBottom(): {
   hidden: number;
@@ -48,13 +54,14 @@ export function useOffscreenBottom(): {
 } {
   const ref = useRef<ViewInstance>(null);
   const { height: windowHeight } = useWindowDimensions();
-  const [hidden, setHidden] = useState(0);
+  const [frameEnd, setFrameEnd] = useState(0);
   const onLayout = useCallback(() => {
-    ref.current?.measureInWindow?.((_x, y, _width, height) =>
-      setHidden(Math.max(0, Math.round(y + height - windowHeight))),
-    );
-  }, [windowHeight]);
-  return { hidden, ref, onLayout };
+    ref.current?.measureInWindow?.((_x, y, _width, height) => setFrameEnd(Math.round(y + height)));
+  }, []);
+  useEffect(() => {
+    if (windowHeight > 0) onLayout();
+  }, [windowHeight, onLayout]);
+  return { hidden: Math.max(0, frameEnd - Math.round(windowHeight)), ref, onLayout };
 }
 
 /**

@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { AccessibilityInfo } from 'react-native';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react-native';
+import { AccessibilityInfo, Dimensions } from 'react-native';
 import {
   Badge,
   Button,
@@ -19,7 +19,7 @@ import {
   withAlpha,
 } from '../index';
 import { renderThemed } from '../test-utils';
-import { keyboardOffset } from './screenParts';
+import { keyboardOffset, useOffscreenBottom } from './screenParts';
 
 const mockSetString = jest.fn(async (_value: string) => true);
 jest.mock('expo-clipboard', () => ({ setStringAsync: (value: string) => mockSetString(value) }));
@@ -263,6 +263,31 @@ describe('Screen keyboard avoidance', () => {
     expect(keyboardOffset(874, 34, 768)).toBe(72);
     expect(keyboardOffset(874, 34, 840)).toBe(0);
     expect(keyboardOffset(874, 34, 0)).toBe(0);
+  });
+
+  it('pads a frame that runs below the window, and follows the window when it changes size', async () => {
+    const window = Dimensions.get('window');
+    let frame = { y: 0, height: 1100 };
+    const { result } = await renderHook(() => useOffscreenBottom());
+    const host = {
+      measureInWindow: (callback: (x: number, y: number, w: number, h: number) => void) =>
+        callback(0, frame.y, window.width, frame.height),
+    };
+    (result.current.ref as { current: unknown }).current = host;
+    try {
+      // A sheet taller than the window: the part below the edge is padded.
+      await act(async () => Dimensions.set({ window: { ...window, height: 951 } }));
+      await act(async () => result.current.onLayout());
+      expect(result.current.hidden).toBe(149);
+      // A live resize: the layout event brings the new frame before the window's new height arrives.
+      frame = { y: 0, height: 951 };
+      await act(async () => Dimensions.set({ window: { ...window, height: 669 } }));
+      await act(async () => result.current.onLayout());
+      await act(async () => Dimensions.set({ window: { ...window, height: 951 } }));
+      expect(result.current.hidden).toBe(0);
+    } finally {
+      await act(async () => Dimensions.set({ window }));
+    }
   });
 
   it('wraps the content in a keyboard-avoiding view and still renders it', async () => {
