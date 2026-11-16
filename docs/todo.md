@@ -6,11 +6,17 @@ Items are worked from the top of each group; groups are in priority order.
 
 ## 1. In flight
 
-- [ ] **1.0.2 (build 8) on the owner's iPhone, from TestFlight** (uploaded 2026-11-16, tag `ios-1.0.2-8`).
-  It carries the Duo two panes, the terminal's native fix, the one input bar, the Model and Effort sheet.
-  None of it has run on a real iPhone. Done when: he has tried the terminal (typing, paste, Keys/Compose,
-  back to Chat), the Model and Effort sheet on a real Claude Agent, Chat, an approval, the Live Activity and
-  the widgets, and says which build (7 or 8) goes to review in the 1.0.2 draft.
+- [ ] **1.0.2 (build 9) on the owner's iPhone, from TestFlight** (uploaded 2026-11-16, tag `ios-1.0.2-9`;
+  it replaces build 8, which never received an internal update). It carries the Duo two panes, the
+  terminal's native fix, the terminal toolbar as one capsule with the Agent's mark, the full keyboard
+  fitted to the width, the Model and Effort sheet and its line on Chat's status line, and Settings naming
+  the build. None of it has run on a real iPhone. Done when: he has tried the terminal (typing, paste,
+  Keys/Compose, the full keyboard, back to Chat), Model and Effort on a real Claude Agent, Chat, an
+  approval, the Live Activity and the widgets, and says which build goes to review in the 1.0.2 draft.
+- [ ] **A TestFlight install asks for the internal channel** (unverified on a device). Build 9 reads the
+  receipt's name natively (`modules/install-info`); build 8 looked for the receipt file, which a fresh
+  TestFlight install does not have. Done when: one internal update is published for build 9's runtime, on
+  the owner's word, and Settings > Update on his iPhone shows its id.
 - [x] **iPhone Duo, stage 1 (closed, open, open-and-rotated).** Done and verified on the iPhone Duo
   simulator overnight 2026-11-16 (pushed, CI green). `SplitView` (`packages/ui`): wider windows show
   Home's list beside the selected Agent (the Agent lives in the route; ADR 0029); opening or closing the
