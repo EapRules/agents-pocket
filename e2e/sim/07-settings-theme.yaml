@@ -21,3 +21,10 @@ appId: com.openagentspocket.app
 - waitForAnimationToEnd
 - runFlow: _guard.yaml
 - takeScreenshot: design/atlas/sim/07-settings-fonts
+# About names the installed build in the form releases use: "1.0.2 (8)".
+- openLink: openagentspocket:///settings
+- scrollUntilVisible:
+    element:
+      id: settings.about.version
+- assertVisible: ".*\\d+\\.\\d+.* \\(\\d+\\).*"
+- takeScreenshot: design/atlas/sim/07-settings-about
