@@ -28,3 +28,4 @@ One short ADR per founding decision. Add a new numbered file for any decision th
 - [0026](./0026-sheets.md) Sheets: one look, one sizing rule, two hosts
 - [0027](./0027-session-backends.md) Session backends: herdr, tmux and what comes next
 - [0028](./0028-over-the-air-updates.md) Over-the-air JS updates: expo-updates, a signed static server on our Cloudflare account (proposed)
+- [0029](./0029-two-panes.md) Wider windows show two panes; the route is the selection
