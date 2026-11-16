@@ -83,6 +83,99 @@
         "headline": "Todos tus agentes, <em>en cada Host</em>",
         "subline": "Agrupados por lo que están haciendo"
       }
+    },
+    {
+      "name": "07-terminal",
+      "layout": {
+        "width": 1040,
+        "top": 900,
+        "tilt": 4
+      },
+      "en": {
+        "headline": "The real terminal, <em>one tap away</em>",
+        "subline": "Every agent's CLI, with the keys you need"
+      },
+      "es": {
+        "headline": "La terminal real, <em>a un toque</em>",
+        "subline": "El CLI de cada agente, con las teclas que necesitas"
+      }
+    },
+    {
+      "name": "08-themes",
+      "screens": ["08-themes-negro", "08-themes-indigo", "08-themes-noche", "08-themes-papel"],
+      "en": {
+        "headline": "Four themes, <em>pick yours</em>",
+        "subline": "Negro, Índigo, Noche and Papel"
+      },
+      "es": {
+        "headline": "Cuatro temas, <em>elige el tuyo</em>",
+        "subline": "Negro, Índigo, Noche y Papel"
+      }
+    }
+  ],
+  "art": [
+    {
+      "name": "header",
+      "size": [3840, 1646],
+      "safe": [1097, 493, 1646, 661],
+      "caption": {
+        "x": 1097,
+        "y": 610,
+        "width": 1646,
+        "center": true,
+        "h1": 212
+      },
+      "phones": [
+        {
+          "screen": "01-home",
+          "width": 900,
+          "left": 540,
+          "top": 210,
+          "tilt": -8
+        },
+        {
+          "screen": "03-approval",
+          "width": 900,
+          "left": 3300,
+          "top": 210,
+          "tilt": 8
+        }
+      ],
+      "en": {
+        "headline": "Your coding agents, <em>in your pocket</em>"
+      },
+      "es": {
+        "headline": "Tus agentes, <em>en el bolsillo</em>"
+      }
+    },
+    {
+      "name": "search",
+      "size": [3840, 2560],
+      "safe": [836, 765, 2168, 1030],
+      "caption": {
+        "x": 870,
+        "y": 850,
+        "width": 1080,
+        "h1": 218,
+        "p": 84
+      },
+      "phones": [
+        {
+          "screen": "01-home",
+          "width": 1150,
+          "left": 2480,
+          "top": 650,
+          "tilt": -6
+        }
+      ],
+      "en": {
+        "headline": "Your coding agents, <em>in your pocket</em>",
+        "subline": "See which ones need you, from anywhere"
+      },
+      "es": {
+        "headline": "Tus agentes, <em>en el bolsillo</em>",
+        "subline": "Mira cuáles te necesitan, desde donde estés"
+      }
     }
   ]
 }

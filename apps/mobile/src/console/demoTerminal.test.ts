@@ -1,11 +1,14 @@
 import { utf8Encode } from 'agentico-ssh';
-import { DemoAgentTuiSession } from './demoTerminal';
+import { DemoAgentTuiSession, DemoTerminalSession } from './demoTerminal';
 
 const WHEEL_UP = utf8Encode('\u001b[<64;40;12M');
 const WHEEL_DOWN = utf8Encode('\u001b[<65;40;12M');
 
 /** The last screen painted, read off the session's output queue. */
-async function lastPaint(session: DemoAgentTuiSession, paints: number): Promise<string> {
+async function lastPaint(
+  session: DemoAgentTuiSession | DemoTerminalSession,
+  paints: number,
+): Promise<string> {
   const iterator = session.output[Symbol.asyncIterator]();
   let text = '';
   for (let index = 0; index < paints; index += 1) {
@@ -33,5 +36,18 @@ describe('DemoAgentTuiSession', () => {
     const session = new DemoAgentTuiSession(24);
     session.scroll(WHEEL_UP, 3);
     expect(await lastPaint(session, 3)).toContain('scrolled back 3');
+  });
+});
+
+describe('DemoTerminalSession', () => {
+  it('opens on a shell prompt when it has no transcript', async () => {
+    expect(await lastPaint(new DemoTerminalSession(), 1)).toMatch(/\r\n\$ $/);
+  });
+
+  it("opens on the Agent's CLI and prompts like it", async () => {
+    const session = new DemoTerminalSession('agent\nline two');
+    expect(await lastPaint(session, 1)).toMatch(/\$ agent\r\nline two\r\n> $/);
+    session.send(utf8Encode('\r'));
+    expect(await lastPaint(session, 1)).toBe('\r\n> '); // the opening was already read
   });
 });

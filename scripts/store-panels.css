@@ -17,7 +17,7 @@ body {
 }
 .stage {
   position: relative;
-  width: 1290px;
+  width: var(--stage-w);
   height: var(--stage-h);
   zoom: var(--zoom);
   overflow: hidden;
@@ -69,7 +69,7 @@ body {
 h1 {
   font-family: "Instrument Serif", serif;
   font-weight: 400;
-  font-size: 142px;
+  font-size: var(--h1, 142px);
   line-height: 0.98;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -87,13 +87,37 @@ h1 em {
   color: transparent;
 }
 p {
-  margin-top: 34px;
-  font-size: 52px;
+  margin-top: 0.65em;
+  font-size: var(--p, 52px);
   line-height: 1.28;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.86);
   max-width: 19em;
   text-wrap: balance;
+}
+.caption.free {
+  left: var(--x);
+  right: auto;
+  top: var(--y);
+  width: var(--cw);
+}
+.caption.free h1 {
+  font-size: var(--h1);
+}
+/* Wide art has no dark top: a soft dark spot behind its caption does the same job. */
+.spot {
+  position: absolute;
+  background: radial-gradient(
+    closest-side,
+    rgba(7, 4, 10, 0.78) 0,
+    rgba(7, 4, 10, 0.5) 55%,
+    transparent 100%
+  );
+}
+/* Apple's art safe area, drawn only with --safe. */
+.safe {
+  position: absolute;
+  outline: 6px dashed #6f6;
 }
 .caption.center p {
   margin-left: auto;
@@ -103,7 +127,7 @@ p {
 /* iPhone 17 Pro, front view. Every measure is a fraction of the body width (--w). */
 .phone {
   position: absolute;
-  left: 50%;
+  left: var(--left, 50%);
   top: var(--top);
   width: var(--w);
   transform: translateX(-50%) rotate(var(--tilt));
@@ -138,6 +162,15 @@ p {
 .screen img {
   display: block;
   width: 100%;
+}
+/* Several themes of one screen: the first image sets the height, the rest lie over it, each clipped
+   to its slice; the screen's own color shows through the cuts as the lines between them. */
+.screen.split {
+  background: rgba(255, 255, 255, 0.92);
+}
+.screen.split img + img {
+  position: absolute;
+  inset: 0;
 }
 .island {
   position: absolute;

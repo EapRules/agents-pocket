@@ -29,6 +29,8 @@ sips -s format jpeg -s formatOptions 92 design/atlas/rn-ios/<atlas id>.negro.<la
 | `04-changes.jpg` | `changes.list` |
 | `05-usage.jpg` | `usage.tab` |
 | `06-agents.jpg` | `console.agents-list-by-status` |
+| `07-terminal.jpg` | `agent-detail.terminal` |
+| `08-themes-<theme>.jpg` | `shell.home`, once per theme (`negro`, `indigo`, `noche`, `papel`) |
 
 ## Panels
 
@@ -37,5 +39,9 @@ node scripts/store-panels.mjs [--locale en] [--size 1206x2622]
 ```
 
 Order, layout and captions per locale live in `docs/store/panels/panels.json`; the look (gradient, type, the iPhone) in `scripts/store-panels.css`. The script renders each panel with a headless Chromium-family browser and writes `docs/store/panels/<locale>/<file>`. `--size` renders the set for another display, for example `1290x2796`.
+
+A panel with `screens` (the themes one) cuts several captures of the same screen into slanted slices inside one iPhone.
+
+The same file lists the wide art under `art`: the product page header (3840x1646) and the search results image (3840x2560), each with Apple's art safe area; `--safe` outlines that area on the render. If a field in App Store Connect refuses the JPEG, convert it (`sips -s format png header.jpg --out header.png`): the result has no alpha channel.
 
 Captions say what the screen shows: no claim the screen does not back, no badges or ratings.

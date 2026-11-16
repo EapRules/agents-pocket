@@ -1,23 +1,32 @@
 import { ScriptedTerminalSession } from '@openagentspocket/core';
 
-const PROMPT = '$ ';
+const SHELL_PROMPT = '$ ';
+const AGENT_PROMPT = '> ';
 const ENCODER_OUT = (text: string) => Uint8Array.from(text, (char) => char.charCodeAt(0) & 0xff);
 
 /**
  * The offline terminal: a prompt that echoes what is typed, so demo mode and screenshots can
  * show the keys working. Enter starts a new prompt line; Backspace erases one character.
+ * With a `transcript` (an Agent's CLI as it stands, ASCII and ANSI colors) it opens on that and
+ * prompts like the Agent does.
  */
 export class DemoTerminalSession extends ScriptedTerminalSession {
-  constructor() {
+  private readonly prompt: string;
+
+  constructor(transcript = '') {
     super();
-    this.emit(ENCODER_OUT(`Demo terminal. Nothing leaves this device.\r\n${PROMPT}`));
+    this.prompt = transcript ? AGENT_PROMPT : SHELL_PROMPT;
+    const opening = transcript ? `${SHELL_PROMPT}${transcript.replaceAll('\n', '\r\n')}\r\n` : '';
+    this.emit(
+      ENCODER_OUT(`Demo terminal. Nothing leaves this device.\r\n${opening}${this.prompt}`),
+    );
   }
 
   override send(keystrokes: Uint8Array): void {
     super.send(keystrokes);
     let echo = '';
     for (const byte of keystrokes) {
-      if (byte === 0x0d) echo += `\r\n${PROMPT}`;
+      if (byte === 0x0d) echo += `\r\n${this.prompt}`;
       else if (byte === 0x7f) echo += '\b \b';
       else if (byte >= 0x20 && byte < 0x7f) echo += String.fromCharCode(byte);
       else if (byte < 0x20) echo += `^${String.fromCharCode(byte + 0x40)}`;

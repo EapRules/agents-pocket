@@ -34,9 +34,40 @@ interface DemoAgent {
   session?: string;
   /** What its screen shows, which a Session thumbnail previews (default: blank). */
   screen?: string;
+  /** What its terminal holds when attached: the Agent's CLI as it stands (default: a bare prompt). */
+  terminal?: string;
   /** Shell panes (no Agent) in this Agent's workspace. */
   shells?: readonly { pane: string; label?: string; cwd: string }[];
 }
+
+const GREEN = '\u001b[32m';
+const RED = '\u001b[31m';
+const DIM = '\u001b[2m';
+const BOLD = '\u001b[1m';
+const PLAIN = '\u001b[0m';
+
+/** The same turn the demo Chat shows for this Agent, as its CLI prints it. */
+const SETTINGS_REFACTOR_CLI = [
+  'codex',
+  `${BOLD}> Now check the toolbar at the largest text size.${PLAIN}`,
+  '',
+  `${DIM}*${PLAIN} Ran ${BOLD}pnpm test Toolbar${PLAIN}`,
+  `  ${GREEN}PASS${PLAIN} fits the largest text size`,
+  `  ${GREEN}PASS${PLAIN} keeps every control on wide screens`,
+  `  ${RED}FAIL${PLAIN} wraps the More label`,
+  `  ${DIM}     expected 1 line, received 2${PLAIN}`,
+  '',
+  `${DIM}*${PLAIN} Edited ${BOLD}src/settings/Toolbar.tsx${PLAIN}  ${GREEN}+18${PLAIN} ${RED}-6${PLAIN}`,
+  `  ${RED}- <Label>More</Label>${PLAIN}`,
+  `  ${GREEN}+ <Icon name="ellipsis" label="More" />${PLAIN}`,
+  '',
+  `${DIM}*${PLAIN} Ran ${BOLD}pnpm test Toolbar${PLAIN}`,
+  `  ${GREEN}PASS${PLAIN} 3 of 3`,
+  '',
+  'The label fits now. At the largest size the toolbar',
+  'shows an icon instead of the word.',
+  '',
+].join('\n');
 
 const AGENTS: readonly DemoAgent[] = [
   {
@@ -57,6 +88,7 @@ const AGENTS: readonly DemoAgent[] = [
     title: 'Settings refactor',
     screen:
       'Splitting SettingsScreen into one file per section.\nEdited src/settings/Appearance.tsx',
+    terminal: SETTINGS_REFACTOR_CLI,
     seq: 7,
     session: '01a1108c-69c0-7a5e-8d2c-4f6b1e3a9c70',
     shells: [
@@ -198,11 +230,11 @@ export class DemoConsoleTransport extends ScriptedEventsTransport implements Con
     return { text: agent?.screen ?? '' };
   }
 
-  /** One Agent is a fake TUI, the rest echo keys; the live Transport opens a PTY attach. */
+  /** One Agent is a fake TUI, the rest echo keys under their own CLI; the live Transport opens a PTY attach. */
   async attachTerminal(request: TerminalAttachRequest): Promise<TerminalAttachSession> {
-    return request.target.id === DEMO_TUI_PANE
-      ? new DemoAgentTuiSession(request.rows)
-      : new DemoTerminalSession();
+    if (request.target.id === DEMO_TUI_PANE) return new DemoAgentTuiSession(request.rows);
+    const agent = this.agents.find((candidate) => candidate.pane === request.target.id);
+    return new DemoTerminalSession(agent?.terminal);
   }
 
   /** The demo has no panes to close; the live Transport sends `pane.close`. */
