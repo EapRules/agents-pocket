@@ -6,9 +6,9 @@ Items are worked from the top of each group; groups are in priority order.
 
 ## 1. In flight
 
-- [ ] **Store panels into App Store Connect.** `docs/store/panels/{en,es}` (1206x2622, made by
-  `scripts/store-panels.mjs`) replace the six screenshots per language once 1.0.2 leaves review; the owner
-  has seen and approved the look. Nothing is uploaded yet.
+- [x] **Store panels into App Store Connect.** The owner pulled 1.0.2 from review and uploaded, per language,
+  the eight panels, the header and the search results image from `docs/store/panels/{en,es}` (2026-11-16).
+  Left: he sends 1.0.2 (7) back to review.
 - [ ] **Spanish titles left in English:** the Usage screen's title ("Usage") and the Agents list's title
   ("Agents"), seen while capturing the Spanish store screens. Found, not fixed.
 - [x] **Simulator suite on the new native build, then push.** The icon and the black native splash changed
