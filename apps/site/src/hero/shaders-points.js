@@ -3,7 +3,7 @@ import { GAP_OPEN, RIP_SPEED, U0, U1 } from './config.js';
 import { STORM_GLSL } from './storm.js';
 
 export const GLSL_COMMON = `
-const vec3 CY = vec3(0.302, 0.890, 0.878); const vec3 MG = vec3(0.878, 0.290, 0.886);
+const vec3 OR = vec3(0.941, 0.541, 0.173); const vec3 MG = vec3(0.910, 0.247, 0.847);
 const vec3 WH = vec3(0.914);
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float gauss(float x) { return exp(-x * x); }
@@ -56,7 +56,7 @@ void main() {
   act = clamp(act, 0.0, 1.0);
   if (show < 0.02 || (uGhost != 0.0 && act < 0.02)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 1.0; vA = 0.0; vBlur = 0.0; vCol = vec3(0.0); return; }
   p += push + uGhost * sep * act;
-  // Tap ripples on the dot grid: swell and brighten at the wavefront (cyan leading edge, magenta trailing), lift toward the camera.
+  // Tap ripples on the dot grid: swell and brighten at the wavefront (orange leading edge, magenta trailing), lift toward the camera.
   float rip = 0.0, ripC = 0.0, ripM = 0.0;
   for (int i = 0; i < 3; i++) {
     float age = uTime - uRip[i].z;
@@ -83,9 +83,9 @@ void main() {
   float vis = kind < 0.5 ? smoothstep(-0.42, -0.1, facing) : kind < 1.5 ? smoothstep(-0.1, 0.22, facing) : 1.0;
 
   vec3 col = mix(vec3(0.16), WH, g);
-  col = mix(col, MG, ripM * 0.6); col = mix(col, CY, ripC * 0.9);
+  col = mix(col, MG, ripM * 0.6); col = mix(col, OR, ripC * 0.9);
   float a = uFade * smoothstep(0.0, 0.07, g) * vis * show;
-  if (uGhost != 0.0) { col = (uGhost > 0.0 ? CY : MG) * (0.13 + 0.76 * g); a *= act; }
+  if (uGhost != 0.0) { col = (uGhost > 0.0 ? OR : MG) * (0.13 + 0.76 * g); a *= act; }
   else a *= 1.0 - 0.85 * act;
 
   // dot art: front dots are big (level 1) or small (0) as in the art; back shell and interior are smaller

@@ -1,6 +1,6 @@
 // Tormenta: gusts tear slices of the hands toward the camera, the wind takes part of the cloud with it
 // and the gap flashes. The GLSL says which slices of space glitch (act), where they are pushed (push)
-// and how far apart the cyan and magenta ghosts sit (sep).
+// and how far apart the orange and magenta ghosts sit (sep).
 // GLSL inputs: p (world position), position (rest position in the hand), dt (distance to the fingertip),
 // h (hand), r/r2 (randoms), kind, t, uP (the four values update() returns), uPtr (pointer on the focal
 // plane, on, speed).

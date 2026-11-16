@@ -35,10 +35,11 @@
   --ink: #eeece6;
   --ink-2: #a6a49d;
   --ink-3: #6c6b67;
-  --warm: #4de3e0;
-  --cool: #e04ae2;
+  --warm: #f08a2c;
+  --cool: #e83fd8;
+  --violet: #6a2be0;
   --line: rgba(238, 236, 230, 0.13);
-  --focus: #4de3e0;
+  --focus: #ff8ad8;
   --serif: "Instrument Serif", ui-serif, "New York", Georgia, serif;
   --sans: "Instrument Sans", ui-sans-serif, -apple-system, "Helvetica Neue", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -60,6 +61,17 @@ body {
 #scene { opacity: 0; transition: opacity 0.5s linear; }
 #scene.on { opacity: 1; }
 #still.off { visibility: hidden; }
+/* The panel colors behind the hands. Both canvases are opaque, so the layer sits over them and
+   screens onto the black: the dots stay white, the dark turns to color. The top stays dark for the headline. */
+.glow {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse 55% 58% at 10% 64%, rgba(106,43,224,0.6), transparent 100%),
+    radial-gradient(ellipse 50% 54% at 80% 72%, rgba(232,63,216,0.42), transparent 100%),
+    radial-gradient(ellipse 36% 34% at 48% 86%, rgba(240,138,44,0.32), transparent 100%),
+    radial-gradient(ellipse 42% 38% at 98% 22%, rgba(122,53,230,0.3), transparent 100%);
+}
+.grain { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: url("/grain.svg"); opacity: 0.3; mix-blend-mode: overlay; }
 .vignette {
   position: fixed; inset: 0; z-index: 1; pointer-events: none;
   background: radial-gradient(ellipse 80% 75% at 50% 58%, transparent 60%, rgba(0,0,0,0.6) 100%);
@@ -85,8 +97,13 @@ h1 {
   font-size: clamp(40px, 5.6vw, 76px); line-height: 1.0; letter-spacing: -0.01em;
   max-width: 15em; text-wrap: balance;
 }
-h1 em { font-style: italic; color: #fff; }
+h1 em {
+  font-style: italic; color: transparent;
+  background: linear-gradient(100deg, #ffd0f4 0, #ff8ad8 38%, #ffab5e 100%); -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 0 14px #000) drop-shadow(0 0 28px #000);
+}
 h1, .lede, .brand { text-shadow: 0 0 2px #000, 0 0 14px #000, 0 0 28px #000; }
+h1 em { text-shadow: none; }
 .lede {
   margin: 16px 0 0; max-width: 34em; color: var(--ink-2);
   font-size: clamp(15px, 1.25vw, 17px); text-wrap: pretty;
@@ -96,7 +113,7 @@ h1, .lede, .brand { text-shadow: 0 0 2px #000, 0 0 14px #000, 0 0 28px #000; }
   padding: 9px 18px 9px 14px; border-radius: 12px; border: 1px solid rgba(238,236,230,0.45);
   background: #000; color: var(--ink); text-decoration: none; line-height: 1.1;
 }
-.store:hover { border-color: var(--ink); }
+.store:hover { border-color: var(--cool); }
 .store:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .store svg { width: 20px; height: 20px; flex: none; }
 .store span { display: flex; flex-direction: column; text-align: left; }
@@ -107,10 +124,21 @@ h1, .lede, .brand { text-shadow: 0 0 2px #000, 0 0 14px #000, 0 0 28px #000; }
   position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
   padding: clamp(56px, 10vh, 120px) var(--pad) 80px;
 }
-.facts::before {
-  content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0.74) 110px, rgba(0,0,0,0.8) 100%); pointer-events: none;
+/* The panel gradient under the content: soft blobs over a near-black ground, then film grain. */
+.facts::before, .facts::after {
+  content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); pointer-events: none;
+  /* both layers fade in under the hero, so neither starts on a hard line */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 220px); -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 220px);
 }
+.facts::before {
+  background:
+    radial-gradient(ellipse 60% 420px at 8% 0, rgba(106,43,224,0.5), transparent 100%),
+    radial-gradient(ellipse 55% 520px at 92% 24%, rgba(232,63,216,0.3), transparent 100%),
+    radial-gradient(ellipse 45% 380px at 70% 62%, rgba(240,138,44,0.16), transparent 100%),
+    radial-gradient(ellipse 60% 520px at 6% 88%, rgba(106,43,224,0.3), transparent 100%),
+    linear-gradient(to bottom, rgba(7,4,10,0) 0, rgba(7,4,10,0.78) 110px, rgba(18,6,31,0.9) 100%);
+}
+.facts::after { background: url("/grain.svg"); opacity: 0.22; mix-blend-mode: overlay; }
 .facts h2 {
   font-family: var(--mono); font-weight: 400; font-size: 12px; letter-spacing: 0.22em;
   text-transform: uppercase; color: var(--ink-3); margin: 0 0 28px;
@@ -154,6 +182,8 @@ h1, .lede, .brand { text-shadow: 0 0 2px #000, 0 0 14px #000, 0 0 28px #000; }
 <body>
 <canvas id="still" aria-hidden="true"></canvas>
 <canvas id="scene" aria-hidden="true"></canvas>
+<div class="glow" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
 
 <header class="hero" id="hero">

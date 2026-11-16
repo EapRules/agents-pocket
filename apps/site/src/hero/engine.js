@@ -1,4 +1,4 @@
-// The three.js engine: the hands' points (base pass plus a cyan and a magenta ghost pass), the dust,
+// The three.js engine: the hands' points (base pass plus a orange and a magenta ghost pass), the dust,
 // the light in the gap, the camera rig and the post chain. Everything here is Tormenta; the scene is
 // one point cloud staged by uniforms and torn by the storm shader.
 import { createCameraRig } from './camera.js';
@@ -105,7 +105,7 @@ export function createEngine(T, canvas, geo) {
   dust.frustumCulled = false;
   scene.add(dust);
 
-  // The hands: one geometry, drawn three times (base, cyan ghost, magenta ghost) through groups.
+  // The hands: one geometry, drawn three times (base, orange ghost, magenta ghost) through groups.
   let cloud = null;
   let points = null;
   let pointGeo = null;
