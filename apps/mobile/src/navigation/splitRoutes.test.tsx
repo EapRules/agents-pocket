@@ -1,3 +1,4 @@
+import { agentKey } from '@openagentspocket/core';
 import { ThemeProvider } from '@openagentspocket/ui';
 import { act, render, screen } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
@@ -83,6 +84,7 @@ describe('the split routes', () => {
     expect(screen.getByTestId('split-view-detail')).toContainElement(
       screen.getByTestId('agent-detail'),
     );
+    expect(mockHome.mock.lastCall?.[0].selectedAgent).toBe(agentKey('h1', 'p1'));
     openAgent();
     expect(mockRouter.setParams).toHaveBeenCalledWith({ hostId: 'h2', paneId: 'p2' });
     expect(mockRouter.push).not.toHaveBeenCalled();

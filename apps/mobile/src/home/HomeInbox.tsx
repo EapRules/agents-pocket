@@ -64,6 +64,8 @@ interface HomeInboxProps {
   content: HomeContent;
   now: number;
   columns: 1 | 2;
+  /** The `agentKey` of the open Agent, whose card shows as selected. */
+  selected?: string;
   isPinned: (item: StatusInboxItem) => boolean;
   onOpen?: (item: StatusInboxItem) => void;
   onPin: (item: StatusInboxItem) => void;
@@ -75,6 +77,7 @@ export function HomeInbox({
   content,
   now,
   columns,
+  selected,
   isPinned,
   onOpen,
   onPin,
@@ -109,6 +112,7 @@ export function HomeInbox({
                 item={item}
                 now={now}
                 pinned={isPinned(item)}
+                selected={selected === rowKey(item.row)}
                 onOpen={onOpen}
                 onPin={onPin}
                 onClose={onClose}

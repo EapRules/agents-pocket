@@ -30,6 +30,8 @@ export interface HomeScreenProps {
   focused?: boolean;
   /** Opens the Agent's detail; unset until the detail route exists. */
   onOpenAgent?: (row: ConsoleRow) => void;
+  /** The `agentKey` of the Agent open beside Home (two panes): its card shows as selected. */
+  selectedAgent?: string;
   onOpenHost?: (hostId: string) => void;
   /** Leads to adding a Host (the Hosts screen). */
   onAddHost?: () => void;
@@ -118,6 +120,7 @@ export function HomeScreen(props: HomeScreenProps) {
               content={content}
               now={Date.now()}
               columns={columns}
+              selected={props.selectedAgent}
               isPinned={(item) => store.isPinned(item.row.hostId, item.row.agent.pane_id)}
               onOpen={onOpenAgent ? (item) => onOpenAgent(item.row) : undefined}
               onPin={actions.pin}

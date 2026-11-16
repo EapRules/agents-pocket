@@ -28,7 +28,10 @@ export default function AgentRoute() {
   const swap = (next: ConsoleRow) =>
     router.setParams({ hostId: next.hostId, paneId: next.agent.pane_id });
   // From `regular` up Home is the list pane beside the Agent (ADR 0029).
-  const home = useHomeRoute({ onOpenAgent: swap });
+  const home = useHomeRoute({
+    onOpenAgent: swap,
+    selectedAgent: agentKey(params.hostId, params.paneId),
+  });
   const compact = useLayoutMode() === 'compact';
   // A screen left under another stays mounted: each return to it counts as a visit.
   const [visit, setVisit] = useState(0);

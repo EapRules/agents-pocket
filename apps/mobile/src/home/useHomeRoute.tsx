@@ -11,7 +11,14 @@ import { HomeScreen } from './HomeScreen';
  * Focus is the rendering route's, so a Home left under another route keeps its notices quiet; its
  * sheets open only from its own taps.
  */
-export function useHomeRoute({ onOpenAgent }: { onOpenAgent?: (row: ConsoleRow) => void } = {}) {
+export function useHomeRoute({
+  onOpenAgent,
+  selectedAgent,
+}: {
+  onOpenAgent?: (row: ConsoleRow) => void;
+  /** The `agentKey` of the Agent open beside Home: its card shows as selected. */
+  selectedAgent?: string;
+} = {}) {
   const router = useRouter();
   const focused = useIsFocused();
   const addHost = useAddHostSheet({
@@ -23,6 +30,7 @@ export function useHomeRoute({ onOpenAgent }: { onOpenAgent?: (row: ConsoleRow) 
       <HomeScreen
         crashStorage={crashStorage}
         focused={focused}
+        selectedAgent={selectedAgent}
         onAddHost={addHost.open}
         onSetupGuide={() => router.push(hrefs.setupGuide())}
         onOpenSettings={() => router.push('/settings')}

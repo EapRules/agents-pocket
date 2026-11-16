@@ -33,13 +33,15 @@ interface InboxItemProps {
   item: StatusInboxItem;
   now: number;
   pinned: boolean;
+  /** The Agent open beside the list. */
+  selected?: boolean;
   onOpen?: (item: StatusInboxItem) => void;
   onPin: (item: StatusInboxItem) => void;
   onClose: (item: StatusInboxItem) => void;
 }
 
 /** One inbox card with its swipes (Pin leading, Close trailing) and the long-press menu. */
-export function InboxItem({ item, now, pinned, onOpen, onPin, onClose }: InboxItemProps) {
+export function InboxItem({ item, now, pinned, selected, onOpen, onPin, onClose }: InboxItemProps) {
   const context = useContextMenu();
   const presentation = presentInbox(item, now);
   const actions = agentRowActions({
@@ -61,6 +63,7 @@ export function InboxItem({ item, now, pinned, onOpen, onPin, onClose }: InboxIt
   const card = (testID: string) => (
     <InboxCard
       presentation={presentation}
+      selected={selected}
       accessibilityLabel={label}
       testID={testID}
       onPress={onOpen ? () => onOpen(item) : undefined}

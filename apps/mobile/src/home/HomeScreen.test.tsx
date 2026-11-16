@@ -1,4 +1,4 @@
-import { AgentStatusClocks, MemoryStorage, PinnedAgents } from '@openagentspocket/core';
+import { AgentStatusClocks, agentKey, MemoryStorage, PinnedAgents } from '@openagentspocket/core';
 import { setLocale, translate } from '@openagentspocket/i18n';
 import { systemClock } from '@openagentspocket/transport';
 import { FAB_SIZE, ThemeProvider } from '@openagentspocket/ui';
@@ -125,5 +125,14 @@ describe('HomeScreen', () => {
     } finally {
       bindDemoModeStorage(undefined);
     }
+  });
+
+  it('marks the card of the Agent open beside Home as selected, and no other', async () => {
+    await renderHome({ selectedAgent: agentKey('demo', 'p1'), onOpenAgent: () => {} });
+    await waitFor(() => expect(screen.getByTestId('inbox-p1')).toBeTruthy());
+    expect(screen.getByTestId('inbox-p1').props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+    expect(screen.getByTestId('inbox-p2').props.accessibilityState?.selected).toBeFalsy();
   });
 });
