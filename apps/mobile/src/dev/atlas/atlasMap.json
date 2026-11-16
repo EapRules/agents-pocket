@@ -562,6 +562,11 @@
     "note": "opened after focusing the input (the folded composer shows no \"...\"); Worktree Details and Rename Workspace have no RN action yet"
   },
   {
+    "id": "rn.status-line-settings",
+    "rn": "AgentDetailScreen (AgentBackgroundWork StatusLine)",
+    "note": "RN-only state: Chat's status line on a Claude Code Agent, its model and effort at the trailing end, opening Model and Effort"
+  },
+  {
     "id": "rn.conversation-settings-claude",
     "rn": "ConversationSettingsSheet (Section, ListRow, ToggleRow)",
     "note": "RN-only state: Model and Effort from Chat's \"...\" menu on a Claude Code Agent; model changed in its terminal picker, effort levels and fast mode applied by command"

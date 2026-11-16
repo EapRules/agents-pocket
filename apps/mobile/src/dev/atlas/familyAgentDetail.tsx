@@ -282,6 +282,8 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
   // The settings sheet from Chat's "..." menu: a Claude Code Agent (choices sent by command), the
   // same with a level chosen and waiting for Apply, and a Codex Agent (shown, changed in its picker).
+  // Chat's status line with the conversation's model and effort at its trailing end.
+  'rn.status-line-settings': detail('p5', 'chat', undefined, false, false, 'claudeSettings'),
   'rn.conversation-settings-claude': detail(
     'p5',
     'chat',
