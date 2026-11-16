@@ -16,9 +16,15 @@ export interface SettingsContext {
   themeId: SettingsThemeId;
   /** Live values for the root rows: notification state, Host count. */
   summary: { notifications?: string; hostCount: number };
+  /** Recognizer locales dictation can offer, one per device language; empty without a recognizer. */
+  dictationLanguages: readonly string[];
 }
 
 type Text = (ctx: SettingsContext) => string;
+interface PickerChoice {
+  value: string;
+  label: Text;
+}
 /** A secondary line; undefined draws none. */
 type Subtitle = (ctx: SettingsContext) => string | undefined;
 type BoolKey = { [K in SettingKey]: SettingsValues[K] extends boolean ? K : never }[SettingKey];
@@ -54,7 +60,8 @@ export type SettingsRow =
   | (RowBase & {
       kind: 'picker';
       key: ChoiceKey;
-      options: readonly { value: string; label: Text }[];
+      /** A fixed list, or one read from the context (choices the device only knows at run time). */
+      options: readonly PickerChoice[] | ((ctx: SettingsContext) => readonly PickerChoice[]);
     })
   | (RowBase & {
       kind: 'stepper';
@@ -91,6 +98,14 @@ export interface SettingsPage {
   id: string;
   title: Text;
   sections: readonly SettingsSection[];
+}
+
+/** A picker row's choices in this context. */
+export function pickerChoices(
+  row: Extract<SettingsRow, { kind: 'picker' }>,
+  ctx: SettingsContext,
+): readonly PickerChoice[] {
+  return typeof row.options === 'function' ? row.options(ctx) : row.options;
 }
 
 export { SETTINGS_PAGES } from './pages';

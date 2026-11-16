@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { useOpenLink } from '@/links/useOpenLink';
 import { CustomRow } from './customRows';
 import { useAuthenticator, useSettingsStore } from './SettingsProvider';
-import type { SettingsContext, SettingsRow } from './schema';
+import { pickerChoices, type SettingsContext, type SettingsRow } from './schema';
 
 interface Props {
   row: SettingsRow;
@@ -94,16 +94,26 @@ export function SettingsRowView({ row, ctx }: Props) {
           testID={row.id}
         />
       );
-    case 'picker':
+    case 'picker': {
+      const options = pickerChoices(row, ctx).map((option) => ({
+        value: option.value,
+        label: option.label(ctx),
+      }));
+      const stored = ctx.values[row.key];
+      // A stored value no longer offered (a language the recognizer dropped) shows as the first choice.
+      const value = options.some((option) => option.value === stored)
+        ? stored
+        : (options[0]?.value ?? stored);
       return (
         <PickerRow
           title={title}
-          options={row.options.map((option) => ({ value: option.value, label: option.label(ctx) }))}
-          value={ctx.values[row.key]}
-          onChange={(value) => store.setRaw(row.key, value)}
+          options={options}
+          value={value}
+          onChange={(next) => store.setRaw(row.key, next)}
           testID={row.id}
         />
       );
+    }
     case 'stepper':
       return (
         <StepperRow

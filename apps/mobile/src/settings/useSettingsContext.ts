@@ -1,11 +1,16 @@
 import { resolveThemeId, summarizeRunningUpdate } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import { themes } from '@openagentspocket/ui';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { appBuild, appVersionLabel } from '@/diagnostics/appBuild';
 import type { AppUpdates } from '@/updates/appUpdates';
-import { useAppUpdates, useAuthenticator, useSettings } from './SettingsProvider';
+import {
+  useAppUpdates,
+  useAuthenticator,
+  useDictationLanguagesSource,
+  useSettings,
+} from './SettingsProvider';
 import type { SettingsContext } from './schema';
 import { useSettingsSummary } from './useSettingsSummary';
 
@@ -26,24 +31,35 @@ export function runningUpdateRow(updates: AppUpdates): { running: string; runnin
   return { running: summary.shortId, runningDate: summary.date ?? undefined };
 }
 
-/** What schema rows read: the values, the device's authentication kind, version, theme name. */
-export function useSettingsContext(): SettingsContext {
-  const values = useSettings();
-  const authenticator = useAuthenticator();
-  const [authKind, setAuthKind] = useState<string | null>(null);
-  const themeId = useResolvedThemeId();
-  const summary = useSettingsSummary();
-  const updates = useAppUpdates();
+const NO_LANGUAGES: readonly string[] = [];
 
+/** The value `load` resolves to, `initial` until then; loads again when `load` changes. */
+function useAsyncValue<T>(load: () => Promise<T>, initial: T): T {
+  const [value, setValue] = useState(initial);
   useEffect(() => {
     let alive = true;
-    authenticator.kind().then((kind) => {
-      if (alive) setAuthKind(kind);
+    load().then((next) => {
+      if (alive) setValue(next);
     });
     return () => {
       alive = false;
     };
-  }, [authenticator]);
+  }, [load]);
+  return value;
+}
+
+/** What schema rows read: the values, the device's authentication kind, version, theme name. */
+export function useSettingsContext(): SettingsContext {
+  const values = useSettings();
+  const authenticator = useAuthenticator();
+  const themeId = useResolvedThemeId();
+  const summary = useSettingsSummary();
+  const updates = useAppUpdates();
+  const authKind = useAsyncValue(
+    useCallback(() => authenticator.kind(), [authenticator]),
+    null,
+  );
+  const dictationLanguages = useAsyncValue(useDictationLanguagesSource(), NO_LANGUAGES);
 
   return {
     values,
@@ -53,5 +69,6 @@ export function useSettingsContext(): SettingsContext {
     themeName: themes[themeId].name,
     themeId,
     summary,
+    dictationLanguages,
   };
 }

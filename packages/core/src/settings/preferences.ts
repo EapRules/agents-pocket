@@ -43,6 +43,8 @@ export interface SettingsValues {
   appLockEnabled: boolean;
   appLockGrace: GracePeriod;
   appLockForKeys: boolean;
+  /** The recognizer locale dictation starts in (`es-MX`); empty for Automatic, the first device language it supports. */
+  dictationLanguage: string;
   /** Over-the-air updates from the beta channel (docs/guides/updates.md); only builds with updates show it. */
 }
 
@@ -67,6 +69,7 @@ export const SETTINGS_DEFAULTS: Readonly<SettingsValues> = {
   appLockEnabled: false,
   appLockGrace: 'immediately',
   appLockForKeys: false,
+  dictationLanguage: '',
 };
 
 export const SETTING_KEYS = Object.keys(SETTINGS_DEFAULTS) as SettingKey[];
@@ -85,6 +88,13 @@ const ALLOWED: Partial<Record<SettingKey, readonly string[]>> = {
   appLockGrace: GRACE_PERIODS,
 };
 
+/** Keys whose values are not a closed list (registered ids, recognizer locales); empty only where that is the default. */
+const FREE_TEXT: readonly SettingKey[] = [
+  'terminalThemeLight',
+  'terminalThemeDark',
+  'dictationLanguage',
+];
+
 const NUMBER_RANGE: Partial<Record<SettingKey, { min: number; max: number }>> = {
   terminalFontSize: TERMINAL_FONT_SIZE_RANGE,
   chatTextOffset: CHAT_TEXT_OFFSET_RANGE,
@@ -99,8 +109,10 @@ function sanitize(key: SettingKey, raw: unknown): SettingsValues[SettingKey] | u
     if (typeof raw !== 'number' || !Number.isFinite(raw) || !range) return undefined;
     return Math.min(range.max, Math.max(range.min, Math.round(raw)));
   }
-  if (key === 'terminalThemeLight' || key === 'terminalThemeDark')
-    return typeof raw === 'string' && raw.length > 0 ? raw : undefined;
+  if (FREE_TEXT.includes(key)) {
+    const empty = SETTINGS_DEFAULTS[key] === '';
+    return typeof raw === 'string' && (empty || raw.length > 0) ? (raw as never) : undefined;
+  }
   const allowed = ALLOWED[key] ?? [];
   return typeof raw === 'string' && allowed.includes(raw) ? (raw as never) : undefined;
 }

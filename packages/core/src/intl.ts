@@ -277,3 +277,18 @@ export function deviceTimeZone(): string {
     : null;
   return zone || 'UTC';
 }
+
+/** A language tag's name in `locale` ("Spanish (Mexico)"); the tag itself where Intl.DisplayNames is missing (Hermes). */
+export function languageName(tag: string, locale: string | undefined): string {
+  const ctor = intlConstructor('DisplayNames');
+  if (!ctor) return tag;
+  const name = attempt(() =>
+    new (
+      ctor as unknown as new (
+        l: string[],
+        o: { type: 'language' },
+      ) => { of(code: string): string | undefined }
+    )(locale ? [locale] : [], { type: 'language' }).of(tag),
+  );
+  return name || tag;
+}

@@ -46,6 +46,8 @@
   "Default Mode": "Default Mode",
   "Demo Mode": "Demo Mode",
   "Demo mode is set by the EXPO_PUBLIC_DEMO build flag.": "Demo mode is set by the EXPO_PUBLIC_DEMO build flag.",
+  "Dictation Language": "Dictation Language",
+  "Dictation is not available in this language.": "Dictation is not available in this language.",
   "Don't Ask": "Don't Ask",
   "Drag to reorder": "Drag to reorder",
   "Easy Pair": "Easy Pair",

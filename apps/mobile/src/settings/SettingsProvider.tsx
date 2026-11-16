@@ -14,25 +14,31 @@ interface SettingsServices {
   authenticator: Authenticator;
   chatCache: ChatCache;
   updates: AppUpdates;
+  /** The languages dictation can offer (see `systemDictationLanguages`); none by default (tests, web). */
+  dictationLanguages: () => Promise<readonly string[]>;
 }
+
+const noDictationLanguages = async (): Promise<readonly string[]> => [];
 
 const Services = createContext<SettingsServices | null>(null);
 
-interface ProviderProps extends Partial<Pick<SettingsServices, 'chatCache' | 'updates'>> {
+interface ProviderProps
+  extends Partial<Pick<SettingsServices, 'chatCache' | 'updates' | 'dictationLanguages'>> {
   store: SettingsStore;
   authenticator: Authenticator;
   children: ReactNode;
 }
 
 /**
- * Hands the settings store, the device authenticator, Chat's cache and the build's over-the-air
- * updates (off when absent: tests, web) to the tree below.
+ * Hands the settings store, the device authenticator, Chat's cache, the build's over-the-air
+ * updates and dictation's languages (off when absent: tests, web) to the tree below.
  */
 export function SettingsProvider({
   store,
   authenticator,
   chatCache,
   updates,
+  dictationLanguages,
   children,
 }: ProviderProps) {
   const value = {
@@ -40,6 +46,7 @@ export function SettingsProvider({
     authenticator,
     chatCache: chatCache ?? emptyChatCache,
     updates: updates ?? disabledUpdates,
+    dictationLanguages: dictationLanguages ?? noDictationLanguages,
   };
   return <Services.Provider value={value}>{children}</Services.Provider>;
 }
@@ -54,6 +61,7 @@ export const useSettingsStore = (): SettingsStore => useServices().store;
 export const useAuthenticator = (): Authenticator => useServices().authenticator;
 export const useChatCache = (): ChatCache => useServices().chatCache;
 export const useAppUpdates = (): AppUpdates => useServices().updates;
+export const useDictationLanguagesSource = () => useServices().dictationLanguages;
 
 /** All settings, re-rendering on any change. */
 export function useSettings(): Readonly<SettingsValues> {

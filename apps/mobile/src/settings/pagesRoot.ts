@@ -1,5 +1,10 @@
-import { type CHAT_FONTS, GRACE_PERIODS, type TERMINAL_FONTS } from '@openagentspocket/core';
-import { t } from '@openagentspocket/i18n';
+import {
+  type CHAT_FONTS,
+  GRACE_PERIODS,
+  languageName,
+  type TERMINAL_FONTS,
+} from '@openagentspocket/core';
+import { getLocaleTag, t } from '@openagentspocket/i18n';
 import type { IconName } from '@openagentspocket/ui';
 import type { SettingsContext, SettingsPage, SettingsRow } from './schema';
 
@@ -125,6 +130,22 @@ export const root: SettingsPage = {
           page: 'toolbar',
         },
         route('snippets', () => t('Snippets'), 'snippets'),
+        {
+          kind: 'picker',
+          id: 'settings.input.dictationLanguage',
+          title: () => t('Dictation Language'),
+          icon: 'mic',
+          key: 'dictationLanguage',
+          options: (ctx) => [
+            { value: '', label: () => t('Automatic') },
+            ...ctx.dictationLanguages.map((tag) => ({
+              value: tag,
+              label: () => languageName(tag, getLocaleTag()),
+            })),
+          ],
+          // Automatic is the first language anyway: a second one is what makes a choice.
+          when: (ctx) => ctx.dictationLanguages.length > 1,
+        },
       ],
     },
     {

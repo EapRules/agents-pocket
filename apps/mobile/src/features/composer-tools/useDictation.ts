@@ -1,8 +1,15 @@
 import { t } from '@openagentspocket/i18n';
 import { toast } from '@openagentspocket/ui';
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
-import { DictationController } from './dictation';
+import { useSettingsStore } from '@/settings/SettingsProvider';
+import { DictationController, type DictationFailure } from './dictation';
 import { systemSpeechEngine } from './speechEngine';
+
+const FAILURE_TEXT: Record<DictationFailure, () => string> = {
+  permission: () => t('Microphone access is off. Turn it on in Settings to dictate.'),
+  language: () => t('Dictation is not available in this language.'),
+  stopped: () => t('Dictation stopped unexpectedly.'),
+};
 
 const never = () => () => {};
 const idle = () => false;
@@ -11,22 +18,17 @@ const idle = () => false;
 export function useDictation(insert: (text: string) => void) {
   const latest = useRef(insert);
   latest.current = insert;
+  const settings = useSettingsStore();
   const controller = useMemo(() => {
-    const engine = systemSpeechEngine();
+    const engine = systemSpeechEngine(() => settings.get('dictationLanguage'));
     return engine
       ? new DictationController(
           engine,
           (text) => latest.current(text),
-          (reason) =>
-            toast({
-              title:
-                reason === 'permission'
-                  ? t('Microphone access is off. Turn it on in Settings to dictate.')
-                  : t('Dictation stopped unexpectedly.'),
-            }),
+          (reason) => toast({ title: FAILURE_TEXT[reason]() }),
         )
       : null;
-  }, []);
+  }, [settings]);
   useEffect(() => () => controller?.stop(), [controller]);
   const listening = useSyncExternalStore(
     controller?.subscribe ?? never,

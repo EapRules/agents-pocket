@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConnectionsProvider } from '@/connections/ConnectionsProvider';
 import { bindDemoModeStorage } from '@/connections/mode';
 import { recordUncaughtErrors } from '@/diagnostics/crashStorage';
+import { systemDictationLanguages } from '@/features/composer-tools/speechEngine';
 import { LaunchAnimation } from '@/launch/LaunchAnimation';
 import { AppLinkOpener } from '@/links/AppLinkOpener';
 import { useIncomingLinks } from '@/links/useIncomingLinks';
@@ -122,6 +123,7 @@ export default function RootLayout() {
         store={settingsStore}
         authenticator={deviceAuthenticator}
         updates={deviceUpdates}
+        dictationLanguages={systemDictationLanguages}
       >
         <UpdateChannelSync />
         <SettingsTheme>

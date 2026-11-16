@@ -5,6 +5,7 @@ export * from './changes';
 export * from './chat';
 export * from './composer';
 export * from './console';
+export * from './dictation';
 export * from './errors';
 export * from './events';
 export * from './files';

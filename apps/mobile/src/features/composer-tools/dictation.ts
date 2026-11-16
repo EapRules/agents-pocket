@@ -1,16 +1,21 @@
-export type DictationFailure = 'permission' | 'stopped';
+import { type DictationFailure, dictationFailure } from '@openagentspocket/core';
+
+export type { DictationFailure };
 
 interface SpeechEvents {
   /** One finished phrase. */
   onFinal(text: string): void;
-  onError(): void;
+  /** The recognizer's error code (`no-speech`, `language-not-supported`...). */
+  onError(code: string): void;
   onEnd(): void;
 }
 
 /** The system's speech recognizer, as dictation uses it. */
 export interface SpeechEngine {
   requestPermission(): Promise<boolean>;
-  start(events: SpeechEvents): void;
+  /** The locale to listen in; null when the recognizer supports no language to offer. */
+  language(): Promise<string | null>;
+  start(events: SpeechEvents, language: string): void;
   stop(): void;
 }
 
@@ -50,19 +55,28 @@ export class DictationController {
       this.onFailure('permission');
       return;
     }
+    const language = await this.engine.language();
+    if (language === null) {
+      this.onFailure('language');
+      return;
+    }
     this.set(true);
-    this.engine.start({
-      onFinal: (text) => {
-        const phrase = text.trim();
-        if (phrase !== '') this.insert(`${phrase} `);
+    this.engine.start(
+      {
+        onFinal: (text) => {
+          const phrase = text.trim();
+          if (phrase !== '') this.insert(`${phrase} `);
+        },
+        onError: (code) => {
+          if (!this.active) return;
+          this.set(false);
+          const failure = dictationFailure(code);
+          if (failure) this.onFailure(failure);
+        },
+        onEnd: () => this.set(false),
       },
-      onError: () => {
-        if (!this.active) return;
-        this.set(false);
-        this.onFailure('stopped');
-      },
-      onEnd: () => this.set(false),
-    });
+      language,
+    );
   }
 
   private set(active: boolean): void {

@@ -29,11 +29,12 @@ interface Options {
   authenticator?: Authenticator;
   chatCache?: ChatCache;
   updates?: AppUpdates;
+  dictationLanguages?: () => Promise<readonly string[]>;
 }
 
 async function setup(
   page: string,
-  { authenticator = fakeAuthenticator(null), chatCache, updates }: Options = {},
+  { authenticator = fakeAuthenticator(null), chatCache, updates, dictationLanguages }: Options = {},
 ) {
   const store = new SettingsStore(new MemoryStorage());
   const ui: ReactElement = (
@@ -43,6 +44,7 @@ async function setup(
         authenticator={authenticator}
         chatCache={chatCache}
         updates={updates}
+        dictationLanguages={dictationLanguages}
       >
         <SettingsScreen page={page} />
         <OverlayHost />
@@ -72,7 +74,7 @@ describe('settings schema', () => {
     expect(keyed.length).toBeGreaterThan(8);
     for (const row of keyed) {
       expect(row.key in SETTINGS_DEFAULTS).toBe(true);
-      if (row.kind === 'picker') {
+      if (row.kind === 'picker' && typeof row.options !== 'function') {
         const values = row.options.map((option) => option.value);
         expect(values).toContain(SETTINGS_DEFAULTS[row.key]);
       }
@@ -97,6 +99,21 @@ describe('SettingsScreen', () => {
     expect(screen.getByTestId('settings.about.privacyPolicy')).toBeTruthy();
     expect(screen.queryByTestId('settings.snippets')).toBeNull();
     expect(screen.queryByTestId('settings-section-security')).toBeNull();
+  });
+
+  it('hides the dictation language without a recognizer or with a single language', async () => {
+    await setup('root');
+    expect(screen.queryByTestId('settings.input.dictationLanguage')).toBeNull();
+    const single = jest.fn(async () => ['en-US']);
+    await setup('root', { dictationLanguages: single });
+    await act(async () => {});
+    expect(single).toHaveBeenCalled();
+    expect(screen.queryByTestId('settings.input.dictationLanguage')).toBeNull();
+  });
+
+  it('offers a dictation language when the recognizer has a second one', async () => {
+    await setup('root', { dictationLanguages: async () => ['en-US', 'es-MX'] });
+    expect(await screen.findByTestId('settings.input.dictationLanguage')).toBeTruthy();
   });
 
   it('shows nothing about updates in a build without them', async () => {
