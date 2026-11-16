@@ -4,7 +4,7 @@ Status: accepted (2026-11-16), the owner approved the mockup. Stage 1 (closed, o
 
 ## Context
 
-iPhone Duo opens from a 466x678 pt outer display to an inner one whose screenshots are 2007x2853 px (669x951 pt at 3x; the inner display has not been measured in the simulator yet, its pose control is not scriptable). Apple's "Prepare your app for iPhone Duo" says: the app resizes continuously as the device opens and closes, the inner display does not honor the supported orientations, and layout should follow size classes, never the device or the orientation. The App Store has a Duo screenshot slot and will require it from April 2027 for apps built with the iOS 27.1 SDK.
+iPhone Duo opens from a 466x678 pt outer display to an inner one of 951x669 pt (2853x2007 px), wider than tall when the device is opened from portrait; rotated it is 669x951. Measured on the simulator (2026-11-16): the system keeps a column of about 84 pt on the trailing side of the inner display, which reaches the app as a safe-area inset. Apple's "Prepare your app for iPhone Duo" says: the app resizes continuously as the device opens and closes, the inner display does not honor the supported orientations, and layout should follow size classes, never the device or the orientation. The App Store has a Duo screenshot slot and will require it from April 2027 for apps built with the iOS 27.1 SDK.
 
 The app already has layout modes by window width (`useLayoutMode`: compact under 600, regular, wide from 860, expansive from 1160), used by Home and Usage only. Home and the Agent screen are prop-driven components that their routes only wire.
 
@@ -26,4 +26,5 @@ The app already has layout modes by window width (`useLayoutMode`: compact under
 
 - Home can be mounted twice (under the stack and in the list pane): notices and sheets must come from the focused one only.
 - Overlays (sheets, menus, alerts) keep sizing from the window. Anything else that reads the window's size has to be looked at once: a pane is narrower than the window.
-- Verification: `scripts/atlas-web.mjs` at the Duo's sizes is support, not proof; the simulator's open pose needs a person to open the device in Simulator.
+- Verification: `scripts/atlas-web.mjs` at the Duo's sizes is support, not proof. On the simulator the pose (closed, open, folded, rotated) is set from Xcode's Device Hub (`Xcode.app/Contents/Applications/DeviceHub.app`), by hand or with computer use: `simctl` has no command for it. Maestro reads the inner display's hierarchy with a shifted origin, so its taps miss there: assertions work, taps do not.
+- The window changes size while the app runs (opening, closing, rotating). Anything that measures the window or a screen once is a bug on this device.
