@@ -78,6 +78,8 @@ export interface PickerOption<V extends string> {
 
 interface PickerRowProps<V extends string> {
   title: string;
+  /** The row's leading icon, as its neighbours in a grouped list have. */
+  icon?: IconName;
   options: readonly PickerOption<V>[];
   value: V;
   onChange: (value: V) => void;
@@ -94,6 +96,7 @@ interface PickerRowProps<V extends string> {
 /** A setting with a few choices: shows the current one, opens a menu of all with a checkmark. */
 export function PickerRow<V extends string>({
   title,
+  icon,
   options,
   value,
   onChange,
@@ -118,6 +121,7 @@ export function PickerRow<V extends string>({
     <View ref={ref} collapsable={false}>
       <ListRow
         title={title}
+        icon={icon}
         value={current?.label}
         valueTone={valueTone}
         trailing={

@@ -107,6 +107,7 @@ export function SettingsRowView({ row, ctx }: Props) {
       return (
         <PickerRow
           title={title}
+          icon={row.icon}
           options={options}
           value={value}
           onChange={(next) => store.setRaw(row.key, next)}

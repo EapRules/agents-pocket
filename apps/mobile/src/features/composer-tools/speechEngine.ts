@@ -67,9 +67,12 @@ export function systemSpeechEngine(chosen: () => string): SpeechEngine | null {
     language: async () => {
       const locales = await recognizerLocales(speech);
       const preferred = devicePreferredLocales();
-      // A list the recognizer cannot give is not a "no": start as before and let it answer.
-      if (locales.length === 0) return chosen() || (preferred[0] ?? deviceLocaleTag());
-      return dictationLocale(locales, preferred, chosen() || null);
+      const picked = dictationLocale(locales, preferred, chosen() || null);
+      // Only iOS lists every language `start` accepts. Android lists the on-device recognizer's
+      // (none before Android 13) while the network one takes more, and an empty list is no answer:
+      // there, start as before and let the recognizer say no.
+      if (picked !== null || (Platform.OS === 'ios' && locales.length > 0)) return picked;
+      return chosen() || (preferred[0] ?? deviceLocaleTag());
     },
     start: (events, language) => {
       const listeners = [
