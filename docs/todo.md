@@ -6,6 +6,24 @@ Items are worked from the top of each group; groups are in priority order.
 
 ## 1. In flight
 
+- [x] **iPhone Duo, stage 1 (closed, open, open-and-rotated).** Done and verified on the iPhone Duo
+  simulator overnight 2026-11-16 (pushed, CI green). `SplitView` (`packages/ui`): wider windows show
+  Home's list beside the selected Agent (the Agent lives in the route; ADR 0029); opening or closing the
+  device no longer remounts the screen; the open Agent is marked in the list; Chat and Terminal side by
+  side when the Agent's pane is wide. The terminal's iOS surface survives window changes (patch to
+  `expo-libghostty`, fixed a blank terminal and a crash on rotate). One input bar on the terminal (Keys
+  toolbar or Compose). Rotation: a portrait-only app already follows the opened device on the inner
+  display, so no native change (the orientation package was tried and reverted). Duo store screenshots for
+  the owner in `~/Downloads/agents-pocket-app-store/duo-{en,es}` (inner two-pane + outer screens); the Duo
+  slot is optional until April 2027. **Left:** stage 2 (half-open) needs a native fold module; an
+  "Agent open" inner-display store shot (the inner-display tap needs the owner or more fiddling).
+- [x] **Model and Effort selector, per conversation, every program.** Done and pushed 2026-11-16. A generic
+  `settings` capability on `ProgramDefinition` (`packages/core`): reads the current model, effort and fast
+  mode per program; writes only verified argument-taking slash commands (Claude `/effort`, `/fast`; Hermes
+  `/reasoning`), never a picker, never while blocked, with a two-step confirm that shows the exact command
+  and the "applies after this turn / becomes the default / uses credits" notes before sending. Model is
+  shown and "Change in Terminal" (its picker). Sheet in the Composer's "…" menu on Chat and terminal.
+  **Not verified on a real iPhone.**
 - [x] **Store panels into App Store Connect.** The owner pulled 1.0.2 from review and uploaded, per language,
   the eight panels, the header and the search results image from `docs/store/panels/{en,es}` (2026-11-16).
   Left: he sends 1.0.2 (7) back to review.
