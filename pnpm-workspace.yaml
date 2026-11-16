@@ -17,6 +17,11 @@ allowBuilds:
 # Local fixes to dependencies, each meant to go upstream. expo-libghostty: the iOS
 # terminal controller deletes its generated ghostty-config-*.conf right after loading
 # it, and sweeps leftovers once per process (they piled up in the app's tmp folder).
+# The iOS terminal view keeps its surface when it leaves a window (a foldable moving
+# the app between displays emptied the grid) and frees it only when the view goes
+# away; when a surface is freed it removes ghostty's IOSurfaceLayer from the view,
+# because the bundled renderer leaves it with a callback into the freed renderer
+# (a crash on the next resize; fixed upstream in ghostty 4b4a5b24).
 patchedDependencies:
   expo-libghostty@0.8.1: patches/expo-libghostty@0.8.1.patch
 

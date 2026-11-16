@@ -136,3 +136,140 @@ index 8079ab097035d5ab38cb6a40fdd6e94389c8558e..8c8fe76b3f51429386aa8f913a775949
 -        }
      }
  }
+diff --git a/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView+Lifecycle.swift b/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView+Lifecycle.swift
+index e56733f4c5cbc9d9871e3933c511c64c855cf07e..353198b9bf7e1e23490a59153406a4aa23aafe5a 100644
+--- a/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView+Lifecycle.swift
++++ b/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView+Lifecycle.swift
+@@ -50,9 +50,15 @@
+                 "didMoveToWindow attached=\(window != nil)"
+             )
+             updateDisplayScale()
++            // The surface outlives a window change (a foldable moving the app
++            // between displays, a reparented view): freeing it on detach lost
++            // the grid and scrollback. It is freed when the view goes away.
+             if window != nil {
+-                core.rebuildIfReady()
++                if surface == nil {
++                    core.rebuildIfReady()
++                }
+                 updateColorScheme()
++                core.windowAttachmentDidChange()
+                 core.startDisplayLink()
+                 // Defer sublayer frame and metrics sync to the next runloop
+                 // so that AutoLayout has resolved final bounds.
+@@ -62,8 +68,25 @@
+                     core.fitToSize()
+                 }
+             } else {
++                core.windowAttachmentDidChange()
+                 core.stopDisplayLink()
+-                core.freeSurface()
++            }
++        }
++
++        /// Takes the layers of a freed renderer out of the view's layer.
++        ///
++        /// ghostty's Metal renderer adds a CALayer subclass it registers as
++        /// `IOSurfaceLayer` to this view's layer and never removes it. Called
++        /// after the old surface is freed and before a new one is built, so
++        /// none of these layers belongs to a live renderer. Removing them
++        /// drops the tree's reference; blocks the renderer already queued on
++        /// the main queue retain the layer they use.
++        func removeFreedRendererLayers() {
++            guard let sublayers = layer.sublayers else { return }
++            for sublayer in sublayers
++                where String(cString: object_getClassName(sublayer)) == "IOSurfaceLayer"
++            {
++                sublayer.removeFromSuperlayer()
+             }
+         }
+ 
+diff --git a/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView.swift b/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView.swift
+index 7bb1e9861c9640c197321a9eff2cd7f9e087c0a1..1b96fec05fd1273bd8adc619bef414131509a812 100644
+--- a/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView.swift
++++ b/ios/vendor/GhosttyTerminal/Platform/UIKit/UITerminalView.swift
+@@ -128,6 +128,9 @@
+             core.onPostRender = { [weak self] in
+                 self?.enforceSublayerScale()
+             }
++            core.onSurfaceDidFree = { [weak self] in
++                self?.removeFreedRendererLayers()
++            }
+ 
+             setupApplicationLifecycleObservers()
+             syncApplicationActiveState()
+@@ -242,6 +245,14 @@
+ 
+         deinit {
+             NotificationCenter.default.removeObserver(self)
++            // The surface now lives until the view goes away. Free it here,
++            // while the view and its layer are still whole, and take the
++            // renderer's layer out of the tree so nothing can display it.
++            // UIKit deallocates views on the main thread.
++            MainActor.assumeIsolated {
++                core.freeSurface()
++                removeFreedRendererLayers()
++            }
+         }
+ 
+         #if !targetEnvironment(macCatalyst)
+diff --git a/ios/vendor/GhosttyTerminal/Surface/TerminalSurfaceCoordinator.swift b/ios/vendor/GhosttyTerminal/Surface/TerminalSurfaceCoordinator.swift
+index 1fb2cce36487e53aa94bf1b2cd66bd1479329f8a..b7a91ab77ad92dcd6fcbdfcf60221a88c7c2a629 100644
+--- a/ios/vendor/GhosttyTerminal/Surface/TerminalSurfaceCoordinator.swift
++++ b/ios/vendor/GhosttyTerminal/Surface/TerminalSurfaceCoordinator.swift
+@@ -62,6 +62,16 @@ final class TerminalSurfaceCoordinator {
+     /// correcting any drift introduced by ghostty within a single frame.
+     var onPostRender: (() -> Void)?
+ 
++    /// Called right after a surface is freed, before any replacement is built.
++    ///
++    /// On iOS the renderer adds its own layer to the host view's layer and
++    /// never removes it, and the bundled renderer does not clear that layer's
++    /// display callback when it is freed. A stale layer left in the tree can
++    /// then call into the freed renderer during a Core Animation commit (for
++    /// example when its frame changes on rotation). Platform views use this
++    /// hook to take the outgoing renderer's layers out of the tree.
++    var onSurfaceDidFree: (() -> Void)?
++
+     private var lastMetrics: TerminalViewportMetrics?
+     private var isDisplayVisible = true
+     private var isApplicationActive = true
+@@ -243,6 +253,19 @@ final class TerminalSurfaceCoordinator {
+         }
+     }
+ 
++    /// Called when the host view joins or leaves a window. The surface (and
++    /// with it the grid, scrollback and parser state) is kept across a window
++    /// change; only occlusion and frame scheduling follow the attachment.
++    /// Safe to call repeatedly and in any order.
++    func windowAttachmentDidChange() {
++        surface?.setOcclusion(effectiveSurfaceVisible)
++        if canRenderFrame {
++            requestImmediateTick()
++        } else {
++            stopDisplayLink()
++        }
++    }
++
+     func setApplicationActive(_ active: Bool) {
+         guard isApplicationActive != active else {
+             if active {
+@@ -321,6 +344,9 @@ final class TerminalSurfaceCoordinator {
+         surface?.setFocus(false)
+         surface?.free()
+         surface = nil
++        if hadSurface {
++            onSurfaceDidFree?()
++        }
+         lastMetrics = nil
+         pendingImmediateTick = true
+         lastTickTimestamp = 0
+@@ -377,7 +403,7 @@ final class TerminalSurfaceCoordinator {
+     }
+ 
+     private var effectiveSurfaceVisible: Bool {
+-        isDisplayVisible && isApplicationActive
++        isDisplayVisible && isApplicationActive && isAttached()
+     }
+ 
+     private var canRenderFrame: Bool {
