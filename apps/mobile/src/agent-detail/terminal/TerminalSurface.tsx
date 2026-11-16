@@ -189,7 +189,14 @@ function LiveTerminal({
           ]}
         />
       </View>
-      {dock ? <KeyboardDock rows={dock.rows} onKey={dockKey(dock)} testID="keys-dock" /> : null}
+      {dock ? (
+        <KeyboardDock
+          rows={dock.rows}
+          fit={keys === 'full'}
+          onKey={dockKey(dock)}
+          testID="keys-dock"
+        />
+      ) : null}
       <ActionMenu items={items} {...context.menuProps} />
       {textActions.sheets}
       <TerminalPasteReview input={session.input} />

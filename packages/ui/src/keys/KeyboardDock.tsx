@@ -15,6 +15,8 @@ export interface KeySpec {
   accessibilityLabel?: string;
   /** A sticky modifier: tapping it latches it for the next key. */
   modifier?: KeyModifier;
+  /** Share of a fitted row's width, against 1 for a letter (`fit` rows only). */
+  weight?: number;
 }
 
 /** One-shot modifiers, as Swift's TerminalKeyModifiers: Ctrl, Alt (Option) and Shift. */
@@ -35,6 +37,8 @@ const useStyles = makeStyles((t) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  fitRow: { flexDirection: 'row', gap: t.spacing.xxs, paddingHorizontal: t.spacing.xxs },
+  fitKey: { flexBasis: 0, minWidth: 0, paddingHorizontal: 0 },
   latched: { backgroundColor: t.colors.accent },
   pressed: { opacity: 0.6 },
   dock: {
@@ -46,6 +50,7 @@ const useStyles = makeStyles((t) => ({
     paddingBottom: t.spacing.xxs,
     gap: t.spacing.xs,
   },
+  fitDock: { gap: t.spacing.xxs },
 }));
 
 interface KeyRowProps {
@@ -55,18 +60,24 @@ interface KeyRowProps {
   /** Latched modifiers, owned by the dock so they span rows. */
   latched?: KeyModifiers;
   onToggleModifier?: (modifier: KeyModifier) => void;
+  /** Fill the width exactly, keys sharing it by `weight`, instead of scrolling. */
+  fit?: boolean;
 }
 
-/** One scrolling row of keys. */
-export function KeyRow({ keys, onKey, latched = NONE, onToggleModifier }: KeyRowProps) {
+/** One row of keys: scrolling by default, or `fit` to the width. */
+export function KeyRow({ keys, onKey, latched = NONE, onToggleModifier, fit }: KeyRowProps) {
   const styles = useStyles();
+  const Container = fit ? View : ScrollView;
+  const containerProps = fit
+    ? { style: styles.fitRow }
+    : {
+        horizontal: true,
+        showsHorizontalScrollIndicator: false,
+        keyboardShouldPersistTaps: 'always' as const,
+        contentContainerStyle: styles.row,
+      };
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      keyboardShouldPersistTaps="always"
-      contentContainerStyle={styles.row}
-    >
+    <Container {...containerProps} testID={fit ? 'key-row-fit' : 'key-row-scroll'}>
       {keys.map((key) => {
         const on = key.modifier ? latched[key.modifier] : false;
         return (
@@ -76,20 +87,32 @@ export function KeyRow({ keys, onKey, latched = NONE, onToggleModifier }: KeyRow
             accessibilityRole={key.modifier ? 'togglebutton' : 'keyboardkey'}
             accessibilityLabel={key.accessibilityLabel ?? key.label}
             accessibilityState={key.modifier ? { checked: on, selected: on } : undefined}
-            style={({ pressed }) => [styles.key, on && styles.latched, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.key,
+              fit && styles.fitKey,
+              fit && { flexGrow: key.weight ?? 1 },
+              on && styles.latched,
+              pressed && styles.pressed,
+            ]}
             testID={`key-${key.id}`}
           >
             {key.icon ? (
               <Icon name={key.icon} size={15} color={on ? 'onAccent' : 'textPrimary'} />
             ) : (
-              <Text variant="callout" tone={on ? 'onAccent' : 'primary'}>
+              <Text
+                variant={fit ? 'footnote' : 'callout'}
+                tone={on ? 'onAccent' : 'primary'}
+                numberOfLines={fit ? 1 : undefined}
+                adjustsFontSizeToFit={fit}
+                minimumFontScale={0.7}
+              >
                 {key.label}
               </Text>
             )}
           </Tappable>
         );
       })}
-    </ScrollView>
+    </Container>
   );
 }
 
@@ -99,6 +122,8 @@ interface KeyboardDockProps {
   onKey: (key: KeySpec, modifiers: KeyModifiers) => void;
   /** Extra controls above the keys (a snippets button, a keyboard toggle). */
   toolbar?: ReactNode;
+  /** Rows fill the dock's width by key weight and never scroll (the full keyboard). */
+  fit?: boolean;
   testID?: string;
 }
 
@@ -107,6 +132,7 @@ export function KeyboardDock({
   rows,
   onKey,
   toolbar,
+  fit,
   testID = 'keyboard-dock',
 }: KeyboardDockProps) {
   const styles = useStyles();
@@ -116,7 +142,7 @@ export function KeyboardDock({
     setLatched(NONE);
   };
   return (
-    <View style={styles.dock} testID={testID}>
+    <View style={[styles.dock, fit && styles.fitDock]} testID={testID}>
       {toolbar}
       {rows.map((keys, index) => (
         <KeyRow
@@ -125,6 +151,7 @@ export function KeyboardDock({
           keys={keys}
           onKey={press}
           latched={latched}
+          fit={fit}
           onToggleModifier={(modifier) =>
             setLatched((current) => ({ ...current, [modifier]: !current[modifier] }))
           }

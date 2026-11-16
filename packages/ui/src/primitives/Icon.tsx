@@ -86,6 +86,7 @@ const ICONS = {
   chevronUp: { ios: 'chevron.up', android: 'expand_less' },
   note: { ios: 'text.bubble', android: 'chat' },
   dpad: { ios: 'arrow.up.and.down.and.arrow.left.and.right', android: 'open_with' },
+  backspace: { ios: 'delete.left', android: 'backspace' },
   enter: { ios: 'return', android: 'keyboard_return' },
   shift: { ios: 'shift', android: 'keyboard_capslock' },
   skills: { ios: 'sparkle', android: 'auto_awesome' },

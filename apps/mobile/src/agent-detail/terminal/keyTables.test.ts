@@ -33,4 +33,24 @@ describe('full keyboard', () => {
       expect.arrayContaining(['mod-control', 'mod-option', 'mod-shift', 'char-space']),
     );
   });
+
+  it('fits a phone: at most 11 cells a row, no Esc, Tab or function keys', () => {
+    for (const row of FULL_KEYBOARD.rows) expect(row.length).toBeLessThanOrEqual(11);
+    const ids = FULL_KEYBOARD.rows.flat().map((spec) => spec.id);
+    expect(ids).not.toContain('escape');
+    expect(ids).not.toContain('tab');
+  });
+
+  it('lets the space bar take the widest share of its row', () => {
+    const row = FULL_KEYBOARD.rows.find((cells) => cells.some((spec) => spec.id === 'char-space'));
+    const weights = (row ?? []).map((spec) => spec.weight ?? 1);
+    expect(Math.max(...weights)).toBe(row?.find((spec) => spec.id === 'char-space')?.weight);
+  });
+});
+
+describe('control keys', () => {
+  it('keep Esc and Tab', () => {
+    const ids = CONTROL_KEYS.rows.flat().map((spec) => spec.id);
+    expect(ids).toEqual(expect.arrayContaining(['escape', 'tab']));
+  });
 });

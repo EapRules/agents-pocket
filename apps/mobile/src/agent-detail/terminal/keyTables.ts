@@ -17,6 +17,8 @@ const ARROW_ICONS: Record<string, IconName> = {
   up: 'arrowUp',
   down: 'arrowDown',
   right: 'arrowRight',
+  enter: 'enter',
+  backspace: 'backspace',
 };
 
 const SPOKEN: Record<string, () => string> = {
@@ -69,26 +71,42 @@ export interface KeyRows {
   readonly lookup: KeyLookup;
 }
 
-function build(cells: readonly (readonly Cell[])[]): KeyRows {
+/** A cell with its share of a fitted row (a letter is 1). */
+interface Weighted {
+  readonly cell: Cell;
+  readonly weight: number;
+}
+
+const weighted = (cell: Cell, weight: number): Weighted => ({ cell, weight });
+const isWeighted = (entry: Cell | Weighted): entry is Weighted =>
+  typeof entry === 'object' && 'weight' in entry;
+
+function build(cells: readonly (readonly (Cell | Weighted)[])[]): KeyRows {
   const lookup = new Map<string, QuickKey>();
   const rows = cells.map((row) =>
-    row.map((cell): KeySpec => {
-      if (typeof cell === 'object' && 'modifier' in cell) {
-        const info = MODIFIERS[cell.modifier];
-        const ui =
-          cell.modifier === 'control' ? 'ctrl' : cell.modifier === 'option' ? 'alt' : 'shift';
-        return {
-          id: `mod-${cell.modifier}`,
-          label: info.label,
-          accessibilityLabel: info.spoken(),
-          modifier: ui,
-        };
-      }
-      lookup.set(quickKeyId(cell), cell);
-      return keySpec(cell);
+    row.map((entry): KeySpec => {
+      const cell = isWeighted(entry) ? entry.cell : entry;
+      const spec = specOf(cell);
+      return isWeighted(entry) ? { ...spec, weight: entry.weight } : spec;
     }),
   );
   return { rows, lookup };
+
+  function specOf(cell: Cell): KeySpec {
+    if (typeof cell === 'object' && 'modifier' in cell) {
+      const info = MODIFIERS[cell.modifier];
+      const ui =
+        cell.modifier === 'control' ? 'ctrl' : cell.modifier === 'option' ? 'alt' : 'shift';
+      return {
+        id: `mod-${cell.modifier}`,
+        label: info.label,
+        accessibilityLabel: info.spoken(),
+        modifier: ui,
+      };
+    }
+    lookup.set(quickKeyId(cell), cell);
+    return keySpec(cell);
+  }
 }
 
 const chars = (text: string): QuickKey[] => [...text].map(character);
@@ -103,14 +121,24 @@ export const CONTROL_KEYS: KeyRows = build([
   FUNCTION_KEYS,
 ]);
 
-/** The full keyboard: US QWERTY with the sticky modifiers, one scrolling row per line. */
+/**
+ * The full keyboard for a phone: US QWERTY in six fitted rows of at most 11 cells, so a key stays near
+ * 29 pt wide on 375 pt. Esc, Tab and the function keys live in `CONTROL_KEYS` and the key toolbar.
+ */
 export const FULL_KEYBOARD: KeyRows = build([
-  [...FUNCTION_KEYS, 'escape'],
-  [...chars('`1234567890-='), 'backspace'],
-  ['tab', ...chars('qwertyuiop[]\\')],
-  [...chars("asdfghjkl;'"), 'enter'],
-  [{ modifier: 'shift' }, ...chars('zxcvbnm,./'), 'up'],
-  [{ modifier: 'control' }, { modifier: 'option' }, character(' '), 'left', 'down', 'right'],
+  chars("`-=[]\\;',./"),
+  chars('1234567890'),
+  chars('qwertyuiop'),
+  [...chars('asdfghjkl'), weighted('backspace', 2)],
+  [weighted({ modifier: 'shift' }, 1.5), ...chars('zxcvbnm'), 'up', weighted('enter', 1.5)],
+  [
+    weighted({ modifier: 'control' }, 1.5),
+    weighted({ modifier: 'option' }, 1.5),
+    weighted(character(' '), 5),
+    'left',
+    'down',
+    'right',
+  ],
 ]);
 
 /** The menu's Commands > Keys, as dock keys. */
