@@ -4,12 +4,18 @@ import { Text } from '../primitives/Text';
 import { makeStyles } from '../theme/theme';
 import { BackgroundWorkGlyph, type StatusLineState } from './BackgroundWorkGlyph';
 
+/**
+ * The line is as tall as its text and a little air, so it adds no dark band over the Composer; its
+ * buttons reach past that with this slop, to a touch target near the minimum tap size.
+ */
+const TOUCH_SLOP = { top: 8, bottom: 8 } as const;
+
 const useStyles = makeStyles((t) => ({
   line: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.xs,
-    minHeight: t.metrics.minTapSize,
+    paddingVertical: t.spacing.xxs,
     paddingHorizontal: t.spacing.md,
   },
   text: { flexShrink: 1, minWidth: 0 },
@@ -25,7 +31,7 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.xs,
-    minHeight: t.metrics.minTapSize,
+    paddingVertical: t.spacing.xxs,
     flexShrink: 0,
     maxWidth: '100%',
   },
@@ -33,7 +39,7 @@ const useStyles = makeStyles((t) => ({
     flexShrink: 1,
     minWidth: 0,
     marginLeft: 'auto',
-    minHeight: t.metrics.minTapSize,
+    paddingVertical: t.spacing.xxs,
     justifyContent: 'center',
   },
 }));
@@ -96,6 +102,7 @@ export function StatusLine({
       <Tappable
         style={style}
         onPress={open.onPress}
+        hitSlop={TOUCH_SLOP}
         accessibilityRole="button"
         accessibilityLabel={open.label}
         accessibilityValue={{ text: spoken }}
@@ -112,6 +119,7 @@ export function StatusLine({
       <Tappable
         style={styles.trailing}
         onPress={trailing.onPress}
+        hitSlop={TOUCH_SLOP}
         accessibilityRole="button"
         accessibilityLabel={trailing.label}
         accessibilityValue={{ text: trailing.text }}
