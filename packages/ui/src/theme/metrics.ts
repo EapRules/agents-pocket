@@ -104,6 +104,9 @@ export const metrics = {
   glowOpacity: 0.55,
   /** Widest a reading column grows on tablets and landscape. */
   readableWidth: 720,
+  /** A split's list pane (Home beside the Agent): this wide, and never more than its share of the window. */
+  splitListWidth: 300,
+  splitListMaxShare: 0.45,
 } as const;
 
 export type SpacingKey = keyof typeof spacing;

@@ -295,5 +295,6 @@
   "OpenCode runs its commands alone. Send the command without anything after it.": "OpenCode runs its commands alone. Send the command without anything after it.",
   "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.": "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.",
   "Agentico answers only OpenCode's single questions. Answer this one with these keys or in the terminal.": "Agents Pocket answers only OpenCode's single questions. Answer this one with these keys or in the terminal.",
-  "Agentico answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.": "Agents Pocket answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal."
+  "Agentico answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.": "Agents Pocket answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.",
+  "Choose an Agent in the list to open it here.": "Choose an Agent in the list to open it here."
 }

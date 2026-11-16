@@ -3,6 +3,7 @@ import {
   OverlayHost,
   TerminalThemeProvider,
   ThemeProvider,
+  useLayoutMode,
   useTheme,
   withAlpha,
 } from '@openagentspocket/ui';
@@ -81,11 +82,13 @@ function AppStack() {
   // Routes that are sheets in the Swift app. They scroll and push screens, so they open full.
   const sheet = sheetOptions(theme);
   const bare = { headerShown: false } as const;
+  // From `regular` up the Agent opens beside Home's list (ADR 0029): it appears, it does not slide.
+  const beside = useLayoutMode() === 'compact' ? bare : ({ ...bare, animation: 'none' } as const);
   return (
     <Stack screenOptions={options}>
       <Stack.Screen name="index" options={{ ...bare, title: t('Home') }} />
       {/* The Agent detail draws its own floating header; the route name must never show as a title. */}
-      <Stack.Screen name="agent/[hostId]/[paneId]" options={{ ...bare, title: t('Agent') }} />
+      <Stack.Screen name="agent/[hostId]/[paneId]" options={{ ...beside, title: t('Agent') }} />
       <Stack.Screen name="agents" options={{ ...bare, title: t('Agents') }} />
       <Stack.Screen name="board" options={{ title: t('Board') }} />
       <Stack.Screen name="changes" options={{ ...bare, title: t('Changes') }} />

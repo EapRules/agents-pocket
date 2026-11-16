@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 /** One column on a phone; two side by side; two wide ones; those two and a sidebar. */
@@ -13,7 +14,14 @@ export function layoutModeFor(width: number): LayoutMode {
   return width >= REGULAR_WIDTH ? 'regular' : 'compact';
 }
 
-/** The one place a screen learns how much room it has: never a width check of its own. */
+/** Set by `SplitView` around each pane, from the pane's own width. */
+export const PaneLayoutModeContext = createContext<LayoutMode | null>(null);
+
+/**
+ * The one place a screen learns how much room it has: never a width check of its own. Inside a
+ * `SplitView` pane it is the pane's room, else the window's.
+ */
 export function useLayoutMode(): LayoutMode {
-  return layoutModeFor(useWindowDimensions().width);
+  const window = layoutModeFor(useWindowDimensions().width);
+  return useContext(PaneLayoutModeContext) ?? window;
 }

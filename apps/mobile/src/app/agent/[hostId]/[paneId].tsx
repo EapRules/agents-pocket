@@ -1,4 +1,5 @@
-import { agentKey } from '@openagentspocket/core';
+import { agentKey, type ConsoleRow } from '@openagentspocket/core';
+import { SplitView, useLayoutMode } from '@openagentspocket/ui';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { AgentDetailScreen } from '@/agent-detail/AgentDetailScreen';
@@ -7,6 +8,7 @@ import { parseSurface } from '@/agent-detail/surface';
 import { useAgent, useConsoleStore } from '@/console/hooks';
 import { agentActions } from '@/features/agents/agentActions';
 import { closeAgentItem } from '@/features/agents/closeAgent';
+import { useHomeRoute } from '@/home/useHomeRoute';
 import { useEntryMenus } from '@/navigation/entryMenus';
 import { hrefs } from '@/navigation/hrefs';
 import { deviceStorage } from '@/settings/deviceStorage';
@@ -22,6 +24,12 @@ export default function AgentRoute() {
   const row = useAgent(agentKey(params.hostId, params.paneId));
   const entries = useEntryMenus();
   const store = useConsoleStore();
+  // Same route, other Agent: swap in place, with no push animation (the switcher and the list pane).
+  const swap = (next: ConsoleRow) =>
+    router.setParams({ hostId: next.hostId, paneId: next.agent.pane_id });
+  // From `regular` up Home is the list pane beside the Agent (ADR 0029).
+  const home = useHomeRoute({ onOpenAgent: swap });
+  const split = useLayoutMode() !== 'compact';
   // A screen left under another stays mounted: each return to it counts as a visit.
   const [visit, setVisit] = useState(0);
   useFocusEffect(useCallback(() => setVisit((count) => count + 1), []));
@@ -34,22 +42,20 @@ export default function AgentRoute() {
         }),
       ]
     : [];
-  return (
-    <>
-      <AgentDetailScreen
-        key={`${params.hostId}/${params.paneId}`}
-        hostId={params.hostId}
-        paneId={params.paneId}
-        storage={deviceStorage}
-        surface={parseSurface(params.surface)}
-        surfaceRequest={params.request}
-        menu={items}
-        onHome={() => router.navigate('/')}
-        visit={visit}
-        onOpenChanges={() => router.push(hrefs.changesForAgent(params.hostId, params.paneId))}
-        // Same route, other Agent: swap in place, with no push animation.
-        onSwitch={(next) => router.setParams({ hostId: next.hostId, paneId: next.agent.pane_id })}
-      />
-    </>
+  const detail = (
+    <AgentDetailScreen
+      key={`${params.hostId}/${params.paneId}`}
+      hostId={params.hostId}
+      paneId={params.paneId}
+      storage={deviceStorage}
+      surface={parseSurface(params.surface)}
+      surfaceRequest={params.request}
+      menu={items}
+      onHome={() => router.navigate('/')}
+      visit={visit}
+      onOpenChanges={() => router.push(hrefs.changesForAgent(params.hostId, params.paneId))}
+      onSwitch={swap}
+    />
   );
+  return split ? <SplitView list={home} detail={detail} /> : detail;
 }

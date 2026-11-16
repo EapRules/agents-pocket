@@ -31,6 +31,7 @@ export {
   type PrimerReason,
 } from './components/PermissionPrimer';
 export { SheetBar, type SheetBarItem } from './components/SheetBar';
+export { SplitView } from './components/SplitView';
 export * from './components/settingsPickers';
 export * from './components/usage';
 export {

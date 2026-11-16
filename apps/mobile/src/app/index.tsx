@@ -1,33 +1,27 @@
-import { useIsFocused, useRouter } from 'expo-router';
-import { crashStorage } from '@/diagnostics/crashStorage';
-import { useAddHostSheet } from '@/features/hosts/useAddHostSheet';
-import { HomeScreen } from '@/home/HomeScreen';
-import { hrefs } from '@/navigation/hrefs';
+import { t } from '@openagentspocket/i18n';
+import { EmptyState, SplitView, useLayoutMode } from '@openagentspocket/ui';
+import { useHomeRoute } from '@/home/useHomeRoute';
+import { AppScreen } from '@/navigation/AppScreen';
 
-/** `/`: Home. The header capsules, the + sheet and every card are drawn by HomeScreen. */
+/**
+ * `/`: Home. The header capsules, the + sheet and every card are drawn by HomeScreen. From `regular`
+ * up Home is the list pane of a split whose detail waits for an Agent (ADR 0029).
+ */
 export default function Index() {
-  const router = useRouter();
-  const focused = useIsFocused();
-  const addHost = useAddHostSheet({
-    onEasyPair: () => router.push(hrefs.easyPair()),
-    onAddManually: () => router.push(hrefs.hostForm()),
-  });
+  const home = useHomeRoute();
+  const mode = useLayoutMode();
+  if (mode === 'compact') return home;
   return (
-    <>
-      <HomeScreen
-        crashStorage={crashStorage}
-        focused={focused}
-        onAddHost={addHost.open}
-        onSetupGuide={() => router.push(hrefs.setupGuide())}
-        onOpenSettings={() => router.push('/settings')}
-        onOpenHost={(id) => router.push({ pathname: '/hosts/[id]', params: { id } })}
-        onOpenAgent={(row) => router.push(hrefs.agent(row.hostId, row.agent.pane_id))}
-        onNewAgent={() => router.push(hrefs.newAgent())}
-        onNewTerminal={() => router.push('/new-terminal')}
-        onOpenAgents={() => router.push('/agents')}
-        onOpenSessions={() => router.push(hrefs.terminals())}
-      />
-      {addHost.sheet}
-    </>
+    <SplitView
+      list={home}
+      detail={
+        <AppScreen bare scroll={false} testID="split-empty-detail">
+          <EmptyState
+            title={t('No Agent Selected')}
+            message={t('Choose an Agent in the list to open it here.')}
+          />
+        </AppScreen>
+      }
+    />
   );
 }

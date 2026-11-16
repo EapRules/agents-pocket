@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useContext } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenRootContext } from '../overlay/windowFrame';
-import { useInsets } from '../theme/insets';
+import { PaneSafeAreaContext, useInsets } from '../theme/insets';
 import { makeStyles, useTheme } from '../theme/theme';
 import { ScreenBackground } from './ScreenBackground';
 import {
@@ -89,7 +89,10 @@ export function Screen({
   const theme = useTheme();
   const insets = useInsets();
   const requested = edges ?? (header?.variant === 'native' ? UNDER_NATIVE_HEADER : ALL_EDGES);
-  const safeEdges = bottomBar ? requested.filter((edge) => edge !== 'bottom') : requested;
+  // In a split pane the native view would pad the window's both sides: only the pane's own are kept.
+  const pane = useContext(PaneSafeAreaContext);
+  const paneEdges = pane ? requested.filter((edge) => pane.edges.includes(edge)) : requested;
+  const safeEdges = bottomBar ? paneEdges.filter((edge) => edge !== 'bottom') : paneEdges;
   const lift = useKeyboardOffset(safeEdges.includes('bottom') ? insets.bottom : 0);
   const nativeInsets = Platform.OS === 'ios' && scroll && !bare;
   const refresh = onRefresh ? (
