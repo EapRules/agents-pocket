@@ -17,11 +17,12 @@ appId: com.openagentspocket.app
     visible:
       id: terminal-toolbar
     timeout: 5000
-- scrollUntilVisible:
-    element:
-      id: toolbar-keyboard
-    direction: RIGHT
-    optional: true
+# The keyboard key sits past the capsule's edge on a phone: drag the keys to bring it in.
+- swipe:
+    from:
+      id: toolbar-dPad
+    direction: LEFT
+- waitForAnimationToEnd
 - tapOn:
     id: toolbar-keyboard
 - extendedWaitUntil:
@@ -30,4 +31,4 @@ appId: com.openagentspocket.app
     timeout: 4000
 - assertVisible:
     id: key-char-space
-- takeScreenshot: design/atlas/sim/15-terminal-full-keyboard
+- takeScreenshot: design/atlas/sim/23-terminal-full-keyboard
