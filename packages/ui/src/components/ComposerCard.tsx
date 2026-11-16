@@ -133,8 +133,8 @@ export interface ComposerCardProps {
   labels?: AgentBarLabels;
   /** The key the "..." circle registers as a popover anchor. */
   moreAnchorKey?: string;
-  /** A show/hide toggle for a bar above the composer (the terminal's key toolbar); omitted draws nothing. */
-  barToggle?: { visible: boolean; onToggle: () => void; label: string };
+  /** Swaps the composer for another bar in its place (the terminal's key toolbar); omitted draws nothing. */
+  barToggle?: { onToggle: () => void; label: string };
   /** The input gained or lost focus: the composer is open (a surface above it may condense). */
   onFocusChange?: (focused: boolean) => void;
   /**
@@ -358,7 +358,7 @@ export function ComposerCard({
         <View style={[styles.buttons, stacked && styles.pinLeft]}>
           {plus}
           {leadingMark}
-          {stacked && barToggle ? (
+          {barToggle ? (
             <Circle
               icon="toolbar"
               label={barToggle.label}

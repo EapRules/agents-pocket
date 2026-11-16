@@ -1,4 +1,5 @@
 import { MemoryStorage, SettingsStore } from '@openagentspocket/core';
+import { t } from '@openagentspocket/i18n';
 import { ThemeProvider } from '@openagentspocket/ui';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
@@ -8,7 +9,7 @@ import { ConsoleStoreProvider } from '../console/hooks';
 import { fakeAuthenticator } from '../settings/authenticator';
 import { SettingsProvider } from '../settings/SettingsProvider';
 import { AgentDetailScreen } from './AgentDetailScreen';
-import { parseSurface, readSurface } from './surface';
+import { parseSurface, readSurface, readTerminalInput, saveTerminalInput } from './surface';
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock('expo-clipboard', () => ({ getStringAsync: async () => '' }));
@@ -152,14 +153,49 @@ describe('AgentDetailScreen', () => {
     expect(screen.queryByTestId('agent-header-sidebar-dot')).toBeNull();
   });
 
-  it('turns the terminal toolbar on and off from the header menu', async () => {
-    const { settings } = renderDetail({ paneId: 'p2', surface: 'terminal' });
-    const before = settings.get('terminalToolbarVisible');
+  it('swaps the key toolbar for the Composer from the header menu', async () => {
+    const { storage } = renderDetail({ paneId: 'p2', surface: 'terminal' });
     await waitFor(() => expect(screen.getByTestId('agent-header-more')).toBeTruthy());
     fireEvent.press(screen.getByTestId('agent-header-more'));
     await waitFor(() => expect(screen.getByTestId('action-menu-terminal-toolbar')).toBeTruthy());
     fireEvent.press(screen.getByTestId('action-menu-terminal-toolbar'));
-    await waitFor(() => expect(settings.get('terminalToolbarVisible')).toBe(!before));
+    await waitFor(() => expect(screen.getByTestId('composer-input')).toBeTruthy());
+    expect(readTerminalInput(storage)).toBe('compose');
+  });
+
+  describe('one input bar on the terminal', () => {
+    it('shows the key toolbar and no Composer by default', async () => {
+      renderDetail({ paneId: 'p2', surface: 'terminal' });
+      await waitFor(() => expect(screen.getByTestId('terminal-toolbar')).toBeTruthy());
+      expect(screen.queryByTestId('agent-composer')).toBeNull();
+      expect(screen.getByTestId('surface-toggle').props.accessibilityLabel).toBe(t('Show Chat'));
+    });
+
+    it('switches to the Composer from the toolbar and keeps the choice', async () => {
+      const { storage } = renderDetail({ paneId: 'p2', surface: 'terminal' });
+      await waitFor(() => expect(screen.getByTestId('toolbar-compose')).toBeTruthy());
+      fireEvent.press(screen.getByTestId('toolbar-compose'));
+      await waitFor(() => expect(screen.getByTestId('composer-input')).toBeTruthy());
+      expect(screen.queryByTestId('terminal-toolbar')).toBeNull();
+      expect(readTerminalInput(storage)).toBe('compose');
+    });
+
+    it('opens in Compose when that was the last choice', async () => {
+      const storage = new MemoryStorage();
+      saveTerminalInput(storage, 'compose');
+      renderDetail({ paneId: 'p2', surface: 'terminal', storage });
+      await waitFor(() => expect(screen.getByTestId('composer-input')).toBeTruthy());
+      expect(screen.queryByTestId('terminal-toolbar')).toBeNull();
+    });
+
+    it('goes back to Chat from the toolbar, where the Composer is as before', async () => {
+      renderDetail({ paneId: 'p2', surface: 'terminal' });
+      await waitFor(() => expect(screen.getByTestId('surface-toggle')).toBeTruthy());
+      fireEvent.press(screen.getByTestId('surface-toggle'));
+      await waitFor(() => expect(screen.getByTestId('slot-chat')).toBeTruthy());
+      expect(screen.getByTestId('composer-input')).toBeTruthy();
+      expect(screen.queryByTestId('terminal-toolbar')).toBeNull();
+    });
   });
 
   it('keeps the toolbar item off the Chat menu', async () => {
@@ -213,6 +249,14 @@ describe('Chat beside the terminal', () => {
   const atWidth = (width: number) => Dimensions.set({ window: { ...window, width } });
   afterEach(async () => {
     await act(async () => Dimensions.set({ window }));
+  });
+
+  it('keeps one input bar with Chat beside the terminal: the key toolbar', async () => {
+    atWidth(1000);
+    renderDetail({ paneId: 'p2', surface: 'terminal' });
+    await waitFor(() => expect(screen.getByTestId('terminal-toolbar')).toBeTruthy());
+    expect(screen.getByTestId('chat-timeline')).toBeTruthy();
+    expect(screen.queryByTestId('agent-composer')).toBeNull();
   });
 
   it('shows Chat and the terminal side by side in a wide window on the terminal', async () => {

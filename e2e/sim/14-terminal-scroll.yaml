@@ -1,7 +1,9 @@
 # A drag on the Agent's terminal reaches the fake TUI as wheel reports: its last line says how far
 # back it stands. Maestro cannot read the Metal surface, so the proof is in the screenshots. The
-# first tap raises the keyboard, which leaves the terminal the band from 17% to 33% of the screen;
-# every drag stays inside it, and the keyboard staying up shows a drag is not read as a tap.
+# terminal opens in Keys (only the key toolbar over the keyboard, no Composer). The first tap raises
+# the keyboard, which leaves the terminal at least the band from 17% to 33% of the screen (measured
+# with the Composer under the toolbar too; one bar leaves it taller); every drag stays inside it,
+# and the keyboard staying up shows a drag is not read as a tap.
 appId: com.openagentspocket.app
 ---
 - runFlow: _demo.yaml
@@ -20,6 +22,8 @@ appId: com.openagentspocket.app
     notVisible:
       id: terminal-status
     timeout: 15000
+- assertVisible:
+    id: terminal-toolbar
 - tapOn:
     point: "50%,40%"
 - waitForAnimationToEnd

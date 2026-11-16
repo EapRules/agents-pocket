@@ -5,6 +5,7 @@ import { ComposerCard, ComposerRoomProvider } from '@openagentspocket/ui';
 import { Stack } from 'expo-router';
 import { AgentDetailScreen } from '@/agent-detail/AgentDetailScreen';
 import { slashRows } from '@/agent-detail/composer/useSlashPanel';
+import { saveTerminalInput } from '@/agent-detail/surface';
 import { closeTerminalConfirmation } from '@/features/terminals/closeConfirmation';
 import { SHELL_CLOSE_ANCHOR, ShellTerminalScreen } from '@/features/terminals/ShellTerminalScreen';
 import { deviceStorage } from '@/settings/deviceStorage';
@@ -45,30 +46,37 @@ function detail(
 ): AtlasEntry {
   return {
     script: press ? { press } : undefined,
-    render: () => (
-      <AtlasChat looking={looking} background={background}>
-        <Stack.Screen options={{ headerShown: false }} />
-        {blocked ? (
-          <AtlasBlocked variant={blocked}>
-            <AgentDetailScreen
-              hostId="demo"
-              paneId={pane}
-              storage={deviceStorage}
-              surface={surface}
-              onSwitch={noop}
-            />
-          </AtlasBlocked>
-        ) : (
-          <AgentDetailScreen
-            hostId="demo"
-            paneId={pane}
-            storage={deviceStorage}
-            surface={surface}
-            onSwitch={noop}
-          />
-        )}
-      </AtlasChat>
-    ),
+    render: () => {
+      // Each state starts in Keys, the default; `inCompose` sets Compose after this returns.
+      saveTerminalInput(deviceStorage, 'keys');
+      const screen = (
+        <AgentDetailScreen
+          hostId="demo"
+          paneId={pane}
+          storage={deviceStorage}
+          surface={surface}
+          onSwitch={noop}
+        />
+      );
+      return (
+        <AtlasChat looking={looking} background={background}>
+          <Stack.Screen options={{ headerShown: false }} />
+          {blocked ? <AtlasBlocked variant={blocked}>{screen}</AtlasBlocked> : screen}
+        </AtlasChat>
+      );
+    },
+  };
+}
+
+/** The terminal in Compose: the Composer in the key toolbar's place (read when the detail mounts). */
+function inCompose(entry: AtlasEntry): AtlasEntry {
+  return {
+    ...entry,
+    render: () => {
+      const node = entry.render();
+      saveTerminalInput(deviceStorage, 'compose');
+      return node;
+    },
   };
 }
 
@@ -265,7 +273,9 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
   'rn.composer-skill-list': longSkillList,
   'rn.composer-long-draft': longDraft,
   'rn.composer-very-long-draft': veryLongDraft,
-  'agent-detail.composer-more-menu': detail('p4', 'terminal', ['composer-input', 'composer-more']),
+  'agent-detail.composer-more-menu': inCompose(
+    detail('p4', 'terminal', ['composer-input', 'composer-more']),
+  ),
   'agent-detail.composer-add-menu': detail('p2', 'chat', ['composer-add']),
   'rn.composer-shortcuts-panel': detail('p2', 'chat', ['composer-input', 'composer-shortcuts']),
   'rn.composer-shortcuts-keyboard': withKeyboard(

@@ -1,4 +1,9 @@
-import { type ChatLiveTurn, sameLiveTurn } from '@openagentspocket/core';
+import {
+  type ChatLiveTurn,
+  type KeyValueStorage,
+  MemoryStorage,
+  sameLiveTurn,
+} from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import { ClaudeSubagentTranscript, makeStyles, Sheet } from '@openagentspocket/ui';
 import {
@@ -14,6 +19,7 @@ import {
 } from 'react';
 import { View } from 'react-native';
 import { useSubagentTranscript } from '@/conversations/useSubagentTranscript';
+import { readTerminalInput, saveTerminalInput, type TerminalInput } from './surface';
 
 /**
  * One value a part of the detail hands another (the terminal's key toolbar to the dock, Chat's
@@ -49,6 +55,9 @@ interface DetailUi {
   /** The composer has focus: surfaces over it condense (Swift: "while the Composer is open"). */
   composing: boolean;
   setComposing: (composing: boolean) => void;
+  /** The terminal's input mode (`dockBar` picks the bar from it), saved for the device. */
+  input: TerminalInput;
+  setInput: (input: TerminalInput) => void;
   /** Opens a Subagent's own transcript, read-only, by the id its reporting call carried. */
   openSubagent: (agentId: string) => void;
   /** Counts the asks to open the Background Work sheet (a Subagent row with no transcript yet). */
@@ -60,6 +69,8 @@ const DetailUiContext = createContext<DetailUi>({
   liveTurn: liveTurnSlot(),
   composing: false,
   setComposing: () => undefined,
+  input: 'keys',
+  setInput: () => undefined,
   openSubagent: () => undefined,
   workSheet: requestSlot(),
 });
@@ -171,17 +182,34 @@ function SubagentSheet({
   );
 }
 
-/** What the Agent detail's parts share: the composer's focus, and the Subagent transcript sheet. */
+/**
+ * What the Agent detail's parts share: the composer's focus, the terminal's input mode, and the
+ * Subagent transcript sheet.
+ */
 export function DetailUiProvider({
   hostId,
   paneId,
+  storage: given,
   children,
 }: {
   hostId: string;
   paneId: string;
+  /** Where the terminal's input mode is saved, as the surface is (`readSurface`). */
+  storage?: KeyValueStorage;
   children: ReactNode;
 }) {
+  const storage = useRef(given ?? new MemoryStorage()).current;
   const [composing, setComposing] = useState(false);
+  const [input, setInputState] = useState(() => readTerminalInput(storage));
+  const setInput = useCallback(
+    (next: TerminalInput) => {
+      saveTerminalInput(storage, next);
+      setInputState(next);
+      // The Composer leaves the screen with its input; its blur may never arrive.
+      if (next === 'keys') setComposing(false);
+    },
+    [storage],
+  );
   const [agentId, setAgentId] = useState<string | null>(null);
   const slot = useRef(dockSlot()).current;
   const liveTurn = useRef(liveTurnSlot()).current;
@@ -193,9 +221,11 @@ export function DetailUiProvider({
       workSheet,
       composing,
       setComposing,
+      input,
+      setInput,
       openSubagent: setAgentId,
     }),
-    [slot, liveTurn, workSheet, composing],
+    [slot, liveTurn, workSheet, composing, input, setInput],
   );
   return (
     <DetailUiContext.Provider value={value}>

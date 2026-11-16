@@ -23,7 +23,6 @@ import { Keyboard, View } from 'react-native';
 import { ComposerAttachments } from '@/features/composer-tools/ComposerAttachments';
 import { StagingStatusBar } from '@/features/composer-tools/StagingStatusBar';
 import { useAgentSkills } from '@/features/composer-tools/useAgentSkills';
-import { useSetting } from '@/settings/SettingsProvider';
 import { renderMessage } from '@/usage/usageText';
 import { useShownStatus } from '../../blocked/BlockedCardProvider';
 import { agentBarLabels } from '../agentBarLabels';
@@ -72,7 +71,7 @@ export function AgentComposerBar({
   onToggleSurface,
 }: Props) {
   const { store, snapshot, interrupt } = composer;
-  const { composing, setComposing } = useDetailUi();
+  const { composing, setComposing, setInput } = useDetailUi();
   // The Host's skills, unless the caller brings its own: Chat's menu needs them at once, the
   // terminal only once a `/` opens the panel.
   const hostSkills = useAgentSkills({
@@ -88,8 +87,21 @@ export function AgentComposerBar({
     snapshot,
     skills: agentSkills ?? hostSkills,
   });
-  const [toolbarVisible, setToolbarVisible] = useSetting('terminalToolbarVisible');
-  const menus = useComposerMenus({ composer, surface, program, projectRoot, onToggleSurface });
+  // A draft carried from Chat to the terminal waits in the Composer: the terminal opens in Compose.
+  const carryToTerminal =
+    onToggleSurface &&
+    (() => {
+      onToggleSurface();
+      if (surface === 'chat') setInput('compose');
+    });
+  const menus = useComposerMenus({
+    composer,
+    surface,
+    program,
+    projectRoot,
+    onToggleSurface,
+    onCarryToTerminal: carryToTerminal,
+  });
   const policy = surface === 'chat' ? chatSend.delivery : terminalPolicy;
   // Chat's Stop is the program's own (keys and guard); the terminal's is Esc, which some programs ignore.
   const chatStop = surface === 'chat' ? chatSend.chatInterrupt : null;
@@ -104,7 +116,7 @@ export function AgentComposerBar({
     chatPolicy: chatSend.policy,
     chatMenu: chatSend.commands,
     skills: agentSkills ?? hostSkills,
-    onToggleSurface,
+    onToggleSurface: carryToTerminal,
   });
   const hasAttachments = snapshot.attachments.length > 0;
   const control = primaryControl({
@@ -124,7 +136,7 @@ export function AgentComposerBar({
   const noticeAction =
     surface === 'chat' && refused ? refusalAction(refused, terminalReachable) : undefined;
   const takeNoticeAction = () => {
-    onToggleSurface?.();
+    carryToTerminal?.();
     if (noticeAction?.kind === 'runInTerminal') store.replaceDraft(noticeAction.text);
   };
   const shownStatus = useShownStatus(status ?? 'idle');
@@ -141,6 +153,8 @@ export function AgentComposerBar({
     }
     const result = await store.send(policy);
     setAttachDraft(result.kind === 'deliveredViaAttach');
+    // A draft typed into a Blocked terminal waits for the user's own Enter or Esc: the keys.
+    if (result.kind === 'deliveredViaAttach' && !onAttachKey) setInput('keys');
   };
 
   return (
@@ -217,13 +231,10 @@ export function AgentComposerBar({
         // Folded to one line until the Composer is open (Swift): then the "..." menu shows.
         expanded={composing ? true : undefined}
         moreAnchorKey={COMPOSER_MORE_ANCHOR}
+        // The terminal's other input mode: its key toolbar, in the Composer's place.
         barToggle={
           surface === 'terminal'
-            ? {
-                visible: toolbarVisible,
-                onToggle: () => setToolbarVisible(!toolbarVisible),
-                label: t('Toolbar'),
-              }
+            ? { onToggle: () => setInput('keys'), label: t('Hide Composer') }
             : undefined
         }
         onFocusChange={setComposing}

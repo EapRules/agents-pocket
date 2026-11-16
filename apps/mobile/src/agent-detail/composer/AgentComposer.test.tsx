@@ -13,6 +13,7 @@ import { ConsoleStoreProvider } from '@/console/hooks';
 import { pickPhoto } from '@/files/pickers';
 import { TestSettings } from '@/settings/TestSettings';
 import { AgentDetailScreen } from '../AgentDetailScreen';
+import { readTerminalInput, saveTerminalInput } from '../surface';
 import { ComposerRegistryProvider } from './composerContext';
 
 jest.mock('@/files/pickers', () => ({
@@ -189,21 +190,30 @@ describe('AgentComposerBar', () => {
     expect(screen.getByTestId('composer-more')).toBeTruthy();
   });
 
-  describe('on the terminal', () => {
+  describe('on the terminal, in Compose', () => {
     const openTerminal = async () => {
-      await renderDetail('p2', new MemoryStorage(), undefined, 'terminal');
+      const storage = new MemoryStorage();
+      saveTerminalInput(storage, 'compose');
+      await renderDetail('p2', storage, undefined, 'terminal');
       await waitFor(() => expect(screen.getByTestId('composer-input')).toBeTruthy());
+      return storage;
     };
 
     it('stays on one line until focused, and folds back on leaving', async () => {
       await openTerminal();
       expect(screen.queryByTestId('composer-more')).toBeNull();
-      expect(screen.queryByTestId('composer-bar-toggle')).toBeNull();
       await fireEvent(screen.getByTestId('composer-input'), 'focus');
       await waitFor(() => expect(screen.getByTestId('composer-more')).toBeTruthy());
-      expect(screen.getByTestId('composer-bar-toggle')).toBeTruthy();
       await fireEvent(screen.getByTestId('composer-input'), 'blur');
       await waitFor(() => expect(screen.queryByTestId('composer-more')).toBeNull());
+    });
+
+    it('goes back to the key toolbar from the folded Composer, and keeps that choice', async () => {
+      const storage = await openTerminal();
+      await fireEvent.press(screen.getByTestId('composer-bar-toggle'));
+      await waitFor(() => expect(screen.getByTestId('terminal-toolbar')).toBeTruthy());
+      expect(screen.queryByTestId('composer-input')).toBeNull();
+      expect(readTerminalInput(storage)).toBe('keys');
     });
 
     it('folds back and drops the keyboard after sending', async () => {

@@ -40,6 +40,8 @@ interface Input {
   /** The Agent's launch directory: its project skills are listed in the Skills sheet. */
   projectRoot?: string;
   onToggleSurface?: () => void;
+  /** To the terminal with a draft for it (a shortcut that types there); defaults to the toggle. */
+  onCarryToTerminal?: () => void;
 }
 
 export interface ComposerMenus {
@@ -67,6 +69,7 @@ export function useComposerMenus({
   program,
   projectRoot,
   onToggleSurface,
+  onCarryToTerminal = onToggleSurface,
 }: Input): ComposerMenus {
   const { hostId, paneId, store } = composer;
   const router = useRouter();
@@ -77,7 +80,7 @@ export function useComposerMenus({
     composer,
     program,
     surface,
-    surface === 'chat' ? onToggleSurface : undefined,
+    surface === 'chat' ? onCarryToTerminal : undefined,
   );
   const staging = useMemo(() => {
     // The upload runs on the Host's transport at the time it starts.

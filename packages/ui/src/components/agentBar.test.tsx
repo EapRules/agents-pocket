@@ -312,9 +312,9 @@ describe('ComposerCard layouts', () => {
     expect(screen.queryByTestId('composer-card-more-panel')).toBeNull();
   });
 
-  it('shows the toolbar toggle and "..." only once stacked', async () => {
+  it('shows the bar toggle in both layouts and "..." only once stacked', async () => {
     const more = [{ key: 'p', title: 'Paste', onPress: jest.fn() }];
-    const barToggle = { visible: false, onToggle: jest.fn(), label: 'Toolbar' };
+    const barToggle = { onToggle: jest.fn(), label: 'Toolbar' };
     const card = (expanded?: boolean) => (
       <ComposerCard
         value=""
@@ -327,7 +327,7 @@ describe('ComposerCard layouts', () => {
     );
     const { rerender } = await renderThemed(card());
     expect(screen.queryByTestId('composer-card-more')).toBeNull();
-    expect(screen.queryByTestId('composer-card-bar-toggle')).toBeNull();
+    expect(screen.getByTestId('composer-card-bar-toggle')).toBeTruthy();
     await rerenderThemed(rerender, card(true));
     expect(screen.getByTestId('composer-card-more')).toBeTruthy();
     expect(screen.getByTestId('composer-card-bar-toggle')).toBeTruthy();

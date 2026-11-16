@@ -18,10 +18,10 @@ import { useSettings } from '@/settings/SettingsProvider';
 import { TerminalGestures } from '@/terminal/TerminalGestures';
 import { TerminalPasteReview } from '@/terminal/TerminalPasteReview';
 import { TerminalStatus } from '@/terminal/TerminalStatus';
-import { useDockSlot } from '../detailUi';
+import { useDetailUi, useDockSlot } from '../detailUi';
 import type { AgentTerminalSession } from './AgentTerminalSession';
 import { CONTROL_KEYS, FULL_KEYBOARD, type KeyRows, keyLabel } from './keyTables';
-import { TerminalToolbar } from './TerminalToolbar';
+import { TerminalToolbar, type ToolbarAction } from './TerminalToolbar';
 import { useAgentTerminalSession } from './useAgentTerminalSession';
 import { useTerminalTextActions } from './useTerminalTextActions';
 
@@ -39,12 +39,15 @@ export function TerminalSurface({
   paneId,
   program,
   composer,
+  onShowChat,
 }: {
   hostId: string;
   paneId: string;
   program?: string | null;
   /** The Agent's Composer: what it delivers round the PTY is told to this session. */
   composer?: ComposerStore;
+  /** The key toolbar's way back to Chat; without it the toolbar offers none. */
+  onShowChat?: () => void;
 }) {
   const session = useAgentTerminalSession(hostId, paneId);
   useEffect(
@@ -52,7 +55,13 @@ export function TerminalSurface({
     [composer, session],
   );
   return session ? (
-    <LiveTerminal session={session} hostId={hostId} paneId={paneId} program={program} />
+    <LiveTerminal
+      session={session}
+      hostId={hostId}
+      paneId={paneId}
+      program={program}
+      onShowChat={onShowChat}
+    />
   ) : null;
 }
 
@@ -61,11 +70,13 @@ function LiveTerminal({
   hostId,
   paneId,
   program,
+  onShowChat,
 }: {
   session: AgentTerminalSession;
   hostId: string;
   paneId: string;
   program?: string | null;
+  onShowChat?: () => void;
 }) {
   const textActions = useTerminalTextActions(hostId, paneId, session, program);
   const router = useRouter();
@@ -76,6 +87,7 @@ function LiveTerminal({
   const context = useContextMenu();
   const [dPad, setDPad] = useState(false);
   const { keyboard } = session;
+  const { input, setInput } = useDetailUi();
   const configuration = {
     showsEscape: settings.toolbarEscape,
     showsTab: settings.toolbarTab,
@@ -119,22 +131,42 @@ function LiveTerminal({
       onPress: () => router.push({ pathname: '/settings/[page]', params: { page: 'toolbar' } }),
     },
   ];
-  const dock = keys === 'system' ? null : DOCKS[keys];
+  // The app's key rows belong to Keys mode: in Compose the Composer is the only bar.
+  const dock = keys === 'system' || input === 'compose' ? null : DOCKS[keys];
+  const actions: ToolbarAction[] = [
+    ...(onShowChat
+      ? [
+          {
+            key: 'chat',
+            icon: 'chat' as const,
+            label: t('Show Chat'),
+            onPress: onShowChat,
+            testID: 'surface-toggle',
+          },
+        ]
+      : []),
+    {
+      key: 'compose',
+      icon: 'edit',
+      label: t('Show Composer'),
+      onPress: () => setInput('compose'),
+      testID: 'toolbar-compose',
+    },
+  ];
 
-  // The toolbar sits in the detail's dock, over the composer.
+  // The toolbar is the dock's bar in Keys mode (`dockBar`); the Composer takes its place in Compose.
   useDockSlot(
-    settings.terminalToolbarVisible ? (
-      <TerminalToolbar
-        keyboard={keyboard}
-        configuration={configuration}
-        onKey={sendKey}
-        fullKeyboardShown={keys === 'full'}
-        onToggleKeyboard={() => showKeys(keys === 'full' ? 'system' : 'full')}
-        onMore={context.open}
-        dPadOpen={dPad}
-        onToggleDPad={setDPad}
-      />
-    ) : null,
+    <TerminalToolbar
+      keyboard={keyboard}
+      configuration={configuration}
+      onKey={sendKey}
+      fullKeyboardShown={keys === 'full'}
+      onToggleKeyboard={() => showKeys(keys === 'full' ? 'system' : 'full')}
+      onMore={context.open}
+      dPadOpen={dPad}
+      onToggleDPad={setDPad}
+      actions={actions}
+    />,
   );
   return (
     <View style={{ flex: 1 }} testID="terminal-surface">

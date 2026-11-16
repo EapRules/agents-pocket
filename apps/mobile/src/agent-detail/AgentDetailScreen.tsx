@@ -75,7 +75,7 @@ export function AgentDetailScreen({
   const composer = useAgentComposer(hostId, paneId, row?.agent.agent_status ?? 'unknown', storage);
   if (!row) return <AgentUnavailable gone={phase === 'gone'} hostId={hostId} />;
   return (
-    <DetailUiProvider hostId={hostId} paneId={paneId}>
+    <DetailUiProvider hostId={hostId} paneId={paneId} storage={storage}>
       <BlockedCardProvider
         row={row}
         active={shown.chat}
@@ -103,6 +103,7 @@ export function AgentDetailScreen({
                   composer={composer.store}
                   headerHeight={headerHeight}
                   onShowTerminal={() => setSurface('terminal')}
+                  onShowChat={() => setSurface('chat')}
                   visit={visit}
                 />
                 <View
@@ -126,15 +127,16 @@ export function AgentDetailScreen({
                 </View>
               </View>
               <View style={[styles.dock, { paddingBottom: chrome.bottom }]}>
-                <DetailDock row={row} chat={shown.chat} />
-                <AgentComposerBar
-                  composer={composer}
-                  surface={surface}
-                  program={row.agent.agent ?? 'unknown'}
-                  projectRoot={row.agent.cwd ?? undefined}
-                  status={statusDot(row.agent.agent_status)}
-                  onToggleSurface={() => setSurface(surface === 'chat' ? 'terminal' : 'chat')}
-                />
+                <DetailDock row={row} chat={shown.chat} surface={surface}>
+                  <AgentComposerBar
+                    composer={composer}
+                    surface={surface}
+                    program={row.agent.agent ?? 'unknown'}
+                    projectRoot={row.agent.cwd ?? undefined}
+                    status={statusDot(row.agent.agent_status)}
+                    onToggleSurface={() => setSurface(surface === 'chat' ? 'terminal' : 'chat')}
+                  />
+                </DetailDock>
               </View>
             </AppScreen>
           </ComposerRoomProvider>

@@ -12,11 +12,14 @@ import {
 import { t } from '@openagentspocket/i18n';
 import { Icon, type IconName, makeStyles, Tappable, Text } from '@openagentspocket/ui';
 import { useSyncExternalStore } from 'react';
-import { type GestureResponderEvent, View } from 'react-native';
+import { type GestureResponderEvent, ScrollView, View } from 'react-native';
 import { keySpec, spokenName } from './keyTables';
 
 const useStyles = makeStyles((th) => ({
   band: { alignItems: 'center', paddingVertical: th.spacing.xs, paddingHorizontal: th.spacing.md },
+  // The keys scroll when the width runs out; the actions stay pinned at the trailing end.
+  line: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xs, maxWidth: '100%' },
+  keys: { flexGrow: 0, flexShrink: 1 },
   capsule: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -48,6 +51,16 @@ const GLYPH: Partial<Record<ToolbarKey, IconName>> = {
   more: 'more',
 };
 
+/** A control after the keys (back to Chat, to the Composer): data, so the toolbar stays generic. */
+export interface ToolbarAction {
+  key: string;
+  icon: IconName;
+  /** Says where it goes ("Show Chat"). */
+  label: string;
+  onPress: () => void;
+  testID: string;
+}
+
 interface Props {
   keyboard: TerminalKeyboardControl;
   configuration: ToolbarConfiguration;
@@ -58,6 +71,8 @@ interface Props {
   onMore: (event: GestureResponderEvent) => void;
   dPadOpen: boolean;
   onToggleDPad: (open: boolean) => void;
+  /** Their own capsule at the trailing end, always in view; the keys scroll beside it. */
+  actions?: readonly ToolbarAction[];
 }
 
 /** The floating capsule: sticky Ctrl, Esc, Tab, a D-pad, the keyboard switch and More. */
@@ -70,6 +85,7 @@ export function TerminalToolbar({
   onMore,
   dPadOpen,
   onToggleDPad,
+  actions = [],
 }: Props) {
   const styles = useStyles();
   useSyncExternalStore(keyboard.subscribe, keyboard.getSnapshot);
@@ -150,10 +166,35 @@ export function TerminalToolbar({
           })}
         </View>
       ) : null}
-      <View style={styles.capsule}>
-        {leadingKeys(configuration).map(renderKey)}
-        <View style={styles.divider} />
-        {trailingKeys(configuration).map(renderKey)}
+      <View style={styles.line}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          style={styles.keys}
+        >
+          <View style={styles.capsule}>
+            {leadingKeys(configuration).map(renderKey)}
+            <View style={styles.divider} />
+            {trailingKeys(configuration).map(renderKey)}
+          </View>
+        </ScrollView>
+        {actions.length ? (
+          <View style={styles.capsule}>
+            {actions.map((action) => (
+              <Tappable
+                key={action.key}
+                onPress={action.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={action.label}
+                style={({ pressed }) => [styles.key, pressed && styles.pressed]}
+                testID={action.testID}
+              >
+                <Icon name={action.icon} size={16} color="textPrimary" />
+              </Tappable>
+            ))}
+          </View>
+        ) : null}
       </View>
     </View>
   );

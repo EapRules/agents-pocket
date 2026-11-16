@@ -40,8 +40,6 @@ export interface SettingsValues {
   toolbarTab: boolean;
   toolbarDPad: boolean;
   toolbarHaptics: boolean;
-  /** The terminal's key toolbar sits over the composer; the composer's toggle hides it. */
-  terminalToolbarVisible: boolean;
   appLockEnabled: boolean;
   appLockGrace: GracePeriod;
   appLockForKeys: boolean;
@@ -66,7 +64,6 @@ export const SETTINGS_DEFAULTS: Readonly<SettingsValues> = {
   toolbarTab: true,
   toolbarDPad: true,
   toolbarHaptics: true,
-  terminalToolbarVisible: true,
   appLockEnabled: false,
   appLockGrace: 'immediately',
   appLockForKeys: false,

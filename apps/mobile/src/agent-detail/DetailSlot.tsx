@@ -25,6 +25,8 @@ interface Props {
   /** The floating header's height: content starts under it. */
   headerHeight: number;
   onShowTerminal: () => void;
+  /** Back to Chat from the terminal's key toolbar. */
+  onShowChat: () => void;
   /** Counts the screen's visits, for Chat to land on its newest row. */
   visit?: number;
 }
@@ -43,6 +45,7 @@ export function DetailSlot({
   composer,
   headerHeight,
   onShowTerminal,
+  onShowChat,
   visit,
 }: Props) {
   const styles = useStyles();
@@ -71,7 +74,13 @@ export function DetailSlot({
       }
       detail={
         <View style={[styles.fill, { paddingTop: headerHeight }]}>
-          <TerminalSurface hostId={hostId} paneId={paneId} program={program} composer={composer} />
+          <TerminalSurface
+            hostId={hostId}
+            paneId={paneId}
+            program={program}
+            composer={composer}
+            onShowChat={onShowChat}
+          />
         </View>
       }
     />

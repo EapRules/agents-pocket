@@ -4,8 +4,8 @@ import { type ActionMenuItem, AgentHeader as FloatingHeader } from '@openagentsp
 import { useGitStatus } from '@/changes/useGitStatus';
 import { useConversation } from '@/conversations/useConversation';
 import { latencyLabel } from '@/features/hosts/hostRows';
-import { useSetting } from '@/settings/SettingsProvider';
 import { agentBarLabels } from './agentBarLabels';
+import { useDetailUi } from './detailUi';
 import { headerTitles } from './headerTitles';
 import { hostAgentItems, otherAgentBlocked } from './hostAgents';
 import type { Surface } from './surface';
@@ -56,7 +56,7 @@ export function AgentHeader({
   const titles = headerTitles(row, surface, recorded);
   const branch = git?.branch ?? undefined;
   const diff = git?.diff;
-  const [toolbarVisible, setToolbarVisible] = useSetting('terminalToolbarVisible');
+  const { input, setInput } = useDetailUi();
   const items: ActionMenuItem[] = [
     {
       key: 'surface-chat',
@@ -78,8 +78,9 @@ export function AgentHeader({
             key: 'terminal-toolbar',
             title: t('Toolbar'),
             icon: 'toolbar' as const,
-            checked: toolbarVisible,
-            onPress: () => setToolbarVisible(!toolbarVisible),
+            // The key toolbar is the bar in Keys mode; unchecked, the Composer takes its place.
+            checked: input === 'keys',
+            onPress: () => setInput(input === 'keys' ? 'compose' : 'keys'),
           },
         ]
       : []),

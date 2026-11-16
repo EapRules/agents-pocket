@@ -19,7 +19,28 @@ export function shownSurfaces(surface: Surface, mode: LayoutMode): ShownSurfaces
   return { chat: surface === 'chat' || mode !== 'compact', terminal: surface === 'terminal' };
 }
 
+/** How the terminal surface takes input: its key toolbar (the system keyboard types into it), or the Composer. */
+export type TerminalInput = 'keys' | 'compose';
+
+/** The one bar over the keyboard: the terminal's key toolbar or the Composer, never both. */
+export type DockBar = 'keys' | 'composer';
+
+/** Chat always writes in the Composer; the terminal shows the bar its input mode names. */
+export function dockBar(surface: Surface, input: TerminalInput): DockBar {
+  return surface === 'terminal' && input === 'keys' ? 'keys' : 'composer';
+}
+
 const STORAGE_KEY = 'agentDetail.surface';
+const INPUT_KEY = 'agentDetail.terminalInput';
+
+/** Keys unless the user last chose to compose on the terminal; one choice per device, not per Agent. */
+export function readTerminalInput(storage: KeyValueStorage): TerminalInput {
+  return storage.getString(INPUT_KEY) === 'compose' ? 'compose' : 'keys';
+}
+
+export function saveTerminalInput(storage: KeyValueStorage, input: TerminalInput): void {
+  storage.set(INPUT_KEY, input);
+}
 
 /** Chat unless the user last chose the terminal. */
 export function readSurface(storage: KeyValueStorage): Surface {

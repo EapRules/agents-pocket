@@ -23,6 +23,11 @@ appId: com.openagentspocket.app
     visible:
       id: agent-header-title
     timeout: 5000
+# The terminal opens in Keys: the key toolbar is the one bar.
+- extendedWaitUntil:
+    visible:
+      id: terminal-toolbar
+    timeout: 5000
 - tapOn:
     id: agent-header-title
 - takeScreenshot: design/atlas/sim/12-agent-menu
@@ -40,5 +45,11 @@ appId: com.openagentspocket.app
     visible:
       id: agent-header-title
     timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: terminal-toolbar
+    timeout: 5000
+- assertNotVisible:
+    id: composer-input
 - runFlow: _guard.yaml
 - takeScreenshot: design/atlas/sim/12-agent-switch
