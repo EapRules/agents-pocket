@@ -6,6 +6,11 @@ Items are worked from the top of each group; groups are in priority order.
 
 ## 1. In flight
 
+- [ ] **Store panels into App Store Connect.** `docs/store/panels/{en,es}` (1206x2622, made by
+  `scripts/store-panels.mjs`) replace the six screenshots per language once 1.0.2 leaves review; the owner
+  has seen and approved the look. Nothing is uploaded yet.
+- [ ] **Spanish titles left in English:** the Usage screen's title ("Usage") and the Agents list's title
+  ("Agents"), seen while capturing the Spanish store screens. Found, not fixed.
 - [x] **Simulator suite on the new native build, then push.** The icon and the black native splash changed
   native inputs. Done when: every `pnpm sim:verify` flow passes on a rebuilt Debug app and main is pushed.
 - [x] **Agent lab, OpenCode on the simulator** (`scripts/agent-lab.py`, `docs/e2e-live-backend.md`). Done
