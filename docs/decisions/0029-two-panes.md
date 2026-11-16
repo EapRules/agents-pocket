@@ -18,7 +18,7 @@ The app already has layout modes by window width (`useLayoutMode`: compact under
 ## What stays out
 
 - The closed pose needs nothing: on the outer display the system keeps a column on one side and the app already lays out inside the rest (checked on the simulator).
-- No native configuration changes for rotation until the open pose is measured: portrait-only is honored on the outer display and ignored on the inner one, so the layout modes may be all it takes.
+- Rotation follows the window's layout mode and nothing else: the interface may rotate from `regular` up (600 pt wide and more: an opened Duo, an iPad) and stays locked to portrait in `compact` (`useOrientationLock`), so no device, fold or model is named.
 - Chat and Terminal side by side on the rotated inner display is a separate task after this lands. Attaching a terminal resizes the Agent's terminal on the Host, so it must stay something the user asks for, not something a wide window does on its own.
 - The half-open pose (stage 2) needs a native module for the fold; React Native has none and the API names are not confirmed against Apple's documentation.
 

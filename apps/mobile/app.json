@@ -4,7 +4,7 @@
     "slug": "openagentspocket",
     "version": "1.0.2",
     "runtimeVersion": { "policy": "fingerprint" },
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": ["openagentspocket", "agentico"],
     "userInterfaceStyle": "automatic",
@@ -72,6 +72,7 @@
           "speechRecognitionPermission": "Agents Pocket turns what you dictate into text for your Agent's draft."
         }
       ],
+      ["expo-screen-orientation", { "initialOrientation": "PORTRAIT_UP" }],
       "expo-secure-store",
       "expo-notifications",
       "@bacons/apple-targets",

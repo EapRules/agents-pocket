@@ -22,6 +22,7 @@ import { LiveActivityActions } from '@/live-activity/LiveActivityActions';
 import { RootCanvas } from '@/navigation/RootCanvas';
 import { statusBarStyle } from '@/navigation/screenOptions';
 import { sheetOptions } from '@/navigation/sheetOptions';
+import { useOrientationLock } from '@/navigation/useOrientationLock';
 import { useStackScreenOptions } from '@/navigation/useStackScreenOptions';
 import { ApprovalActions } from '@/notifications/ApprovalActions';
 import { InAppBanner } from '@/notifications/InAppBanner';
@@ -115,6 +116,7 @@ export default function RootLayout() {
   useWidgetSync();
   useIncomingLinks();
   useNotificationTaps();
+  useOrientationLock();
   const openAgent = useOpenAgent();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
