@@ -114,6 +114,17 @@ describe('SplitView', () => {
     },
   );
 
+  it('keeps each pane its own native view, alone or beside the other', async () => {
+    // A pane React Native could collapse alone but not clipped beside the other would move its
+    // native content to another parent when the split changes, and a native terminal loses its text.
+    setWidth(400);
+    await renderThemed(<Route kept="detail" />);
+    expect(screen.getByTestId('split-view-detail').props.collapsable).toBe(false);
+    await resize(1000);
+    expect(screen.getByTestId('split-view-list').props.collapsable).toBe(false);
+    expect(screen.getByTestId('split-view-detail').props.collapsable).toBe(false);
+  });
+
   it('adds no scope to a pane shown alone', async () => {
     setWidth(1000);
     await renderThemed(

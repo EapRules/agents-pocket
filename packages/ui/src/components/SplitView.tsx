@@ -57,8 +57,17 @@ function SplitPane({
   const outerSafeArea = useContext(PaneSafeAreaContext);
   const safeArea = useMemo(() => paneSafeArea(insets, side, I18nManager.isRTL), [insets, side]);
   const mode = alone ? outerMode : layoutModeFor(measured ?? estimate);
+  // Never collapsed, so the pane is the native parent of its content in both states. Beside the other
+  // pane it clips, alone it does not; without this, React Native would flatten it away alone and move
+  // every native view inside it to a new parent when the split opens or closes. A moved view leaves
+  // the window and comes back: the native terminal frees its surface then and returns empty.
   return (
-    <View style={style} onLayout={(event) => setMeasured(widthOf(event))} testID={testID}>
+    <View
+      style={style}
+      collapsable={false}
+      onLayout={(event) => setMeasured(widthOf(event))}
+      testID={testID}
+    >
       <PaneLayoutModeContext.Provider value={mode}>
         <PaneSafeAreaContext.Provider value={alone ? outerSafeArea : safeArea}>
           {children}

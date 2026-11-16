@@ -12,6 +12,20 @@ import { parseSurface, readSurface } from './surface';
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock('expo-clipboard', () => ({ getStringAsync: async () => '' }));
+// Counts mounts of the terminal view: a remount would drop what it shows.
+const mockTerminalMounts = jest.fn();
+jest.mock('@openagentspocket/ui', () => {
+  const ui = jest.requireActual('@openagentspocket/ui');
+  const { useEffect } = jest.requireActual('react');
+  return {
+    ...ui,
+    TerminalView: (props: object) => {
+      useEffect(() => mockTerminalMounts(), []);
+      return <ui.TerminalView {...props} />;
+    },
+  };
+});
+beforeEach(() => mockTerminalMounts.mockClear());
 function renderDetail(
   props: Partial<React.ComponentProps<typeof AgentDetailScreen>> & { paneId: string },
 ) {
@@ -225,6 +239,20 @@ describe('Chat beside the terminal', () => {
     renderDetail({ paneId: 'p2', surface: 'terminal' });
     await waitFor(() => expect(screen.getByTestId('terminal-surface')).toBeTruthy());
     expect(screen.queryByTestId('chat-timeline')).toBeNull();
+  });
+
+  it('keeps the same terminal view when its pane goes from beside Chat to alone and back', async () => {
+    atWidth(1000);
+    renderDetail({ paneId: 'p2', surface: 'terminal' });
+    await waitFor(() => expect(screen.getByTestId('terminal-slot')).toBeTruthy());
+    expect(screen.getByTestId('chat-timeline')).toBeTruthy();
+    expect(mockTerminalMounts).toHaveBeenCalledTimes(1);
+    await act(async () => atWidth(390));
+    expect(screen.queryByTestId('chat-timeline')).toBeNull();
+    await act(async () => atWidth(1000));
+    expect(screen.getByTestId('chat-timeline')).toBeTruthy();
+    expect(screen.getAllByTestId('terminal-slot')).toHaveLength(1);
+    expect(mockTerminalMounts).toHaveBeenCalledTimes(1);
   });
 
   it('mounts the terminal only while it is the surface, in a wide window', async () => {
