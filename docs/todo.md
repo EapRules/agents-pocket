@@ -17,6 +17,13 @@ Items are worked from the top of each group; groups are in priority order.
   receipt's name natively (`modules/install-info`); build 8 looked for the receipt file, which a fresh
   TestFlight install does not have. Done when: one internal update is published for build 9's runtime, on
   the owner's word, and Settings > Update on his iPhone shows its id.
+- [ ] **Opening a Chat from the Live Activity left the navigation broken** (the owner's iPhone, 2026-11-16,
+  build 8 or 9, not reproduced). He landed on Home with Home drawn over the screen, and the Chat he then
+  opened looked like narrow columns. Not reproduced on the simulator (a link with the app closed, a Chat
+  opened from that Home, a launch with the device sideways); demo mode cannot follow an Agent link (its
+  Host id is not a UUID). Suspect, unconfirmed: the two panes showing on a phone because the route picks
+  one pane or two from the window width the system reports, not from the width it measures. Next: his
+  screenshot when it happens again; then decide the hardening.
 - [x] **iPhone Duo, stage 1 (closed, open, open-and-rotated).** Done and verified on the iPhone Duo
   simulator overnight 2026-11-16 (pushed, CI green). `SplitView` (`packages/ui`): wider windows show
   Home's list beside the selected Agent (the Agent lives in the route; ADR 0029); opening or closing the
