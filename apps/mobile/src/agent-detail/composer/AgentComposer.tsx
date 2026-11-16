@@ -14,9 +14,7 @@ import {
   ComposerCard,
   KeyboardDock,
   type KeySpec,
-  ProgramMark,
   type Status,
-  Tappable,
 } from '@openagentspocket/ui';
 import { useState, useSyncExternalStore } from 'react';
 import { Keyboard, View } from 'react-native';
@@ -24,9 +22,9 @@ import { ComposerAttachments } from '@/features/composer-tools/ComposerAttachmen
 import { StagingStatusBar } from '@/features/composer-tools/StagingStatusBar';
 import { useAgentSkills } from '@/features/composer-tools/useAgentSkills';
 import { renderMessage } from '@/usage/usageText';
-import { useShownStatus } from '../../blocked/BlockedCardProvider';
 import { agentBarLabels } from '../agentBarLabels';
 import { useDetailUi } from '../detailUi';
+import { SurfaceToggle } from '../SurfaceToggle';
 import type { Surface } from '../surface';
 import { COMPOSER_MORE_ANCHOR } from './composerAnchors';
 import type { AgentComposer } from './composerContext';
@@ -139,7 +137,6 @@ export function AgentComposerBar({
     carryToTerminal?.();
     if (noticeAction?.kind === 'runInTerminal') store.replaceDraft(noticeAction.text);
   };
-  const shownStatus = useShownStatus(status ?? 'idle');
   const stopNotice = store.stop.notice;
   const failed = snapshot.messages.filter(
     (message) => message.state.kind === 'failed' && message.route === surface,
@@ -243,14 +240,12 @@ export function AgentComposerBar({
         moreMenu={menus.moreItems}
         shortcutsMenu={menus.shortcutItems}
         leading={
-          <Tappable
+          <SurfaceToggle
+            program={program}
+            status={status}
+            surface={surface}
             onPress={onToggleSurface}
-            accessibilityRole="button"
-            accessibilityLabel={surface === 'chat' ? t('Show Terminal') : t('Show Chat')}
-            testID="surface-toggle"
-          >
-            <ProgramMark program={program} status={status && shownStatus} size={26} />
-          </Tappable>
+          />
         }
         surfaceIcon={surface === 'chat' ? 'chat' : 'terminal'}
         labels={agentBarLabels()}

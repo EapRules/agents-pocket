@@ -12,6 +12,7 @@ import { View } from 'react-native';
 import { AppScreen } from '@/navigation/AppScreen';
 import { BlockedCardProvider } from '../blocked/BlockedCardProvider';
 import { activityOf } from '../blocked/useBlockedCard';
+import { statusDot } from '../console/agentStatus';
 import { useAgentPhase, useConsole, useConsoleState } from '../console/hooks';
 import { AgentHeader } from './AgentHeader';
 import { AgentSessionDrawer } from './AgentSessionDrawer';
@@ -96,6 +97,7 @@ export function AgentDetailScreen({
                   hostId={hostId}
                   paneId={paneId}
                   program={row.agent.agent}
+                  status={statusDot(row.agent.agent_status)}
                   shown={shown}
                   activity={activityOf(row)}
                   messages={composer.snapshot.messages}

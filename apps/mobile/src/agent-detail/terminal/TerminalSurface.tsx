@@ -12,7 +12,7 @@ import {
 } from '@openagentspocket/ui';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { type ReactNode, useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 import { conversationSettingsItems } from '@/features/composer-tools/composerMenus';
 import { useSettings } from '@/settings/SettingsProvider';
@@ -41,15 +41,15 @@ export function TerminalSurface({
   paneId,
   program,
   composer,
-  onShowChat,
+  surfaceToggle,
 }: {
   hostId: string;
   paneId: string;
   program?: string | null;
   /** The Agent's Composer: what it delivers round the PTY is told to this session. */
   composer?: ComposerStore;
-  /** The key toolbar's way back to Chat; without it the toolbar offers none. */
-  onShowChat?: () => void;
+  /** The key toolbar's way back to Chat (the Agent's mark); without it the toolbar offers none. */
+  surfaceToggle?: ReactNode;
 }) {
   const session = useAgentTerminalSession(hostId, paneId);
   useEffect(
@@ -62,7 +62,7 @@ export function TerminalSurface({
       hostId={hostId}
       paneId={paneId}
       program={program}
-      onShowChat={onShowChat}
+      surfaceToggle={surfaceToggle}
     />
   ) : null;
 }
@@ -72,13 +72,13 @@ function LiveTerminal({
   hostId,
   paneId,
   program,
-  onShowChat,
+  surfaceToggle,
 }: {
   session: AgentTerminalSession;
   hostId: string;
   paneId: string;
   program?: string | null;
-  onShowChat?: () => void;
+  surfaceToggle?: ReactNode;
 }) {
   const textActions = useTerminalTextActions(hostId, paneId, session, program);
   const settingsEntry = useConversationSettingsEntry(hostId, paneId, program ?? 'unknown');
@@ -138,17 +138,6 @@ function LiveTerminal({
   // The app's key rows belong to Keys mode: in Compose the Composer is the only bar.
   const dock = keys === 'system' || input === 'compose' ? null : DOCKS[keys];
   const actions: ToolbarAction[] = [
-    ...(onShowChat
-      ? [
-          {
-            key: 'chat',
-            icon: 'chat' as const,
-            label: t('Show Chat'),
-            onPress: onShowChat,
-            testID: 'surface-toggle',
-          },
-        ]
-      : []),
     {
       key: 'compose',
       icon: 'edit',
@@ -169,6 +158,7 @@ function LiveTerminal({
       onMore={context.open}
       dPadOpen={dPad}
       onToggleDPad={setDPad}
+      leading={surfaceToggle}
       actions={actions}
     />,
   );

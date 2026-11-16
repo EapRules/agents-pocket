@@ -11,24 +11,33 @@ import {
 } from '@openagentspocket/core';
 import { t } from '@openagentspocket/i18n';
 import { Icon, type IconName, makeStyles, Tappable, Text } from '@openagentspocket/ui';
-import { useSyncExternalStore } from 'react';
+import { type ReactNode, useSyncExternalStore } from 'react';
 import { type GestureResponderEvent, ScrollView, View } from 'react-native';
 import { keySpec, spokenName } from './keyTables';
 
 const useStyles = makeStyles((th) => ({
   band: { alignItems: 'center', paddingVertical: th.spacing.xs, paddingHorizontal: th.spacing.md },
-  // The keys scroll when the width runs out; the actions stay pinned at the trailing end.
-  line: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xs, maxWidth: '100%' },
-  keys: { flexGrow: 0, flexShrink: 1 },
+  // One capsule: the leading slot and the actions stay pinned, the keys scroll between them.
   capsule: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: th.spacing.xxs,
     padding: th.spacing.xxs,
+    maxWidth: '100%',
+    overflow: 'hidden',
     borderRadius: th.radius.capsule,
     backgroundColor: th.colors.surfaceOverlay,
     borderWidth: th.metrics.hairlineWidth,
     borderColor: th.hairline,
+  },
+  keys: { flexGrow: 0, flexShrink: 1 },
+  keysContent: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xxs },
+  pinned: { flexDirection: 'row', alignItems: 'center', gap: th.spacing.xxs },
+  leading: {
+    minWidth: th.metrics.minTapSize,
+    height: th.metrics.minTapSize - 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   key: {
     minWidth: th.metrics.minTapSize,
@@ -51,7 +60,7 @@ const GLYPH: Partial<Record<ToolbarKey, IconName>> = {
   more: 'more',
 };
 
-/** A control after the keys (back to Chat, to the Composer): data, so the toolbar stays generic. */
+/** A control after the keys (to the Composer): data, so the toolbar stays generic. */
 export interface ToolbarAction {
   key: string;
   icon: IconName;
@@ -71,7 +80,9 @@ interface Props {
   onMore: (event: GestureResponderEvent) => void;
   dPadOpen: boolean;
   onToggleDPad: (open: boolean) => void;
-  /** Their own capsule at the trailing end, always in view; the keys scroll beside it. */
+  /** Pinned at the start of the capsule (the way back to Chat); the toolbar knows nothing of it. */
+  leading?: ReactNode;
+  /** Pinned at the trailing end of the capsule, always in view; the keys scroll between. */
   actions?: readonly ToolbarAction[];
 }
 
@@ -85,6 +96,7 @@ export function TerminalToolbar({
   onMore,
   dPadOpen,
   onToggleDPad,
+  leading,
   actions = [],
 }: Props) {
   const styles = useStyles();
@@ -166,34 +178,37 @@ export function TerminalToolbar({
           })}
         </View>
       ) : null}
-      <View style={styles.line}>
+      <View style={styles.capsule}>
+        {leading ? <View style={styles.leading}>{leading}</View> : null}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           keyboardShouldPersistTaps="always"
           style={styles.keys}
+          contentContainerStyle={styles.keysContent}
         >
-          <View style={styles.capsule}>
-            {leadingKeys(configuration).map(renderKey)}
-            <View style={styles.divider} />
-            {trailingKeys(configuration).map(renderKey)}
-          </View>
+          {leadingKeys(configuration).map(renderKey)}
+          <View style={styles.divider} />
+          {trailingKeys(configuration).map(renderKey)}
         </ScrollView>
         {actions.length ? (
-          <View style={styles.capsule}>
-            {actions.map((action) => (
-              <Tappable
-                key={action.key}
-                onPress={action.onPress}
-                accessibilityRole="button"
-                accessibilityLabel={action.label}
-                style={({ pressed }) => [styles.key, pressed && styles.pressed]}
-                testID={action.testID}
-              >
-                <Icon name={action.icon} size={16} color="textPrimary" />
-              </Tappable>
-            ))}
-          </View>
+          <>
+            <View style={styles.divider} />
+            <View style={styles.pinned}>
+              {actions.map((action) => (
+                <Tappable
+                  key={action.key}
+                  onPress={action.onPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.label}
+                  style={({ pressed }) => [styles.key, pressed && styles.pressed]}
+                  testID={action.testID}
+                >
+                  <Icon name={action.icon} size={16} color="textPrimary" />
+                </Tappable>
+              ))}
+            </View>
+          </>
         ) : null}
       </View>
     </View>

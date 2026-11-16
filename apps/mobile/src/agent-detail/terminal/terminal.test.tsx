@@ -7,6 +7,8 @@ import {
 } from '@openagentspocket/core';
 import { OverlayHost, ThemeProvider } from '@openagentspocket/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import { createDemoConsoleStore } from '@/console/demo';
 import { ConsoleStoreProvider } from '@/console/hooks';
 import { fakeAuthenticator } from '@/settings/authenticator';
@@ -23,7 +25,7 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-async function mountLive(composer?: ComposerStore) {
+async function mountLive(composer?: ComposerStore, surfaceToggle?: ReactNode) {
   const store = createDemoConsoleStore();
   const settings = new SettingsStore(new MemoryStorage());
   await render(
@@ -31,7 +33,12 @@ async function mountLive(composer?: ComposerStore) {
       <SettingsProvider store={settings} authenticator={fakeAuthenticator(null)}>
         <ConsoleStoreProvider store={store}>
           <DetailUiProvider hostId="demo" paneId="p2">
-            <TerminalSurface hostId="demo" paneId="p2" composer={composer} />
+            <TerminalSurface
+              hostId="demo"
+              paneId="p2"
+              composer={composer}
+              surfaceToggle={surfaceToggle}
+            />
             <DockSlotView />
           </DetailUiProvider>
           <OverlayHost />
@@ -70,6 +77,19 @@ describe('Composer messages', () => {
 });
 
 describe('terminal keys', () => {
+  it('pins the way back to Chat inside the one toolbar capsule, only when there is one', async () => {
+    await mountLive(undefined, <View testID="surface-toggle" />);
+    expect(screen.getByTestId('terminal-toolbar')).toContainElement(
+      screen.getByTestId('surface-toggle'),
+    );
+    expect(screen.getByTestId('toolbar-compose')).toBeTruthy();
+  });
+
+  it('offers no way back to Chat without one', async () => {
+    await mountLive();
+    expect(screen.queryByTestId('surface-toggle')).toBeNull();
+  });
+
   it('sends the Esc key as the escape byte', async () => {
     await mountLive();
     await fireEvent.press(screen.getByTestId('toolbar-escape'));

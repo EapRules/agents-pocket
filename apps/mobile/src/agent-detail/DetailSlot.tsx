@@ -1,7 +1,8 @@
 import type { ComposerMessage, ComposerStore } from '@openagentspocket/core';
-import { EdgeFade, makeStyles, SplitView } from '@openagentspocket/ui';
+import { EdgeFade, makeStyles, SplitView, type Status } from '@openagentspocket/ui';
 import { View } from 'react-native';
 import { ChatTimeline } from './chat/ChatTimeline';
+import { SurfaceToggle } from './SurfaceToggle';
 import type { ShownSurfaces } from './surface';
 import { TerminalSurface } from './terminal/TerminalSurface';
 
@@ -15,6 +16,8 @@ interface Props {
   paneId: string;
   /** The Agent's program as herdr reports it; shapes how the terminal finds its messages. */
   program?: string | null;
+  /** The Agent's status dot, as the Composer shows it on the mark. */
+  status?: Status;
   /** Chat, the terminal, or both side by side (`shownSurfaces`). */
   shown: ShownSurfaces;
   activity: Parameters<typeof ChatTimeline>[0]['activity'];
@@ -39,6 +42,7 @@ export function DetailSlot({
   hostId,
   paneId,
   program,
+  status,
   shown,
   activity,
   messages,
@@ -79,7 +83,14 @@ export function DetailSlot({
             paneId={paneId}
             program={program}
             composer={composer}
-            onShowChat={onShowChat}
+            surfaceToggle={
+              <SurfaceToggle
+                program={program ?? 'unknown'}
+                status={status}
+                surface="terminal"
+                onPress={onShowChat}
+              />
+            }
           />
         </View>
       }
