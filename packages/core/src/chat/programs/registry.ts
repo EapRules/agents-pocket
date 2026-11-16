@@ -5,6 +5,7 @@ import {
 import { CHAT_PROGRAMS, type ChatProgram } from '../model/types';
 import type { ProgramDefinition } from './definition';
 import type { ProgramModes } from './modes';
+import type { ProgramSetting } from './settings';
 import { COMMON_SHORTCUTS, type ProgramShortcut } from './shortcuts';
 
 let definitions: Readonly<Record<ChatProgram, ProgramDefinition>> | undefined;
@@ -57,6 +58,12 @@ export function programCommands(program: string | null | undefined): readonly Pr
 export function programModes(program: string | null | undefined): ProgramModes | null {
   const known = CHAT_PROGRAMS.find((name) => name === program);
   return (known && programDefinition(known).modes?.()) || null;
+}
+
+/** The settings of an Agent's conversation; none for a program that lists none, or one Chat does not know. */
+export function programSettings(program: string | null | undefined): readonly ProgramSetting[] {
+  const known = CHAT_PROGRAMS.find((name) => name === program);
+  return (known && programDefinition(known).settings?.()) || [];
 }
 
 /** Whether Chat reads a finished Subagent's transcript for an Agent of `program`. */

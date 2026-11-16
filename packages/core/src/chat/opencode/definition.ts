@@ -3,6 +3,7 @@ import { message } from '../../errors/text';
 import { openCodeID } from '../model/session-ids';
 import type { ProgramDefinition } from '../programs/definition';
 import { OPENCODE_MODES } from '../programs/mode-lists';
+import { OPENCODE_SETTINGS } from '../programs/setting-lists';
 import { OPENCODE_SHORTCUTS } from '../programs/shortcut-lists';
 import { locateNoTranscriptFile } from '../store/locate';
 import { openCodeAdapter } from './adapter';
@@ -12,6 +13,7 @@ import { openCodeStoreProblem } from './store-problems';
 export const openCodeProgram: ProgramDefinition = {
   modes: () => OPENCODE_MODES,
   shortcuts: () => OPENCODE_SHORTCUTS,
+  settings: () => OPENCODE_SETTINGS,
   program: 'opencode',
   chatName: 'OpenCode',
   noSessionMessage: () =>

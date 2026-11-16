@@ -39,7 +39,7 @@ function workImage(item: ChatBackgroundWorkItem): unknown {
 
 /** The transcript as Swift holds it: entries only this port shows are left out. */
 export function goldenImage(transcript: ChatTranscript): unknown {
-  const { backgroundWorkAgents: _agents, ...swift } = transcript;
+  const { backgroundWorkAgents: _agents, recordedSettings: _settings, ...swift } = transcript;
   return JSON.parse(
     JSON.stringify({
       ...swift,

@@ -12,10 +12,12 @@ import type { ChatToolOutput, ChatTranscriptReducer } from '../model/reducer';
 import {
   type AgentContextUsage,
   type ChatProjectionContext,
+  type ChatRecordedSettings,
   type ChatToolActivity,
   type ChatTranscript,
   type ChatTranscriptDiagnostics,
   emptyTranscript,
+  NO_RECORDED_SETTINGS,
 } from '../model/types';
 import { CLASSIFIER_PREFIX_LIMIT, classifyLine } from './classifier';
 import { decodeLine } from './decoder';
@@ -38,6 +40,7 @@ import {
   emptyTimeline,
 } from './timeline';
 import { contextUsageIn } from './token-count';
+import { turnSettingsIn } from './turn-context';
 
 /** Bumped when the normalization changes, so entries cached by an older build are dropped. */
 export const CODEX_REVISION = 11;
@@ -76,6 +79,8 @@ export class CodexRolloutReducer implements ChatTranscriptReducer {
   };
   /** The newest `token_count` among the live lines fed so far, by offset. */
   private contextSample: { offset: number; usage: AgentContextUsage } | null = null;
+  /** The newest `turn_context` among the live lines fed so far, by offset. */
+  private settingsSample: { offset: number; settings: ChatRecordedSettings } | null = null;
 
   constructor(readonly rolloutID: string) {}
 
@@ -186,6 +191,7 @@ export class CodexRolloutReducer implements ChatTranscriptReducer {
       turns: output.chatTurns,
       precedingTurnEnd: output.precedingTurnEnd,
       contextUsage: this.contextSample?.usage ?? null,
+      recordedSettings: this.settingsSample?.settings ?? NO_RECORDED_SETTINGS,
     };
     return {
       transcript,
@@ -197,13 +203,18 @@ export class CodexRolloutReducer implements ChatTranscriptReducer {
 
   // MARK: Lines
 
-  /** Keeps the context share of the newest `token_count` line. */
+  /** Keeps the context share of the newest `token_count` line and the newest turn's settings. */
   private adoptContext(newLines: readonly ChatLine[]): void {
     for (const line of newLines) {
       if (isTruncatedLine(line)) continue;
-      if (this.contextSample && line.offset <= this.contextSample.offset) continue;
-      const usage = contextUsageIn(line.data);
-      if (usage) this.contextSample = { offset: line.offset, usage };
+      if (!this.contextSample || line.offset > this.contextSample.offset) {
+        const usage = contextUsageIn(line.data);
+        if (usage) this.contextSample = { offset: line.offset, usage };
+      }
+      if (!this.settingsSample || line.offset > this.settingsSample.offset) {
+        const settings = turnSettingsIn(line.data);
+        if (settings) this.settingsSample = { offset: line.offset, settings };
+      }
     }
   }
 

@@ -2,10 +2,12 @@
 // idempotent per record: the newest copy of a uuid wins.
 
 import { type ChatLine, isTruncatedLine } from '../model/lines';
-import type {
-  AgentContextUsage,
-  ChatTranscriptDiagnostics,
-  ChatTranscriptLinks,
+import {
+  type AgentContextUsage,
+  type ChatRecordedSettings,
+  type ChatTranscriptDiagnostics,
+  type ChatTranscriptLinks,
+  NO_RECORDED_SETTINGS,
 } from '../model/types';
 import { decodeClaudeLine, KNOWN_METADATA_TYPES } from './record';
 import type { ClaudeMetadata, ClaudeRecord } from './record-types';
@@ -66,6 +68,7 @@ export class ClaudeTranscriptIndex {
   private continuedIn = new Latest();
   private lastAssistantOffset: number | null = null;
   private contextSample: { offset: number; tokens: number; model: string | null } | null = null;
+  private settingsSample: { offset: number; settings: ChatRecordedSettings } | null = null;
   private invalidOffsets = new Set<number>();
   private oversizedOffsets = new Set<number>();
 
@@ -98,6 +101,15 @@ export class ClaudeTranscriptIndex {
           model: sample.model,
         };
       }
+    }
+    const settings = record.settings;
+    if (
+      settings &&
+      !record.isSidechain &&
+      !record.isAPIError &&
+      (this.settingsSample === null || record.byteOffset > this.settingsSample.offset)
+    ) {
+      this.settingsSample = { offset: record.byteOffset, settings };
     }
     if (record.kind.type === 'unknown') this.unknownRecordTypes.add(record.kind.name);
     else if (record.kind.type === 'system' && !KNOWN_SYSTEM_SUBTYPES.has(record.kind.subtype)) {
@@ -151,6 +163,11 @@ export class ClaudeTranscriptIndex {
     if (!this.contextSample) return null;
     const { tokens, model } = this.contextSample;
     return { usedTokens: tokens, windowTokens: claudeContextWindow(model, tokens) };
+  }
+
+  /** The newest main-thread reply's settings: what the last reply ran with, not a change since. */
+  get recordedSettings(): ChatRecordedSettings {
+    return this.settingsSample?.settings ?? NO_RECORDED_SETTINGS;
   }
 
   get links(): ChatTranscriptLinks {

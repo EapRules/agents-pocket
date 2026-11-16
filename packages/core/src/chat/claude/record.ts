@@ -18,6 +18,7 @@ import type {
   ClaudeToolInput,
   ClaudeToolResultDetails,
 } from './record-types';
+import { replySettings } from './settings';
 
 export const CHAIN_TYPES: ReadonlySet<string> = new Set([
   'user',
@@ -232,6 +233,7 @@ function baseRecord(
     toolResult: null,
     cwd: null,
     contextSample: null,
+    settings: null,
     system: null,
     attachment: null,
   };
@@ -265,6 +267,7 @@ function decodeRecord(raw: JsonObject, type: string, uuid: string, line: ChatLin
       if (tokens !== null)
         record.contextSample = { promptTokens: tokens, model: asString(message?.model) };
     }
+    if (kind.type === 'assistant') record.settings = replySettings(raw, message, usage);
     record.apiBlockIndex = asInt(raw.apiBlockIndex);
     record.thinkingDurationMilliseconds = asInt(raw.thinkingDurationMs);
     record.isAPIError = asBool(raw.isApiErrorMessage) ?? false;

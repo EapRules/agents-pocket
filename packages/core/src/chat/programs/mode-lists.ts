@@ -11,6 +11,7 @@
 
 import { message } from '../../errors/text';
 import { modeLabel as mode, type ProgramModes } from './modes';
+import { type ProgramSettingOption, settingOption } from './setting-options';
 
 export const CLAUDE_MODES: ProgramModes = {
   labels: [
@@ -46,31 +47,41 @@ export const HERMES_MODES: ProgramModes = {
   otherwise: null,
 };
 
-export const PI_MODES: ProgramModes = {
-  labels: [
-    mode('• thinking off', 'Thinking Off'),
-    mode('• minimal', 'Thinking Minimal'),
-    mode('• low', 'Thinking Low'),
-    mode('• medium', 'Thinking Medium'),
-    mode('• xhigh', 'Thinking Extra High'),
-    mode('• high', 'Thinking High'),
-    mode('• max', 'Thinking Max'),
-  ],
-  otherwise: null,
-};
+/** A thinking level its footer draws, by the program's own name for it: a mode and an effort option. */
+const level = (value: string, title: string, ...drawn: string[]) =>
+  settingOption(value, title, { drawn });
+
+/** Each level's texts as mode labels, in the level's order. */
+const levelLabels = (levels: readonly ProgramSettingOption[]) =>
+  levels.flatMap((option) => (option.drawn ?? []).map((drawn) => mode(drawn, option.title.key)));
+
+export const PI_LEVELS: readonly ProgramSettingOption[] = [
+  level('off', 'Thinking Off', '• thinking off'),
+  level('minimal', 'Thinking Minimal', '• minimal'),
+  level('low', 'Thinking Low', '• low'),
+  level('medium', 'Thinking Medium', '• medium'),
+  level('high', 'Thinking High', '• high'),
+  level('xhigh', 'Thinking Extra High', '• xhigh'),
+  level('max', 'Thinking Max', '• max'),
+];
+
+export const PI_MODES: ProgramModes = { labels: levelLabels(PI_LEVELS), otherwise: null };
+
+export const OMP_LEVELS: readonly ProgramSettingOption[] = [
+  level('off', 'Thinking Off', ' off'),
+  level('minimal', 'Thinking Minimal', ' min'),
+  level('low', 'Thinking Low', ' low'),
+  level('medium', 'Thinking Medium', ' med'),
+  level('high', 'Thinking High', ' high'),
+  level('xhigh', 'Thinking Extra High', ' xhigh', ' xhi'),
+  level('max', 'Thinking Max', ' max'),
+];
 
 export const OMP_MODES: ProgramModes = {
   labels: [
     mode('Plan (paused)', 'Plan, Paused'),
     mode('🗺 Plan', 'Plan Mode'),
-    mode(' off', 'Thinking Off'),
-    mode(' min', 'Thinking Minimal'),
-    mode(' low', 'Thinking Low'),
-    mode(' med', 'Thinking Medium'),
-    mode(' xhigh', 'Thinking Extra High'),
-    mode(' xhi', 'Thinking Extra High'),
-    mode(' high', 'Thinking High'),
-    mode(' max', 'Thinking Max'),
+    ...levelLabels(OMP_LEVELS),
   ],
   otherwise: null,
 };

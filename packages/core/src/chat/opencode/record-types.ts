@@ -130,6 +130,15 @@ export interface OpenCodeStep {
   retry: { attempt: number | null; error: OpenCodeError | null } | null;
   /** When the step ended, in milliseconds. */
   completed: number | null;
+  /** The step's `model`: `{id, providerID, variant}` in OpenCode 2.x; null when absent. */
+  model: OpenCodeStepModel | null;
+}
+
+export interface OpenCodeStepModel {
+  id: string | null;
+  providerID: string | null;
+  /** The model's variant, which OpenCode's `/variants` picks (its reasoning effort). */
+  variant: string | null;
 }
 
 export interface OpenCodeUserMessage {

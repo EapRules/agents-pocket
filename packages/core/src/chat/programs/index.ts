@@ -16,9 +16,33 @@ export {
   programDefinition,
   programDefinitions,
   programModes,
+  programSettings,
   programShortcuts,
   readsSubagentTranscripts,
 } from './registry';
+export {
+  planSettingChange,
+  SETTING_AFTER_TURN_KEY,
+  SETTING_READ_ONLY_KEY,
+  SETTING_SAVES_DEFAULT_KEY,
+  SETTING_VALUE_NOT_OFFERED_KEY,
+  type SettingChangePlan,
+  type SettingChangeRequest,
+  settingChangeNotes,
+} from './setting-change';
+export {
+  type ConversationSetting,
+  type ProgramSetting,
+  type ProgramSettingID,
+  type ProgramSettingOption,
+  readConversationSettings,
+  readSetting,
+  type SettingApply,
+  type SettingPersistence,
+  type SettingRead,
+  type SettingReadInput,
+  type SettingValue,
+} from './settings';
 export {
   COMMON_SHORTCUTS,
   type CommandArgument,

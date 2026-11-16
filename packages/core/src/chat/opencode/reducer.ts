@@ -16,6 +16,7 @@ import {
   type OpenCodeSession,
   readOpenCodeLine,
 } from './record';
+import { openCodeRecordedSettings } from './settings';
 import { openCodeToolOutput } from './tool-summary';
 
 export const OPENCODE_REVISION = 1;
@@ -96,10 +97,11 @@ export class OpenCodeTranscriptReducer implements ChatTranscriptReducer {
       message === null
         ? null
         : (this.session?.revertSeq ?? this.rows.get(message)?.row.seq ?? null);
-    const ordered = [...this.rows.values()].sort((a, b) => a.row.seq - b.row.seq);
-    for (const held of ordered) {
-      if (boundary === null || held.row.seq < boundary) projection.add(held.row, held.length);
-    }
+    const ordered = [...this.rows.values()]
+      .sort((a, b) => a.row.seq - b.row.seq)
+      .filter((held) => boundary === null || held.row.seq < boundary);
+    for (const held of ordered) projection.add(held.row, held.length);
+    transcript.recordedSettings = openCodeRecordedSettings(ordered.map((held) => held.row));
     projection.finish();
     if (boundary !== null && message !== null) {
       projection.append({

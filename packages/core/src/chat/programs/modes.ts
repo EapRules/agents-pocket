@@ -27,17 +27,28 @@ export const modeLabel = (drawn: string, title: string): ProgramModeLabel => ({
 /** The rows a mode line can sit on: the prompt's footer, under its box. */
 const BOTTOM_ROWS = 8;
 
-/** The lowest row that draws a mode names it: the footer, before anything the conversation says. */
-export function readProgramMode(modes: ProgramModes, screen: string): Message | null {
-  const { conversationRow } = modes;
+/**
+ * The first of `labels` the lowest footer row draws: the footer, before anything the conversation
+ * says. Rows starting with `conversationRow` are skipped.
+ */
+export function findDrawn<Label extends { readonly drawn: string }>(
+  labels: readonly Label[],
+  screen: string,
+  conversationRow?: string,
+): Label | null {
   const rows = screen
     .split('\n')
     .filter((row) => row.trim() !== '')
     .slice(-BOTTOM_ROWS)
     .filter((row) => !conversationRow || !row.trimStart().startsWith(conversationRow));
   for (const row of rows.reverse()) {
-    const label = modes.labels.find((candidate) => row.includes(candidate.drawn));
-    if (label) return label.title;
+    const label = labels.find((candidate) => row.includes(candidate.drawn));
+    if (label) return label;
   }
-  return modes.otherwise;
+  return null;
+}
+
+/** The lowest row that draws a mode names it: the footer, before anything the conversation says. */
+export function readProgramMode(modes: ProgramModes, screen: string): Message | null {
+  return findDrawn(modes.labels, screen, modes.conversationRow)?.title ?? modes.otherwise;
 }

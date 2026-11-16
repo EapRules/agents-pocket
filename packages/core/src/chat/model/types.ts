@@ -273,6 +273,23 @@ export interface AgentContextUsage {
   windowTokens: number;
 }
 
+/**
+ * What the conversation's own records say it ran with, as of its newest record that says so: the
+ * model, the reasoning effort and the speed (Claude Code's `fast` or `standard`), in the program's
+ * own words. Null where the records say nothing; a reader never guesses one.
+ */
+export interface ChatRecordedSettings {
+  model: string | null;
+  effort: string | null;
+  speed: string | null;
+}
+
+export const NO_RECORDED_SETTINGS: ChatRecordedSettings = {
+  model: null,
+  effort: null,
+  speed: null,
+};
+
 export interface ChatTranscript {
   /** Display order, oldest first. */
   entries: ChatEntry[];
@@ -293,6 +310,8 @@ export interface ChatTranscript {
   /** Entries standing for something not recorded yet (a queued prompt's bubble); never cached. */
   unrecordedEntryIDs: ReadonlySet<string>;
   contextUsage: AgentContextUsage | null;
+  /** This port's: what the conversation settings read (`programs/settings.ts`) takes from records. */
+  recordedSettings: ChatRecordedSettings;
 }
 
 /** What a reducer needs beyond the lines. */
@@ -327,5 +346,6 @@ export function emptyTranscript(): ChatTranscript {
     precedingTurnEnd: null,
     unrecordedEntryIDs: new Set(),
     contextUsage: null,
+    recordedSettings: NO_RECORDED_SETTINGS,
   };
 }

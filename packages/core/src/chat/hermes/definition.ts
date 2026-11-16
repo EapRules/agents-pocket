@@ -2,6 +2,7 @@ import { message } from '../../errors/text';
 import { hermesID } from '../model/session-ids';
 import type { ProgramDefinition } from '../programs/definition';
 import { HERMES_MODES } from '../programs/mode-lists';
+import { HERMES_SETTINGS } from '../programs/setting-lists';
 import { HERMES_SHORTCUTS } from '../programs/shortcut-lists';
 import { locateNoTranscriptFile } from '../store/locate';
 import { hermesAdapter } from './adapter';
@@ -12,6 +13,7 @@ import { hermesStoreProblem } from './store-problems';
 export const hermesProgram: ProgramDefinition = {
   modes: () => HERMES_MODES,
   shortcuts: () => HERMES_SHORTCUTS,
+  settings: () => HERMES_SETTINGS,
   program: 'hermes',
   chatName: 'Hermes Agent',
   noSessionMessage: () =>

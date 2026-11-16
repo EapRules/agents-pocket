@@ -5,6 +5,7 @@ import type {
   ChatDiffStats,
   ChatFileChanges,
   ChatQuestion,
+  ChatRecordedSettings,
   ChatToolPreview,
 } from '../model/types';
 
@@ -154,6 +155,8 @@ export interface ClaudeRecord {
   toolResult: ClaudeToolResultDetails | null;
   cwd: string | null;
   contextSample: { promptTokens: number; model: string | null } | null;
+  /** An assistant reply's model, effort and speed (`settings.ts`); null on other records. */
+  settings: ChatRecordedSettings | null;
   system: ClaudeSystemDetails | null;
   attachment: ClaudeAttachmentDetails | null;
 }

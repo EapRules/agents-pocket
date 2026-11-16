@@ -183,12 +183,20 @@ function readStep(data: JsonObject): OpenCodeStep {
   });
   const retry = asObject(data.retry);
   const time = asObject(data.time);
+  const model = asObject(data.model);
   return {
     items,
     finish: str(data, 'finish'),
     error: readError(data.error),
     retry: retry ? { attempt: int(retry, 'attempt'), error: readError(retry.error) } : null,
     completed: time ? int(time, 'completed') : null,
+    model: model
+      ? {
+          id: str(model, 'id'),
+          providerID: str(model, 'providerID'),
+          variant: str(model, 'variant'),
+        }
+      : null,
   };
 }
 

@@ -56,6 +56,10 @@ export class HermesTranscriptReducer implements ChatTranscriptReducer {
     const projection = new HermesProjection(context);
     const { transcript } = projection;
     transcript.title = this.session?.title ?? null;
+    transcript.recordedSettings = {
+      ...transcript.recordedSettings,
+      model: this.session?.model ?? null,
+    };
     transcript.diagnostics.invalidLines = this.malformed.size;
     transcript.diagnostics.oversizedLines = this.cut.size;
     const ordered = [...this.rows.values()].sort((a, b) => a.row.seq - b.row.seq);

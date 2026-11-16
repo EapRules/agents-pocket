@@ -4,6 +4,7 @@ import { codexAdapter } from '../engine/adapter';
 import { canonicalUUID } from '../model/session-ids';
 import type { ProgramDefinition } from '../programs/definition';
 import { CODEX_MODES } from '../programs/mode-lists';
+import { CODEX_SETTINGS } from '../programs/setting-lists';
 import { CODEX_SHORTCUTS } from '../programs/shortcut-lists';
 import { locateCodexTranscript } from './locate';
 import { codexSendPolicy } from './send-policy';
@@ -12,6 +13,7 @@ import { CODEX_TERMINAL_WAITS, codexNotReportingMessage, codexSetupNote } from '
 export const codexProgram: ProgramDefinition = {
   modes: () => CODEX_MODES,
   shortcuts: () => CODEX_SHORTCUTS,
+  settings: () => CODEX_SETTINGS,
   program: 'codex',
   chatName: 'Codex',
   noSessionMessage: () =>

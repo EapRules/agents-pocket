@@ -8,6 +8,7 @@ import type { ChatProgram } from '../model/types';
 import type { ProgramSendPolicy } from '../send/policy';
 import type { ChatSessionStoreProblem } from '../timeline/reasons';
 import type { ProgramModes } from './modes';
+import type { ProgramSetting } from './settings';
 import type { ProgramShortcut } from './shortcuts';
 import type { TerminalWait } from './terminal-waits';
 
@@ -60,6 +61,8 @@ export interface ProgramDefinition {
   shortcuts?: () => readonly ProgramShortcut[];
   /** The modes its screen names, from its source; absent for a program that draws none. */
   modes?: () => ProgramModes;
+  /** Its conversation's model, effort and fast mode: where each is read, how it may change. */
+  settings?: () => readonly ProgramSetting[];
   /**
    * A finished Subagent's own transcript can be read and shown; absent where Chat has no reader
    * for it, and its Background Work row then opens nothing.

@@ -296,5 +296,17 @@
   "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.": "OpenCode asks what to do differently before it rejects. Type your note in the terminal; these keys cannot type text.",
   "Agentico answers only OpenCode's single questions. Answer this one with these keys or in the terminal.": "Agents Pocket answers only OpenCode's single questions. Answer this one with these keys or in the terminal.",
   "Agentico answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.": "Agents Pocket answers only Oh My Pi's single-select questions. These keys move and submit; toggling a choice needs the terminal.",
-  "Choose an Agent in the list to open it here.": "Choose an Agent in the list to open it here."
+  "Choose an Agent in the list to open it here.": "Choose an Agent in the list to open it here.",
+  "Low": "Low",
+  "Medium": "Medium",
+  "High": "High",
+  "Extra High": "Extra High",
+  "Max": "Max",
+  "Auto": "Auto",
+  "Minimal": "Minimal",
+  "Ultra": "Ultra",
+  "The app can only show this setting.": "The app can only show this setting.",
+  "The program doesn't offer this value.": "The program doesn't offer this value.",
+  "Applies after this turn.": "Applies after this turn.",
+  "Also becomes the default for new sessions.": "Also becomes the default for new sessions."
 }

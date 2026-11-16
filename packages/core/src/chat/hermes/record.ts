@@ -32,6 +32,8 @@ export interface HermesRow {
 export interface HermesSession {
   id: string | null;
   title: string | null;
+  /** `sessions.model`: the model the session runs, as Hermes names it (`provider/model`). */
+  model: string | null;
 }
 
 export type HermesLine =
@@ -82,7 +84,14 @@ export function readHermesLine(data: Uint8Array): HermesLine {
   const value = asObject(parsed);
   if (value?.k === 'row') return rowOf(value);
   if (value?.k === 'session') {
-    return { kind: 'session', session: { id: asString(value.id), title: asString(value.title) } };
+    return {
+      kind: 'session',
+      session: {
+        id: asString(value.id),
+        title: asString(value.title),
+        model: asString(value.model),
+      },
+    };
   }
   return MALFORMED;
 }

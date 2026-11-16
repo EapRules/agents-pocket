@@ -5,7 +5,12 @@
 import type { ChatLine } from '../model/lines';
 import { isAcceptablePath } from '../model/paths';
 import type { ChatToolOutput, ChatTranscriptReducer } from '../model/reducer';
-import type { ChatProjectionContext, ChatToolActivity, ChatTranscript } from '../model/types';
+import {
+  type ChatProjectionContext,
+  type ChatToolActivity,
+  type ChatTranscript,
+  NO_RECORDED_SETTINGS,
+} from '../model/types';
 import { answerOutcome, answersIn } from './answers';
 import { Builder } from './builder-user';
 import { type ClaudeChain, type ClaudeRole, resolveChain } from './chain';
@@ -69,6 +74,7 @@ export class ClaudeTranscriptReducer implements ChatTranscriptReducer {
       precedingTurnEnd: main ? builder.precedingTurnEnd : null,
       unrecordedEntryIDs: new Set(waiting.values()),
       contextUsage: main ? this.index.contextUsage : null,
+      recordedSettings: main ? this.index.recordedSettings : NO_RECORDED_SETTINGS,
     };
   }
 

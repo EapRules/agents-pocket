@@ -3,6 +3,7 @@ import { message } from '../../errors/text';
 import { lowercaseUUIDv7 } from '../model/session-ids';
 import type { ProgramDefinition } from '../programs/definition';
 import { GROK_MODES } from '../programs/mode-lists';
+import { GROK_SETTINGS } from '../programs/setting-lists';
 import { GROK_SHORTCUTS } from '../programs/shortcut-lists';
 import { grokAdapter } from './adapter';
 import { locateGrokTranscript } from './locate';
@@ -11,6 +12,7 @@ import { grokSendPolicy } from './send-policy';
 export const grokProgram: ProgramDefinition = {
   modes: () => GROK_MODES,
   shortcuts: () => GROK_SHORTCUTS,
+  settings: () => GROK_SETTINGS,
   program: 'grok',
   chatName: 'Grok Build',
   noSessionMessage: () =>
