@@ -32,6 +32,10 @@ sips -s format jpeg -s formatOptions 92 design/atlas/rn-ios/<atlas id>.negro.<la
 | `07-terminal.jpg` | `agent-detail.terminal` |
 | `08-themes-<theme>.jpg` | `shell.home`, once per theme (`negro`, `indigo`, `noche`, `papel`) |
 
+## iPhone Duo
+
+The store slot takes 1398x2034 (outer display) and 2007x2853 (inner display). The Duo simulator has two displays and a screenshot needs one named: `--display primary` (outer) or `--display primary-1` (inner) on `atlas-ios.mjs`; the file name ends in `.primary.png` or `.primary-1.png`. The simulator's pose (open, closed, rotated) can only be changed by hand in the Simulator app: `simctl` has no command for it, and `simctl io screenConfig power` must not be used for that (it crashes the simulator's SpringBoard).
+
 ## Panels
 
 ```

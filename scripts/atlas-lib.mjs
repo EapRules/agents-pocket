@@ -57,3 +57,19 @@ export const bundlerPortArgs = (udid, bundle, port) => [
   'RCT_jsLocation',
   `localhost:${port}`,
 ];
+
+/** Named web windows for `atlas-web --window`: iPhone Duo postures (CSS px, device scale factor). */
+export const WINDOWS = {
+  'duo-closed': { width: 466, height: 678, scale: 3 },
+  'duo-open': { width: 669, height: 951, scale: 3 },
+  'duo-rotated': { width: 951, height: 669, scale: 3 },
+  'duo-split': { width: 330, height: 951, scale: 3 }, // the app sharing the inner display
+};
+
+/** The window called `name`; throws with the valid names when there is none. */
+export function windowByName(name) {
+  const found = Object.hasOwn(WINDOWS, name) ? WINDOWS[name] : undefined;
+  if (!found)
+    throw new Error(`ERROR unknown --window "${name}"; valid: ${Object.keys(WINDOWS).join(', ')}`);
+  return found;
+}

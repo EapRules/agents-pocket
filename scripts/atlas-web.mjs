@@ -1,17 +1,35 @@
 #!/usr/bin/env node
 // Captures every mapped atlas screen on Expo web with the agent-browser CLI (no simulator).
-//   node scripts/atlas-web.mjs [--port 8123] [--theme indigo|papel|noche] [--no-server] [id ...]
+//   node scripts/atlas-web.mjs [--port 8123] [--theme indigo|papel|noche]
+//                             [--window duo-closed|duo-open|duo-rotated|duo-split] [--no-server] [id ...]
 // Starts `expo start --web` (demo data) unless --no-server (reuse one on --port), then writes
 // design/atlas/rn-web/<id>.png (402x874 @3x, iPhone 17 Pro; Papel ones as <id>.papel.png; ids with
 // "device": "ipad" in atlasMap.json at 1366x1024 @2 as <id>.ipad.png).
+// `--window <name>` (sizes in WINDOWS, atlas-lib.mjs) overrides the viewport of every id and adds the
+// name to the file: <id>.<window>[.theme].png. Without it nothing changes.
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { atlasDir, mappedScreens, mobileDir, parseArgs, sleep } from './atlas-lib.mjs';
+import {
+  atlasDir,
+  mappedScreens,
+  mobileDir,
+  parseArgs,
+  sleep,
+  windowByName,
+} from './atlas-lib.mjs';
 
 const { options, ids } = parseArgs(process.argv.slice(2));
 const port = Number(options.port ?? 8123);
 const theme = options.theme ?? 'indigo';
+const windowName = typeof options.window === 'string' ? options.window : null;
+let win = null;
+try {
+  win = windowName ? windowByName(windowName) : null;
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
+}
 const session = `atlas-${port}`;
 const base = `http://localhost:${port}`;
 const outDir = join(atlasDir, 'rn-web');
@@ -57,7 +75,8 @@ try {
   const setViewport = (device) => {
     if (device === viewport) return;
     viewport = device;
-    if (device === 'ipad') browser('set', 'viewport', '1366', '1024', '2');
+    if (win) browser('set', 'viewport', String(win.width), String(win.height), String(win.scale));
+    else if (device === 'ipad') browser('set', 'viewport', '1366', '1024', '2');
     else browser('set', 'viewport', '402', '874', '3');
   };
   const ready = () => {
@@ -91,7 +110,7 @@ try {
       'eval',
       "(function(){var s=document.createElement('style');s.textContent='#error-toast{display:none!important}';document.head.appendChild(s);})()",
     );
-    const device = devices.get(id) === 'ipad' ? '.ipad' : '';
+    const device = win ? `.${windowName}` : devices.get(id) === 'ipad' ? '.ipad' : '';
     browser('screenshot', join(outDir, `${id}${device}${suffix}.png`));
     let problem = '';
     try {

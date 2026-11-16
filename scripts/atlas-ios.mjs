@@ -2,9 +2,13 @@
 // Captures every mapped atlas screen on the iOS simulator (the integrator's source of truth).
 //   node scripts/atlas-ios.mjs --udid <sim udid> [--port 8081] [--theme indigo|papel|noche]
 //                              [--bundle com.openagentspocket.app] [--no-server]
-//                              [--launch-wait 8000] [--lang es] [id ...]
+//                              [--launch-wait 8000] [--lang es] [--display primary|primary-1] [id ...]
 // `--lang` launches the app in that language (for one run, the simulator's own stays) and adds it
 // to the file name: <id>.<theme>.<lang>.png.
+// `--display <name>` is passed to `simctl io screenshot --display=<name>` and added as the last part of
+// the file name: <id>[.theme][.lang].<display>.png. The iPhone Duo simulator has two displays and a
+// screenshot without --display fails ("a single default display cannot be determined"): `primary`
+// is the outer one (1398x2034), `primary-1` the inner one (2007x2853). Without it nothing changes.
 // Needs the dev build already installed on that simulator (the native slot rules in
 // docs/agents/swarm.md apply: hold the slot while this runs, shut the simulator down after).
 // Starts Metro with demo data, points the dev client at it, then per id runs
@@ -36,6 +40,7 @@ const bundle = options.bundle ?? 'com.openagentspocket.app';
 const launchWait = Number(options['launch-wait'] ?? 8000); // ms for the bundle to load after launch
 const lang = typeof options.lang === 'string' ? options.lang : null;
 // Launch arguments override the language for this process only.
+const display = typeof options.display === 'string' ? options.display : null;
 const langArgs = lang ? ['-AppleLanguages', `(${lang})`, '-AppleLocale', lang] : [];
 const outDir = join(atlasDir, 'rn-ios');
 mkdirSync(outDir, { recursive: true });
@@ -89,7 +94,10 @@ try {
     }
   }
   const targets = ids.length ? ids : mappedScreens().map((screen) => screen.id);
-  const suffix = (theme === 'indigo' ? '' : `.${theme}`) + (lang ? `.${lang}` : '');
+  const suffix =
+    (theme === 'indigo' ? '' : `.${theme}`) +
+    (lang ? `.${lang}` : '') +
+    (display ? `.${display}` : '');
   for (const [index, id] of targets.entries()) {
     try {
       simctl('terminate', udid, bundle);
@@ -99,7 +107,13 @@ try {
     await sleep(index === 0 ? Math.max(launchWait, 15000) : launchWait); // the first bundle is cold
     simctl('openurl', udid, `openagentspocket://__atlas/${id}?theme=${theme}`);
     await sleep(3000);
-    simctl('io', udid, 'screenshot', join(outDir, `${id}${suffix}.png`));
+    simctl(
+      'io',
+      udid,
+      'screenshot',
+      ...(display ? [`--display=${display}`] : []),
+      join(outDir, `${id}${suffix}.png`),
+    );
     console.log(`ok ${id}${suffix}`);
   }
 } catch (error) {
