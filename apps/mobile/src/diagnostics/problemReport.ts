@@ -1,4 +1,5 @@
 import { REPOSITORY_URL } from '@/settings/pagesRoot';
+import { appVersionLabel } from './appBuild';
 import { type CrashRecord, crashReportText } from './crashRecorder';
 
 /** Which app and system a report comes from: nothing that names the user, a Host or a key. */
@@ -32,7 +33,7 @@ export function problemReportBody(build: AppBuild, crash?: CrashRecord): string 
     '',
     '### App',
     '',
-    `- Version: ${build.version || 'unknown'} (build ${build.build || 'unknown'})`,
+    `- Version: ${appVersionLabel(build) || 'unknown'}`,
     ...(build.update ? [`- Update: ${build.update}`] : []),
     `- System: ${build.system}`,
   ];

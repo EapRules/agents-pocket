@@ -1,3 +1,4 @@
+import { formatAppVersion } from '@openagentspocket/core';
 import type { CrashRecord } from './crashRecorder';
 import {
   MAX_CRASH_CHARS,
@@ -14,7 +15,8 @@ const bodyOf = (url: string) => decodeURIComponent(new URL(url).searchParams.get
 describe('problem report', () => {
   it('names the version, build and system, and no crash unless one is given', () => {
     const body = problemReportBody(BUILD);
-    for (const value of ['1.0.0', '42', 'ios 26.1']) expect(body).toContain(value);
+    expect(body).toContain(formatAppVersion(BUILD.version, BUILD.build));
+    expect(body).toContain(BUILD.system);
     expect(body).not.toContain(CRASH.message);
     expect(problemReportBody(BUILD, CRASH)).toContain(CRASH.message);
   });

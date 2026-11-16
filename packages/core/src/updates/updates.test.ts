@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatAppVersion,
   runningUpdateReportText,
   summarizeRunningUpdate,
   UPDATE_CHANNEL_PARAM,
@@ -46,5 +47,15 @@ describe('running update', () => {
   it('drops an unusable date instead of printing it', () => {
     const summary = summarizeRunningUpdate({ embedded: false, id, createdAt: new Date('nope') });
     expect(summary).toEqual({ kind: 'update', shortId: '0f6a2b3c', date: null });
+  });
+});
+
+describe('app version label', () => {
+  it('names the version and the build, as releases do', () => {
+    expect(formatAppVersion('1.0.2', '8')).toBe('1.0.2 (8)');
+  });
+
+  it('is just the version when the build is unknown', () => {
+    expect(formatAppVersion('1.0.2', '')).toBe('1.0.2');
   });
 });

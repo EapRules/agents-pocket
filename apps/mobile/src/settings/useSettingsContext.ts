@@ -3,7 +3,7 @@ import { t } from '@openagentspocket/i18n';
 import { themes } from '@openagentspocket/ui';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
-import { appBuild } from '@/diagnostics/appBuild';
+import { appBuild, appVersionLabel } from '@/diagnostics/appBuild';
 import type { AppUpdates } from '@/updates/appUpdates';
 import { useAppUpdates, useAuthenticator, useSettings } from './SettingsProvider';
 import type { SettingsContext } from './schema';
@@ -48,7 +48,7 @@ export function useSettingsContext(): SettingsContext {
   return {
     values,
     authKind,
-    version: appBuild().version,
+    version: appVersionLabel(appBuild()),
     updates: { enabled: updates.enabled, ...runningUpdateRow(updates) },
     themeName: themes[themeId].name,
     themeId,

@@ -48,3 +48,11 @@ export function runningUpdateReportText(summary: RunningUpdateSummary): string {
   if (summary.kind === 'embedded') return 'embedded (no update applied)';
   return summary.date ? `${summary.shortId} (${summary.date})` : summary.shortId;
 }
+
+/**
+ * The installed binary as releases name it everywhere (App Store Connect, release tags,
+ * `docs/releases/builds.json`): `1.0.2 (8)`; just the version when the build is unknown.
+ */
+export function formatAppVersion(version: string, build: string): string {
+  return build ? `${version} (${build})` : version;
+}

@@ -1,4 +1,8 @@
-import { runningUpdateReportText, summarizeRunningUpdate } from '@openagentspocket/core';
+import {
+  formatAppVersion,
+  runningUpdateReportText,
+  summarizeRunningUpdate,
+} from '@openagentspocket/core';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import type { AppUpdates } from '@/updates/appUpdates';
@@ -23,4 +27,9 @@ export function appBuild(updates: AppUpdates = deviceUpdates): AppBuild {
       ? { update: runningUpdateReportText(summarizeRunningUpdate(updates.running())) }
       : {}),
   };
+}
+
+/** The version and build in the form releases use (`1.0.2 (8)`): Settings and reports share it. */
+export function appVersionLabel(build: AppBuild): string {
+  return formatAppVersion(build.version, build.build);
 }
