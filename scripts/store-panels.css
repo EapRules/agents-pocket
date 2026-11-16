@@ -1,0 +1,186 @@
+/* One App Store panel: caption on top, an iPhone below, over a slice of the set's gradient.
+   Authored 1290 px wide; scripts/store-panels.mjs sets the custom properties (--out-w, --out-h,
+   --stage-h, --zoom, --strip-w, --gradient), adds the @font-face rules and zooms the stage to the
+   size App Store Connect asks for. */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  width: var(--out-w);
+  height: var(--out-h);
+  overflow: hidden;
+  background: #07040a;
+}
+.stage {
+  position: relative;
+  width: 1290px;
+  height: var(--stage-h);
+  zoom: var(--zoom);
+  overflow: hidden;
+  font-family: "Instrument Sans", -apple-system, sans-serif;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The gradient: one strip as wide as the whole set, shifted per panel, so the row reads as one piece. */
+.canvas {
+  position: absolute;
+  top: 0;
+  left: calc(var(--index) * -1290px);
+  width: var(--strip-w);
+  height: 100%;
+  background: var(--gradient);
+  filter: blur(60px) saturate(1.15);
+  transform: scale(1.04);
+}
+/* Keeps the caption readable without flattening the color below it. */
+.shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 4, 10, 0.62) 0,
+    rgba(7, 4, 10, 0.28) 24%,
+    transparent 44%
+  );
+}
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.34;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0'/></filter><rect width='400' height='400' filter='url(%23n)'/></svg>");
+}
+
+.caption {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 150px;
+}
+.caption.center {
+  text-align: center;
+  top: 190px;
+}
+h1 {
+  font-family: "Instrument Serif", serif;
+  font-weight: 400;
+  font-size: 142px;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.caption.center h1 {
+  font-size: 164px;
+}
+/* The one phrase the panel is about. */
+h1 em {
+  font-style: italic;
+  padding-right: 0.06em;
+  background: linear-gradient(100deg, #ffd0f4 0, #ff8ad8 38%, #ffab5e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+p {
+  margin-top: 34px;
+  font-size: 52px;
+  line-height: 1.28;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  max-width: 19em;
+  text-wrap: balance;
+}
+.caption.center p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* iPhone 17 Pro, front view. Every measure is a fraction of the body width (--w). */
+.phone {
+  position: absolute;
+  left: 50%;
+  top: var(--top);
+  width: var(--w);
+  transform: translateX(-50%) rotate(var(--tilt));
+  transform-origin: 50% 40%;
+  padding: calc(var(--w) * 0.0095);
+  border-radius: calc(var(--w) * 0.176);
+  background: linear-gradient(
+    135deg,
+    #8d8d92 0,
+    #3a3a3e 14%,
+    #1d1d20 50%,
+    #46464b 86%,
+    #9a9aa0 100%
+  );
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.0016) rgba(255, 255, 255, 0.28),
+    0 calc(var(--w) * 0.012) calc(var(--w) * 0.03) rgba(4, 2, 8, 0.5),
+    0 calc(var(--w) * 0.07) calc(var(--w) * 0.16) rgba(4, 2, 8, 0.55);
+}
+.bezel {
+  padding: calc(var(--w) * 0.021);
+  border-radius: calc(var(--w) * 0.1665);
+  background: #020203;
+  box-shadow: inset 0 0 0 calc(var(--w) * 0.0012) #2a2a2e;
+}
+.screen {
+  position: relative;
+  border-radius: calc(var(--w) * 0.1455);
+  overflow: hidden;
+  background: #000;
+}
+.screen img {
+  display: block;
+  width: 100%;
+}
+.island {
+  position: absolute;
+  top: calc(var(--w) * 0.033);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--w) * 0.294);
+  height: calc(var(--w) * 0.087);
+  border-radius: 999px;
+  background: #000;
+}
+/* Side buttons: action, volume up and volume down on the left; power and camera control on the right. */
+.key {
+  position: absolute;
+  width: calc(var(--w) * 0.0055);
+  border-radius: calc(var(--w) * 0.003);
+  background: linear-gradient(90deg, #2a2a2e, #77777c, #2a2a2e);
+  z-index: -1;
+}
+.key.l {
+  left: calc(var(--w) * -0.0042);
+}
+.key.r {
+  right: calc(var(--w) * -0.0042);
+}
+.k1 {
+  top: calc(var(--w) * 0.3);
+  height: calc(var(--w) * 0.066);
+}
+.k2 {
+  top: calc(var(--w) * 0.418);
+  height: calc(var(--w) * 0.128);
+}
+.k3 {
+  top: calc(var(--w) * 0.578);
+  height: calc(var(--w) * 0.128);
+}
+.k4 {
+  top: calc(var(--w) * 0.47);
+  height: calc(var(--w) * 0.21);
+}
+.k5 {
+  top: calc(var(--w) * 1.06);
+  height: calc(var(--w) * 0.15);
+  opacity: 0.6;
+}

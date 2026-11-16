@@ -1,0 +1,88 @@
+{
+  "size": [1206, 2622],
+  "locales": ["en", "es"],
+  "panels": [
+    {
+      "name": "01-home",
+      "layout": {
+        "center": true,
+        "width": 960,
+        "top": 1010,
+        "tilt": -4
+      },
+      "en": {
+        "headline": "Your coding agents, <em>in your pocket</em>",
+        "subline": "See which ones need you, from anywhere"
+      },
+      "es": {
+        "headline": "Tus agentes, <em>en el bolsillo</em>",
+        "subline": "Mira cuáles te necesitan, desde donde estés"
+      }
+    },
+    {
+      "name": "03-approval",
+      "en": {
+        "headline": "Approve or deny <em>every command</em>",
+        "subline": "Read what the agent wants to run before you decide"
+      },
+      "es": {
+        "headline": "Aprueba o rechaza <em>cada comando</em>",
+        "subline": "Lee qué quiere ejecutar el agente antes de decidir"
+      }
+    },
+    {
+      "name": "02-chat",
+      "layout": {
+        "width": 1040,
+        "top": 900,
+        "tilt": 5
+      },
+      "en": {
+        "headline": "Chat with the agent <em>as it works</em>",
+        "subline": "Claude, Codex, OpenCode and more, over SSH"
+      },
+      "es": {
+        "headline": "Chatea con el agente <em>mientras trabaja</em>",
+        "subline": "Claude, Codex, OpenCode y más, por SSH"
+      }
+    },
+    {
+      "name": "04-changes",
+      "en": {
+        "headline": "See what the agent <em>changed</em>",
+        "subline": "Every file and diff, right on your phone"
+      },
+      "es": {
+        "headline": "Mira qué <em>cambió</em> el agente",
+        "subline": "Cada archivo y cada diff, en tu teléfono"
+      }
+    },
+    {
+      "name": "05-usage",
+      "layout": {
+        "width": 1040,
+        "top": 900,
+        "tilt": -5
+      },
+      "en": {
+        "headline": "Track cost and <em>usage limits</em>",
+        "subline": "Per Host and per plan, at a glance"
+      },
+      "es": {
+        "headline": "Sigue el costo y <em>los límites de uso</em>",
+        "subline": "Por Host y por plan, de un vistazo"
+      }
+    },
+    {
+      "name": "06-agents",
+      "en": {
+        "headline": "Every agent, <em>on every Host</em>",
+        "subline": "Grouped by what they are doing"
+      },
+      "es": {
+        "headline": "Todos tus agentes, <em>en cada Host</em>",
+        "subline": "Agrupados por lo que están haciendo"
+      }
+    }
+  ]
+}
