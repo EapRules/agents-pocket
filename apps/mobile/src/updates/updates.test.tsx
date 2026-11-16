@@ -1,12 +1,13 @@
 import { MemoryStorage, SettingsStore } from '@openagentspocket/core';
 import { render, waitFor } from '@testing-library/react-native';
+import { fakeInstallInfo } from 'agentico-install-info';
 import { appBuild } from '@/diagnostics/appBuild';
 import { problemReportBody } from '@/diagnostics/problemReport';
 import { fakeAuthenticator } from '@/settings/authenticator';
 import { SettingsProvider } from '@/settings/SettingsProvider';
 import { type AppUpdates, createAppUpdates, disabledUpdates, fakeUpdatesApi } from './appUpdates';
 import { deviceUpdates } from './deviceUpdates';
-import { deviceReceiptProbe, fakeReceiptProbe, receiptDirectory } from './storeReceipt';
+import { deviceReceiptProbe, fakeReceiptProbe, installReceiptProbe } from './storeReceipt';
 import { UpdateChannelSync } from './UpdateChannelSync';
 
 const ID = '0f6a2b3c-1d2e-4f50-8a9b-0c1d2e3f4a5b';
@@ -93,13 +94,24 @@ describe('UpdateChannelSync', () => {
 });
 
 describe('store receipt', () => {
-  it('sits in StoreKit next to the Documents directory', () => {
-    expect(receiptDirectory('file:///var/mobile/Containers/Data/Application/ABC/Documents/')).toBe(
-      'file:///var/mobile/Containers/Data/Application/ABC/StoreKit',
+  it("is the install's receipt URL name, read natively", async () => {
+    const probe = installReceiptProbe(() =>
+      fakeInstallInfo({ storeReceiptName: 'sandboxReceipt' }),
     );
+    await expect(probe.storeReceiptName()).resolves.toBe('sandboxReceipt');
   });
 
-  it('is never probed outside iOS (the test platform included)', async () => {
+  it('is null where the native module is absent (tests included)', async () => {
+    await expect(
+      installReceiptProbe(() => fakeInstallInfo()).storeReceiptName(),
+    ).resolves.toBeNull();
     await expect(deviceReceiptProbe.storeReceiptName()).resolves.toBeNull();
+  });
+
+  it('is null when the read throws', async () => {
+    const probe = installReceiptProbe(() => {
+      throw new Error('no module');
+    });
+    await expect(probe.storeReceiptName()).resolves.toBeNull();
   });
 });

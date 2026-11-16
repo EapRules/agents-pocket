@@ -391,6 +391,12 @@ Two channels again, neither one chosen by the user. This supersedes "one channel
 - **App side.** Merged 2026-11-15, after the owner approved one added clause in the privacy policy (the
   update request says whether the install is from TestFlight). Detection reads the StoreKit receipt name
   and is unverified on a device; a wrong answer leaves a test install on production, never the reverse.
+- **Detection corrected (2026-11-16).** The first version looked for the file `StoreKit/sandboxReceipt`
+  in the app's container. A fresh TestFlight install has no receipt file until StoreKit is used, so it
+  never matched: 1.0.2 (8) from TestFlight stayed on production. Detection now reads the receipt URL's
+  name (`Bundle.main.appStoreReceiptURL?.lastPathComponent`), which is set whether or not the file
+  exists, natively through `modules/install-info`. What the request sends is unchanged. Being native, it
+  changes the fingerprint runtime version and arrives with the next store build.
 
 ## Not verified
 

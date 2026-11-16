@@ -86,7 +86,7 @@ Then scan the Pairing Code QR from the app. Details: [packages/plugin/README.md]
 | `packages/session-bridge` | Answers the session protocol over tmux on the Host |
 | `packages/updates-server` | Serves signed over-the-air updates |
 | `modules/ssh` | SSH Expo Module: libssh2 on iOS, JSch on Android |
-| `modules/app-group`, `modules/live-activity` | iOS native modules |
+| `modules/app-group`, `modules/live-activity`, `modules/install-info` | iOS native modules |
 | `e2e` | Maestro flows |
 
 `ios/` and `android/` are generated and gitignored.

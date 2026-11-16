@@ -283,9 +283,15 @@ prebuild does.
   (`fakeUpdatesApi`) and `disabledUpdates`; `deviceUpdates.ts` loads the native module lazily and never on
   web. Tests run with updates off (`jest.setup.js`), as a build from source does.
 - No channel setting: the user chooses nothing. Builds up to 1.0.1 (5) still show an "Early Updates"
-  switch until they run newer JS; it sends `channel=beta`, which the server serves production. The
-  change that makes TestFlight installs ask for `internal` is on branch `internal-channel-app`, not merged
-  (it waits on one added clause in the privacy policy; ADR 0028, "Amendment: internal channel").
+  switch until they run newer JS; it sends `channel=beta`, which the server serves production.
+- TestFlight installs ask for `internal` (`UpdateChannelSync`, merged 2026-11-15; ADR 0028, "Amendment:
+  internal channel"). A TestFlight install is recognized by the name of its App Store receipt URL,
+  `sandboxReceipt` (`receipt` on the App Store), read natively by `modules/install-info`
+  (`Bundle.main.appStoreReceiptURL`). The name is set whether or not the receipt file exists. The first
+  version checked for the file `StoreKit/sandboxReceipt` instead, which a fresh TestFlight install does
+  not have until StoreKit is used, so 1.0.2 (8) never asked for `internal`. The fix is native, so it
+  reaches installs with a new store build, not over the air. Builds installed from Xcode also read
+  `sandboxReceipt`; they have updates off, so nothing is sent.
 - **Update** row (Settings, About; only when the build has updates): "Built In" for the binary's own JS, or the running update's
   first 8 id characters as the value with its date as the row's second line (both on one line were cut
   on a phone); the Report a Problem text carries both as `- Update: <id> (<date>)`.

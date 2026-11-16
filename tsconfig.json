@@ -7,6 +7,7 @@
     { "path": "modules/ssh" },
     { "path": "modules/app-group" },
     { "path": "modules/live-activity" },
+    { "path": "modules/install-info" },
     { "path": "packages/transport" },
     { "path": "packages/session-bridge" },
     { "path": "apps/mobile" }
