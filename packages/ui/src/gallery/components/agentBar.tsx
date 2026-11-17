@@ -171,6 +171,16 @@ export const agentBarEntries: readonly CatalogEntry[] = [
       { id: 'idle', render: () => <DemoComposer initial="" /> },
       { id: 'draft', render: () => <DemoComposer initial="Run the snapshots" /> },
       {
+        id: 'listening',
+        render: () => <DemoComposer initial="" dictation={{ listening: true, onToggle: noop }} />,
+      },
+      {
+        id: 'listening-draft',
+        render: () => (
+          <DemoComposer initial="Run the" dictation={{ listening: true, onToggle: noop }} />
+        ),
+      },
+      {
         id: 'expanded',
         render: () => <DemoComposer initial="" working expanded moreMenu={menu} />,
       },

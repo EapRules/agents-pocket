@@ -15,6 +15,7 @@ import { ComposerPanel } from './ComposerPanel';
 import { type ComposerSkill, ComposerSuggestions } from './ComposerSuggestions';
 import { menuPanelSections } from './composerMenuPanel';
 import { useComposerPanelMax } from './composerPanelRoom';
+import { DictationButton, useListeningTap } from './DictationButton';
 import { KeyboardDismissButton } from './KeyboardDismissButton';
 
 const CIRCLE = 40;
@@ -138,8 +139,8 @@ export interface ComposerCardProps {
   /** The input gained or lost focus: the composer is open (a surface above it may condense). */
   onFocusChange?: (focused: boolean) => void;
   /**
-   * Dictation into the draft: a microphone while the draft is empty, in Send's place or beside Stop,
-   * and while it listens. Omitted where the build has no recognizer.
+   * Dictation into the draft: a microphone while the draft is empty or while it listens, in Send's
+   * place or beside Stop. Omitted where the build has no recognizer.
    */
   dictation?: { listening: boolean; onToggle: () => void };
   testID?: string;
@@ -238,6 +239,7 @@ export function ComposerCard({
     items?.length ? () => setOpen(panel === which ? null : which) : undefined;
   const stopInk = theme.appearance === 'dark' ? 'textPrimary' : 'onAccent';
   const hint = placeholder ?? labels.messagePlaceholder;
+  const listening = useListeningTap(dictation?.listening ?? false);
   const input = (
     <ThemedTextInput
       value={value}
@@ -246,7 +248,7 @@ export function ComposerCard({
         else setOpen(null);
         onChange(text);
       }}
-      placeholder={hint}
+      placeholder={listening ? labels.listening : hint}
       editable={!disabled}
       onFocus={() => {
         setFocused(true);
@@ -289,20 +291,18 @@ export function ComposerCard({
         <Icon name="send" size={18} color="canvas" />
       </Tappable>
     );
-  // Text in the draft takes the microphone's place for Send; a draft dictated so far keeps it to stop.
+  // Text in the draft takes the microphone's place for Send; while it listens the microphone keeps
+  // Send's place (live words fill the draft), so a tap meant to stop never sends half a phrase.
   const empty = value.trim() === '' && !hasAttachments;
   const mic =
-    dictation && (empty || dictation.listening) ? (
-      <Tappable
-        style={[styles.circle, dictation.listening && { backgroundColor: theme.colors.accent }]}
-        onPress={dictation.onToggle}
-        accessibilityRole="button"
-        accessibilityLabel={dictation.listening ? labels.stopDictating : labels.dictate}
-        accessibilityState={{ selected: dictation.listening }}
+    dictation && (empty || listening) ? (
+      <DictationButton
+        listening={listening}
+        onToggle={dictation.onToggle}
+        style={styles.circle}
+        labels={labels}
         testID={`${testID}-mic`}
-      >
-        <Icon name="mic" size={18} color={dictation.listening ? 'onAccent' : 'textPrimary'} />
-      </Tappable>
+      />
     ) : null;
   const leadingMark = leading ? (
     <View style={styles.circle}>
@@ -392,7 +392,7 @@ export function ComposerCard({
         <View style={[styles.buttons, stacked && styles.pinRight]}>
           {focused ? <KeyboardDismissButton label={labels.dismissKeyboard} /> : null}
           {mic}
-          {mic && action === 'none' ? null : trailing}
+          {mic && action !== 'stop' ? null : trailing}
         </View>
       </View>
     </View>

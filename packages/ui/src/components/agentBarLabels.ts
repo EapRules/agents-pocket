@@ -18,6 +18,8 @@ export interface AgentBarLabels {
   stop: string;
   dictate: string;
   stopDictating: string;
+  /** The input's placeholder while dictation listens. */
+  listening: string;
   add: string;
   moreOptions: string;
   shortcuts: string;
@@ -55,6 +57,7 @@ export const defaultAgentBarLabels: AgentBarLabels = {
   stop: 'Stop',
   dictate: 'Dictate',
   stopDictating: 'Stop Dictating',
+  listening: 'Listening…',
   add: 'Add',
   moreOptions: 'More options',
   shortcuts: 'Shortcuts',

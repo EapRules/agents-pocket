@@ -20,6 +20,7 @@ export function agentBarLabels(): AgentBarLabels {
     stop: t('Stop'),
     dictate: t('Dictate'),
     stopDictating: t('Stop Dictating'),
+    listening: t('Listening…'),
     add: t('Add'),
     moreOptions: t('More Options'),
     shortcuts: t('Shortcuts'),

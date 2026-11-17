@@ -11,6 +11,7 @@ import { SHELL_CLOSE_ANCHOR, ShellTerminalScreen } from '@/features/terminals/Sh
 import { deviceStorage } from '@/settings/deviceStorage';
 import { AtlasBlocked, type AtlasBlockedVariant } from './atlasBlocked';
 import { type AtlasBackground, AtlasChat } from './atlasChat';
+import { composerCardEntries } from './atlasComposerCard';
 import { noop, titled } from './atlasHelpers';
 import {
   AlertOver,
@@ -90,59 +91,6 @@ const refusedCommand: AtlasEntry = {
     deviceStorage.set('composer.draft.demo/p5', '/model opus');
     return detail('p5', 'chat').render();
   },
-};
-
-/** A draft of about four lines: the stacked field grows with it. */
-const longDraft: AtlasEntry = {
-  render: () => (
-    <AtlasChat>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ComposerCard
-        value={
-          'Please look at the failing build.\nStart with the lockfile.\nThen check the CI cache keys.\nReport what you changed.'
-        }
-        onChange={noop}
-        onSend={noop}
-        expanded
-      />
-    </AtlasChat>
-  ),
-};
-
-/** A draft past six lines: the field stops at its cap and scrolls inside. */
-const veryLongDraft: AtlasEntry = {
-  render: () => (
-    <AtlasChat>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ComposerCard
-        value={Array.from(
-          { length: 12 },
-          (_, index) => `Step ${index + 1}: describe what to change.`,
-        ).join('\n')}
-        onChange={noop}
-        onSend={noop}
-        expanded
-      />
-    </AtlasChat>
-  ),
-};
-
-/** The `/` panel over thirty entries: it stops at a share of the screen and its rows scroll. */
-const longSkillList: AtlasEntry = {
-  render: () => (
-    <AtlasChat>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ComposerCard
-        value="/"
-        onChange={noop}
-        onSend={noop}
-        skills={Array.from({ length: 30 }, (_, index) => ({
-          name: `/skill-${String(index + 1).padStart(2, '0')}`,
-          description: `Atlas skill number ${index + 1}.`,
-        }))}
-      />
-    </AtlasChat>
-  ),
 };
 
 /** Chat with `/` typed: the live panel, Claude Code's own commands from its definition. */
@@ -273,9 +221,7 @@ export const agentDetailEntries: Readonly<Record<string, AtlasEntry>> = {
     false,
     'message',
   ),
-  'rn.composer-skill-list': longSkillList,
-  'rn.composer-long-draft': longDraft,
-  'rn.composer-very-long-draft': veryLongDraft,
+  ...composerCardEntries,
   'agent-detail.composer-more-menu': inCompose(
     detail('p4', 'terminal', ['composer-input', 'composer-more']),
   ),

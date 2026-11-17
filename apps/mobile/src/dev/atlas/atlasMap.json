@@ -342,6 +342,16 @@
     "note": "RN-only state: a twelve-line draft, the field stops at six lines and scrolls inside"
   },
   {
+    "id": "rn.composer-listening",
+    "rn": "ComposerCard (dictation)",
+    "note": "RN-only state: dictation just started, the microphone reads as recording and the empty input says Listening"
+  },
+  {
+    "id": "rn.composer-listening-draft",
+    "rn": "ComposerCard (dictation)",
+    "note": "RN-only state: dictation under way, the words heard so far fill the draft and the microphone keeps Send's place"
+  },
+  {
     "id": "rn.composer-skill-list",
     "rn": "ComposerCard (skills panel)",
     "note": "RN-only state: thirty suggestions, the panel scrolls inside its height limit"

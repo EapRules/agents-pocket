@@ -2,7 +2,7 @@ import { t } from '@openagentspocket/i18n';
 import { toast } from '@openagentspocket/ui';
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useSettingsStore } from '@/settings/SettingsProvider';
-import { DictationController, type DictationFailure } from './dictation';
+import { DictationController, type DictationDraft, type DictationFailure } from './dictation';
 import { systemSpeechEngine } from './speechEngine';
 
 const FAILURE_TEXT: Record<DictationFailure, () => string> = {
@@ -15,16 +15,16 @@ const never = () => () => {};
 const idle = () => false;
 
 /** Dictation into the draft; `toggle` is undefined where this build has no recognizer. */
-export function useDictation(insert: (text: string) => void) {
-  const latest = useRef(insert);
-  latest.current = insert;
+export function useDictation(draft: DictationDraft) {
+  const latest = useRef(draft);
+  latest.current = draft;
   const settings = useSettingsStore();
   const controller = useMemo(() => {
     const engine = systemSpeechEngine(() => settings.get('dictationLanguage'));
     return engine
       ? new DictationController(
           engine,
-          (text) => latest.current(text),
+          { read: () => latest.current.read(), write: (text) => latest.current.write(text) },
           // An unexpected stop shows the recognizer's code under the message: without it the cause
           // of a failure on someone's phone cannot be told from a report.
           (reason, code) =>

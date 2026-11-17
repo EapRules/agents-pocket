@@ -199,6 +199,7 @@
   "Queue for after this turn": "Queue for after this turn",
   "Queue for the Agent's next step": "Queue for the Agent's next step",
   "Stop Dictating": "Stop Dictating",
+  "Listening…": "Listening…",
   "%lld notices": "{0, plural, one {# notice} other {# notices}}",
   "Add Working Directory": "Add Working Directory",
   "Archive Session": "Archive Session",

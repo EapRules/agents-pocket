@@ -77,8 +77,11 @@ export function systemSpeechEngine(chosen: () => string): SpeechEngine | null {
     start: (events, language) => {
       const listeners = [
         speech.addListener('result', (event) => {
+          // Each result is the phrase so far (since the last final one), not only its newest words.
           const text = event.results[0]?.transcript;
-          if (event.isFinal && text) events.onFinal(text);
+          if (!text) return;
+          if (event.isFinal) events.onFinal(text);
+          else events.onPartial(text);
         }),
         speech.addListener('error', (event) => events.onError(event.error)),
         speech.addListener('end', () => {
@@ -89,6 +92,7 @@ export function systemSpeechEngine(chosen: () => string): SpeechEngine | null {
       speech.start({
         lang: language,
         continuous: true,
+        interimResults: true,
         addsPunctuation: true,
       });
     },

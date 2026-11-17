@@ -99,7 +99,11 @@ export function useComposerMenus({
     () => staging.state,
   );
   const images = useImageReview(localFiles);
-  const dictation = useDictation((text) => store.insertIntoDraft(text));
+  // Dictation writes only at the end of the draft, replacing the phrase it is still revising.
+  const dictation = useDictation({
+    read: () => store.getSnapshot().draft,
+    write: (text) => store.replaceDraft(text),
+  });
   const actions = useMemo(() => agentActions(consoleStore), [consoleStore]);
   const rename = useRename(actions);
   // The route's own check: Worktree Details exist only for an Agent in a linked worktree.

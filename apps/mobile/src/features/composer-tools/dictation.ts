@@ -1,8 +1,16 @@
-import { type DictationFailure, dictationFailure } from '@openagentspocket/core';
+import {
+  applyDictation,
+  type DictatedDraft,
+  type DictationFailure,
+  dictationFailure,
+  settleDictation,
+} from '@openagentspocket/core';
 
 export type { DictationFailure };
 
 interface SpeechEvents {
+  /** The phrase so far; the next one revises it. */
+  onPartial(text: string): void;
   /** One finished phrase. */
   onFinal(text: string): void;
   /** The recognizer's error code (`no-speech`, `language-not-supported`...). */
@@ -19,14 +27,25 @@ export interface SpeechEngine {
   stop(): void;
 }
 
-/** Dictates into the draft: phrases land as they finish, and the Agent gets nothing until Send. */
+/** The draft dictation writes to: read as it stands, replaced whole. */
+export interface DictationDraft {
+  read(): string;
+  write(text: string): void;
+}
+
+/**
+ * Dictates at the end of the draft: words show as they are heard and are revised in place, a
+ * finished phrase stays, and the Agent gets nothing until Send.
+ */
 export class DictationController {
   private active = false;
+  /** What this dictation wrote at the end of the draft that the recognizer may still revise. */
+  private provisional = '';
   private readonly listeners = new Set<() => void>();
 
   constructor(
     private readonly engine: SpeechEngine,
-    private readonly insert: (text: string) => void,
+    private readonly draft: DictationDraft,
     /** `code` is the recognizer's own word for an unexpected stop, so a report can name it. */
     private readonly onFailure: (reason: DictationFailure, code?: string) => void = () => {},
   ) {}
@@ -61,23 +80,40 @@ export class DictationController {
       this.onFailure('language');
       return;
     }
+    this.provisional = '';
     this.set(true);
     this.engine.start(
       {
-        onFinal: (text) => {
-          const phrase = text.trim();
-          if (phrase !== '') this.insert(`${phrase} `);
-        },
+        onPartial: (text) => this.heard(text, false),
+        onFinal: (text) => this.heard(text, true),
         onError: (code) => {
           if (!this.active) return;
+          this.settle();
           this.set(false);
           const failure = dictationFailure(code);
           if (failure) this.onFailure(failure, code);
         },
-        onEnd: () => this.set(false),
+        onEnd: () => {
+          this.settle();
+          this.set(false);
+        },
       },
       language,
     );
+  }
+
+  private heard(text: string, final: boolean): void {
+    this.write(applyDictation(this.draft.read(), this.provisional, { text, final }));
+  }
+
+  /** Stopped: what the draft shows stays, the provisional phrase as finished. */
+  private settle(): void {
+    if (this.provisional !== '') this.write(settleDictation(this.draft.read(), this.provisional));
+  }
+
+  private write(next: DictatedDraft): void {
+    this.provisional = next.provisional;
+    if (next.draft !== this.draft.read()) this.draft.write(next.draft);
   }
 
   private set(active: boolean): void {
