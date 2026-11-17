@@ -1,6 +1,7 @@
 // Atlas entries that draw the Composer card alone over Chat: drafts, panels and dictation.
 import { ComposerCard, type ComposerCardProps } from '@openagentspocket/ui';
 import { Stack } from 'expo-router';
+import { View } from 'react-native';
 import { agentBarLabels } from '@/agent-detail/agentBarLabels';
 import { AtlasChat } from './atlasChat';
 import { noop } from './atlasHelpers';
@@ -12,7 +13,10 @@ function card(props: Partial<ComposerCardProps> & { value: string }): AtlasEntry
     render: () => (
       <AtlasChat>
         <Stack.Screen options={{ headerShown: false }} />
-        <ComposerCard onChange={noop} onSend={noop} labels={agentBarLabels()} {...props} />
+        {/* In the middle of the screen: at the top the status bar covers a one-line card. */}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ComposerCard onChange={noop} onSend={noop} labels={agentBarLabels()} {...props} />
+        </View>
       </AtlasChat>
     ),
   };
