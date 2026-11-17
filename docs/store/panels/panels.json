@@ -176,6 +176,40 @@
         "headline": "Tus agentes, <em>en el bolsillo</em>",
         "subline": "Mira cuáles te necesitan, desde donde estés"
       }
+    },
+    {
+      "name": "share",
+      "size": [1200, 630],
+      "safe": [290, 150, 620, 330],
+      "caption": {
+        "x": 290,
+        "y": 150,
+        "width": 620,
+        "center": true,
+        "h1": 96
+      },
+      "phones": [
+        {
+          "screen": "02-chat",
+          "width": 330,
+          "left": 235,
+          "top": 290,
+          "tilt": -8
+        },
+        {
+          "screen": "01-home",
+          "width": 330,
+          "left": 965,
+          "top": 290,
+          "tilt": 8
+        }
+      ],
+      "en": {
+        "headline": "Your coding agents, <em>in your pocket</em>"
+      },
+      "es": {
+        "headline": "Tus agentes, <em>en el bolsillo</em>"
+      }
     }
   ]
 }

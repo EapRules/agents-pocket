@@ -78,11 +78,17 @@ test('a real installer is published as plain text and shown on the page', () => 
 test('dist carries the hero scene, its field and the vendored three, with long-lived caching', () => {
   const out = join(temp(), 'dist');
   build({ out, installerDir: temp() });
-  for (const file of ['hero/main.js', 'hero/field.png', THREE_FILE]) {
+  for (const file of ['hero/main.js', 'hero/field.png', 'og.jpg', THREE_FILE]) {
     assert.ok(existsSync(join(out, file)), `${file} is missing from dist`);
   }
   const html = readFileSync(join(out, 'index.html'), 'utf8');
   assert.match(html, /<script type="module" src="\/hero\/main\.js">/);
+  assert.match(
+    html,
+    /<meta property="og:image" content="https:\/\/openagentspocket\.com\/og\.jpg">/,
+  );
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+  assert.match(html, /<meta name="apple-itunes-app" content="app-id=6834077869">/);
   assert.ok(
     html.includes(`"three":"/${THREE_FILE}"`),
     'the import map points at the vendored three',

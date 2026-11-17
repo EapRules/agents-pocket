@@ -77,7 +77,8 @@ export function build({
     copyFileSync(join(repo, 'apps/mobile/assets/images', image), join(out, image));
   }
   writeFileSync(join(out, '_redirects'), `/privacy ${PRIVACY_URL} 302\n`);
-  copyFileSync(join(root, 'src/grain.svg'), join(out, 'grain.svg'));
+  for (const file of ['grain.svg', 'og.jpg'])
+    copyFileSync(join(root, 'src', file), join(out, file));
   cpSync(join(root, 'src/hero'), join(out, 'hero'), { recursive: true });
   mkdirSync(join(out, 'vendor'), { recursive: true });
   copyFileSync(join(root, 'node_modules/three/build/three.module.min.js'), join(out, THREE_FILE));

@@ -48,4 +48,6 @@ A panel with `screens` (the themes one) cuts several captures of the same screen
 
 The same file lists the wide art under `art`: the product page header (3840x1646) and the search results image (3840x2560), each with Apple's art safe area; `--safe` outlines that area on the render. If a field in App Store Connect refuses the JPEG, convert it (`sips -s format png header.jpg --out header.png`): the result has no alpha channel.
 
+The `share` art (1200x630) is the link preview of the site (Open Graph and Twitter card): `apps/site/src/og.jpg` is a copy of `panels/en/share.jpg`, so copy it again after a re-render. Its headline sits inside the central 630x630, because chat apps crop previews to squares; the two phones are decoration at the sides.
+
 Captions say what the screen shows: no claim the screen does not back, no badges or ratings.
